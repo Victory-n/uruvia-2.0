@@ -122,20 +122,19 @@ class DataSyncPage extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => slideRightWidget(newPage: SideBarPage(title: ""), context: context,),
                     style: ButtonStyle(
-                      fixedSize: WidgetStateProperty.all(Size(MediaQuery.of(context).size.width, 44.0)),
+                      fixedSize: WidgetStateProperty.all(Size(MediaQuery.of(context).size.width, 60.0)),
                       backgroundColor: WidgetStateProperty.all(ConstantColor.headingTextPrimary),
                       shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0))),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        interText(text: "Proceed to Dashboard", colors: ConstantColor.paragraphTextSecondary, fontWeight: FontWeight.w700, size: 16.0, textAlign: TextAlign.center, softWrap: true),
-                        Icon(Icons.arrow_forward, color: ConstantColor.paragraphTextSecondary, size: 16.0,),
+                        interText(text: "Proceed to Dashboard", colors: ConstantColor.paragraphTextSecondary, fontWeight: FontWeight.w700, size: 18.0, textAlign: TextAlign.center, softWrap: true),
+                        Icon(Icons.arrow_forward, color: ConstantColor.paragraphTextSecondary, size: 18.0,),
                       ],
                     ),
                   ),
                 ),
-                Spacer(),
               ],
             ),
           ),

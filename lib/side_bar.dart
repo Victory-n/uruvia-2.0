@@ -21,7 +21,7 @@ class _SideBarPageState extends State<SideBarPage> {
 
   static const List<NavItem> _navItems = [
     NavItem(label: 'Dashboard', icon: Icons.dashboard_outlined, screen: Dashboard()),
-    NavItem(label: 'Inventory', icon: Icons.inventory, screen: InventoryMainPage()),
+    NavItem(label: 'Inventory', icon: Icons.inventory_outlined, screen: InventoryMainPage()),
   ];
 
   void _onItemTapped(int index) {
