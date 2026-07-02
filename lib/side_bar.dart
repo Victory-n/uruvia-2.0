@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/dashboard.dart';
 import 'package:uruvia/screens/inventory/inventory_main_page.dart';
+import 'package:uruvia/screens/invoices/invoice_main_page.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 
 import 'classes/nav_items.dart';
@@ -22,6 +23,7 @@ class _SideBarPageState extends State<SideBarPage> {
   static const List<NavItem> _navItems = [
     NavItem(label: 'Dashboard', icon: Icons.dashboard_outlined, screen: Dashboard()),
     NavItem(label: 'Inventory', icon: Icons.inventory_outlined, screen: InventoryMainPage()),
+    NavItem(label: 'Invoice', icon: Icons.receipt_long, screen: InvoiceMainPage()),
   ];
 
   void _onItemTapped(int index) {

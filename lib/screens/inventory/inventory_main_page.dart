@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:route_transitions/route_transitions.dart';
+import 'package:uruvia/screens/inventory/add_inventory_page.dart';
 import 'package:uruvia/screens/inventory/inventory_detailed_page.dart';
 import '../../constants/colors.dart';
 import '../../widgets/custom_column_heading_text.dart';
@@ -18,6 +19,14 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => slideUpWidget(newPage: AddInventoryPage(), context: context),
+        backgroundColor: ConstantColor.blueBackground,
+        child: Icon(
+          Platform.isAndroid ? Icons.add : CupertinoIcons.add,
+          color: Colors.white,
+        ),
+      ),
       appBar: AppBar(
         elevation: 1.0,
         backgroundColor: Colors.white,
