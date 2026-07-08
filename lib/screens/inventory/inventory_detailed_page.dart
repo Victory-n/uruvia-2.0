@@ -186,7 +186,7 @@ class _InventoryDetailedPageState extends State<InventoryDetailedPage> {
                                 isSwitched = value;
                               });
                             },
-                            activeThumbColor: Colors.white,
+                            activeColor: Colors.white,
                             activeTrackColor: ConstantColor.blueBackground,
                             inactiveThumbColor: ConstantColor.paragraphTextSecondary,
                             inactiveTrackColor: ConstantColor.paragraphTextSecondary.withAlpha(50),

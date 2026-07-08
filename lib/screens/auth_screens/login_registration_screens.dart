@@ -4,7 +4,7 @@ import 'package:uruvia/welcome/data_sync.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../constants/colors.dart';
-import 'auto_login.dart';
+import 'registration_page.dart';
 
 class LoginRegistrationScreens extends StatelessWidget {
   const LoginRegistrationScreens({super.key});
@@ -60,7 +60,7 @@ class LoginRegistrationScreens extends StatelessWidget {
                         ),
                         SizedBox(height: 5.0,),
                         ElevatedButton(
-                          onPressed: () => slideRightWidget(newPage: DataSyncPage(), context: context,),
+                          onPressed: () => slideRightWidget(newPage: const RegistrationPage(), context: context,),
                           style: ButtonStyle(
                             fixedSize: WidgetStateProperty.all(Size(MediaQuery.of(context).size.width, 44.0)),
                             backgroundColor: WidgetStateProperty.all(ConstantColor.lightBackground),
