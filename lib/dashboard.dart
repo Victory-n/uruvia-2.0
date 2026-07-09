@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:route_transitions/route_transitions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uruvia/connection/connectivity_service.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/screens/business/business_health.dart';
 import 'package:uruvia/screens/expenses/expense_list_page.dart';
@@ -20,24 +22,56 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final firstName = user?.userMetadata?['first_name'] ?? 'User';
+
     return Scaffold(
       appBar: AppBar(
         elevation: 1.0,
         backgroundColor: Colors.white,
         title: Row(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 20,
+              child: Icon(Icons.person, size: 20),
             ),
-            SizedBox(width: 12.0,),
+            const SizedBox(width: 12.0,),
             interText(text: "Uruvia", colors: Colors.black, fontWeight: FontWeight.bold, size: 20.0, textAlign: TextAlign.center, softWrap: true),
           ],
         ),
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Platform.isAndroid ? Icon(Icons.cloud_done_outlined, color: ConstantColor.paragraphTextPrimary,) : Icon(CupertinoIcons.cloud_upload, color: ConstantColor.paragraphTextPrimary,),
+          ValueListenableBuilder<bool>(
+            valueListenable: ConnectivityService.instance.isConnected,
+            builder: (context, isOnline, _) {
+              if (isOnline) {
+                return IconButton(
+                  onPressed: () {},
+                  icon: Platform.isAndroid
+                      ? const Icon(Icons.cloud_done_outlined, color: ConstantColor.paragraphTextPrimary)
+                      : const Icon(CupertinoIcons.cloud_upload, color: ConstantColor.paragraphTextPrimary),
+                );
+              } else {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_off, color: Colors.red, size: 20.0),
+                      SizedBox(width: 4.0),
+                      Text(
+                        "Offline",
+                        style: TextStyle(
+                          fontFamily: "Inter",
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
           ),
         ],
       ),
@@ -53,7 +87,7 @@ class _DashboardState extends State<Dashboard> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
                     child: columnText(
-                      headingText: interText(text: "Welcome Ada", colors: Colors.black, fontWeight: FontWeight.w600, size: 24.0, textAlign: TextAlign.center, softWrap: true),
+                      headingText: interText(text: "Welcome $firstName", colors: Colors.black, fontWeight: FontWeight.w600, size: 24.0, textAlign: TextAlign.center, softWrap: true),
                       subtext: googleSansText(text: "Your business command centre is ready.", colors: ConstantColor.paragraphTextPrimary, fontWeight: FontWeight.normal, size: 14.0, textAlign: TextAlign.center, softWrap: true),
                     ),
                   ),

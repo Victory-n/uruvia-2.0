@@ -39,6 +39,8 @@ dependencies:
   flutter_svg: ^2.2.3
   flutter_speed_dial: ^7.0.0
   avatar_glow: ^3.0.1
+  supabase_flutter: ^2.16.0
+  internet_connection_checker: ^3.0.1
 
 dev_dependencies:
   flutter_test:

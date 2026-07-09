@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uruvia/connection/connectivity_service.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/constants/supabase_config.dart';
 import 'package:uruvia/welcome/page_one.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    publishableKey: SupabaseConfig.supabaseAnonKey,
+  );
+
+  // Initialize background internet checking
+  ConnectivityService.instance.initialize();
+
   runApp(const MyApp());
 }
 
@@ -15,7 +28,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: ConstantColor.lightBackground),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: ConstantColor.lightBackground,
+        ),
       ),
       home: PageOne(),
     );

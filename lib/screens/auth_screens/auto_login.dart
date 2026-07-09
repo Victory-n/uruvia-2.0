@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/screens/auth_screens/login_registration_screens.dart';
 import 'package:uruvia/side_bar.dart';
 import '../../widgets/custom_text.dart';
@@ -16,11 +17,19 @@ class _AutoLoginState extends State<AutoLogin> {
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 5), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginRegistrationScreens()),
-      );
+    Timer(const Duration(seconds: 3), () {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SideBarPage(title: "")),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginRegistrationScreens()),
+        );
+      }
     });
   }
 

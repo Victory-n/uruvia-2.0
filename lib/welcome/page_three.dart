@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:route_transitions/route_transitions.dart';
 import 'package:uruvia/screens/auth_screens/auto_login.dart';
+import 'package:uruvia/screens/auth_screens/login_registration_screens.dart';
 import '../constants/colors.dart';
 import '../widgets/custom_text.dart';
 
@@ -14,11 +15,23 @@ class PageThree extends StatelessWidget {
         height: 70.0,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: ElevatedButton(
-          onPressed: () => slideRightWidget(newPage: AutoLogin(), context: context,),
-          style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.all(ConstantColor.blueBackground),
+          onPressed: () => slideRightWidget(
+            newPage: LoginRegistrationScreens(),
+            context: context,
           ),
-          child: interText(text: "GET STARTED", colors: Colors.white, fontWeight: FontWeight.w700, size: 12.0, textAlign: TextAlign.center, softWrap: true),
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(
+              ConstantColor.blueBackground,
+            ),
+          ),
+          child: interText(
+            text: "GET STARTED",
+            colors: Colors.white,
+            fontWeight: FontWeight.w700,
+            size: 12.0,
+            textAlign: TextAlign.center,
+            softWrap: true,
+          ),
         ),
       ),
       body: SafeArea(
@@ -38,12 +51,27 @@ class PageThree extends StatelessWidget {
               Spacer(),
               FittedBox(
                 fit: BoxFit.contain,
-                child: interText(text: "Your Business Health at a Glance", colors: Colors.black, fontWeight: FontWeight.w700, size: 24.0, textAlign: TextAlign.center, softWrap: true),
+                child: interText(
+                  text: "Your Business Health at a Glance",
+                  colors: Colors.black,
+                  fontWeight: FontWeight.w700,
+                  size: 24.0,
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                ),
               ),
-              SizedBox(height: 12.0,),
+              SizedBox(height: 12.0),
               Flexible(
                 fit: FlexFit.loose,
-                child: googleSansText(text: "Track your business health score and get actionable insights to grow your revenue and stay on top of overdue payments.", colors: Colors.black, fontWeight: FontWeight.normal, size: 16.0, textAlign: TextAlign.center, softWrap: true),
+                child: googleSansText(
+                  text:
+                      "Track your business health score and get actionable insights to grow your revenue and stay on top of overdue payments.",
+                  colors: Colors.black,
+                  fontWeight: FontWeight.normal,
+                  size: 16.0,
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                ),
               ),
             ],
           ),

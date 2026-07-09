@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:route_transitions/route_transitions.dart';
+import 'package:uruvia/connection/connectivity_service.dart';
 import 'package:uruvia/screens/inventory/add_inventory_page.dart';
 import 'package:uruvia/screens/inventory/inventory_detailed_page.dart';
 import '../../constants/colors.dart';
@@ -41,9 +42,37 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
         ),
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Platform.isAndroid ? Icon(Icons.cloud_done_outlined, color: ConstantColor.paragraphTextPrimary,) : Icon(CupertinoIcons.cloud_upload, color: ConstantColor.paragraphTextPrimary,),
+          ValueListenableBuilder<bool>(
+            valueListenable: ConnectivityService.instance.isConnected,
+            builder: (context, isOnline, _) {
+              if (isOnline) {
+                return IconButton(
+                  onPressed: () {},
+                  icon: Platform.isAndroid
+                      ? const Icon(Icons.cloud_done_outlined, color: ConstantColor.paragraphTextPrimary)
+                      : const Icon(CupertinoIcons.cloud_upload, color: ConstantColor.paragraphTextPrimary),
+                );
+              } else {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_off, color: Colors.red, size: 20.0),
+                      SizedBox(width: 4.0),
+                      Text(
+                        "Offline",
+                        style: TextStyle(
+                          fontFamily: "Inter",
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
           ),
         ],
       ),

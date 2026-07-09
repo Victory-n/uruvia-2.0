@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.uruvia"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.3.13750724"
+    ndkVersion = "29.0.14206865"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
