@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/screens/auth_screens/login_registration_screens.dart';
 import 'package:uruvia/side_bar.dart';
+import 'package:uruvia/organizations/organization_onboarding_screen.dart';
 import '../../widgets/custom_text.dart';
 
 class AutoLogin extends StatefulWidget {
@@ -20,9 +21,15 @@ class _AutoLoginState extends State<AutoLogin> {
     Timer(const Duration(seconds: 3), () {
       final session = Supabase.instance.client.auth.currentSession;
       if (session != null) {
+        final user = Supabase.instance.client.auth.currentUser;
+        final hasOnboarded = user?.userMetadata?['has_onboarded_business'] ?? false;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SideBarPage(title: "")),
+          MaterialPageRoute(
+            builder: (context) => hasOnboarded
+                ? const SideBarPage(title: "")
+                : const OrganizationOnboardingScreen(),
+          ),
         );
       } else {
         Navigator.pushReplacement(

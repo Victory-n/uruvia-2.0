@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uruvia/connection/connectivity_service.dart';
+import 'package:uruvia/offline/connectivity_service.dart';
 
 class OfflineBanner extends StatelessWidget {
   const OfflineBanner({super.key});

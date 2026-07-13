@@ -38,3 +38,29 @@ $$ language plpgsql security definer;
 create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Create inventory_items table in the public schema
+create table public.inventory_items (
+  id text primary key,
+  name text not null,
+  sku text not null,
+  stock integer not null default 0,
+  threshold integer not null default 10,
+  image_url text,
+  retail_price numeric,
+  supplier text,
+  low_stock_alert boolean not null default false,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable Row-Level Security (RLS)
+alter table public.inventory_items enable row level security;
+
+-- Create policies for inventory access
+create policy "Allow read for everyone" on public.inventory_items
+  for select using (true);
+
+create policy "Allow write for authenticated users" on public.inventory_items
+  for all to authenticated
+  using (true)
+  with check (true);

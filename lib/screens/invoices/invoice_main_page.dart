@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:route_transitions/route_transitions.dart';
 import 'package:uruvia/constants/colors.dart';
-import 'package:uruvia/screens/invoices/new/add_invoice_page.dart';
+import 'package:uruvia/screens/invoices/add_invoice_page.dart';
 import 'package:uruvia/screens/invoices/tabs/all_page.dart';
 import 'package:uruvia/screens/invoices/tabs/draft_page.dart';
 import 'package:uruvia/screens/invoices/tabs/overdue_page.dart';
@@ -19,8 +19,8 @@ class InvoiceMainPage extends StatefulWidget {
   State<InvoiceMainPage> createState() => _InvoiceMainPageState();
 }
 
-class _InvoiceMainPageState extends State<InvoiceMainPage> with SingleTickerProviderStateMixin {
-
+class _InvoiceMainPageState extends State<InvoiceMainPage>
+    with SingleTickerProviderStateMixin {
   static const List<Tab> myTabs = <Tab>[
     Tab(text: 'All'),
     Tab(text: 'Draft'),
@@ -44,75 +44,197 @@ class _InvoiceMainPageState extends State<InvoiceMainPage> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => slideUpWidget(newPage: AddInvoicePage(), context: context),
+      backgroundColor: const Color(0xFFF9FAFC),
+      appBar: AppBar(
+        elevation: 0.0,
+        scrolledUnderElevation: 0.0,
+        backgroundColor: const Color(0xFFF9FAFC),
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(
+                CupertinoIcons.bars,
+                color: ConstantColor.headingTextPrimary,
+              ),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            );
+          },
+        ),
+        title: googleSansText(
+          text: "Invoices",
+          colors: ConstantColor.headingTextPrimary,
+          fontWeight: FontWeight.bold,
+          size: 22.0,
+        ),
+        centerTitle: true,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () =>
+            slideUpWidget(newPage: const AddInvoicePage(), context: context),
         backgroundColor: ConstantColor.blueBackground,
-        child: Icon(
-          Platform.isAndroid ? Icons.add : CupertinoIcons.add,
-          color: Colors.white,
+        elevation: 4.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14.0),
+        ),
+        icon: const Icon(CupertinoIcons.add, color: Colors.white, size: 20.0),
+        label: googleSansText(
+          text: "Create",
+          colors: Colors.white,
+          fontWeight: FontWeight.bold,
+          size: 14.0,
         ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              googleSansText(text: "Invoices", colors: ConstantColor.paragraphTextPrimary, fontWeight: FontWeight.bold, size: 24.0, textAlign: TextAlign.center, softWrap: true),
-              SizedBox(height: 16.0,),
-              SizedBox(
-                height: 100,
-                width: MediaQuery.of(context).size.width,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10.0),
-                          border: BoxBorder.all(color: ConstantColor.blueBackground.withAlpha(50)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            googleSansText(text: "Total Outstanding", colors: ConstantColor.paragraphTextPrimary, fontWeight: FontWeight.bold, size: 11.0, textAlign: TextAlign.center, softWrap: true),
-                            SizedBox(height: 10.0,),
-                            googleSansText(text: "₦1,245,000", colors: ConstantColor.paragraphTextPrimary, fontWeight: FontWeight.bold, size: 20.0, textAlign: TextAlign.center, softWrap: true),
-                          ],
-                        ),
+              const SizedBox(height: 8.0),
+
+              // 1. Two Metrics Card (Outstanding & Overdue)
+              Row(
+                children: [
+                  // Outstanding
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16.0),
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.015),
+                            blurRadius: 10.0,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32.0,
+                            height: 32.0,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFFF9E6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.doc_plaintext,
+                              size: 16.0,
+                              color: Color(0xFFD48C00),
+                            ),
+                          ),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                googleSansText(
+                                  text: "Outstanding",
+                                  colors: ConstantColor.paragraphTextSecondary,
+                                  fontWeight: FontWeight.bold,
+                                  size: 10.0,
+                                ),
+                                const SizedBox(height: 2.0),
+                                googleSansText(
+                                  text: "₦1,245,000",
+                                  colors: ConstantColor.headingTextPrimary,
+                                  fontWeight: FontWeight.w900,
+                                  size: 14.0,
+                                  softWrap: false,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(width: 12.0,),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10.0),
-                          border: BoxBorder.all(color: ConstantColor.blueBackground.withAlpha(50)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            googleSansText(text: "Overdue", colors: ConstantColor.paragraphTextPrimary, fontWeight: FontWeight.bold, size: 11.0, textAlign: TextAlign.center, softWrap: true),
-                            SizedBox(height: 10.0,),
-                            googleSansText(text: "₦1,245,000", colors: Colors.red, fontWeight: FontWeight.bold, size: 20.0, textAlign: TextAlign.center, softWrap: true),
-                          ],
-                        ),
+                  ),
+                  const SizedBox(width: 12.0),
+                  // Overdue
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16.0),
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.015),
+                            blurRadius: 10.0,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32.0,
+                            height: 32.0,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFFEBEE),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.shield,
+                              size: 16.0,
+                              color: Color(0xFFC62828),
+                            ),
+                          ),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                googleSansText(
+                                  text: "Overdue",
+                                  colors: ConstantColor.paragraphTextSecondary,
+                                  fontWeight: FontWeight.bold,
+                                  size: 10.0,
+                                ),
+                                const SizedBox(height: 2.0),
+                                googleSansText(
+                                  text: "₦1,245,000",
+                                  colors: const Color(0xFFC62828),
+                                  fontWeight: FontWeight.w900,
+                                  size: 14.0,
+                                  softWrap: false,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+
+              // 2. Collected Card with beautiful Gradient
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18.0,
+                  vertical: 16.0,
+                ),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [ConstantColor.blueBackground, Color(0xFF0075FF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: ConstantColor.blueBackground.withOpacity(0.2),
+                      blurRadius: 12.0,
+                      offset: const Offset(0, 6),
                     ),
                   ],
-                ),
-              ),
-              SizedBox(height: 24.0,),
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  color: ConstantColor.blueBackground,
-                  borderRadius: BorderRadius.circular(10.0),
-                  border: BoxBorder.all(color: ConstantColor.blueBackground.withAlpha(50)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -120,66 +242,140 @@ class _InvoiceMainPageState extends State<InvoiceMainPage> with SingleTickerProv
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        googleSansText(text: "Collected This Month", colors: ConstantColor.lightBackground, fontWeight: FontWeight.bold, size: 11.0, textAlign: TextAlign.center, softWrap: true),
-                        SizedBox(height: 10.0,),
-                        googleSansText(text: "₦850,000", colors: Colors.white, fontWeight: FontWeight.bold, size: 30.0, textAlign: TextAlign.center, softWrap: true),
+                        googleSansText(
+                          text: "Collected This Month",
+                          colors: Colors.white.withOpacity(0.85),
+                          fontWeight: FontWeight.bold,
+                          size: 11.0,
+                        ),
+                        const SizedBox(height: 4.0),
+                        googleSansText(
+                          text: "₦850,000",
+                          colors: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          size: 26.0,
+                        ),
+                        const SizedBox(height: 4.0),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.trending_up_rounded,
+                              size: 14.0,
+                              color: Colors.greenAccent,
+                            ),
+                            const SizedBox(width: 4.0),
+                            googleSansText(
+                              text: "+12.4% from last month",
+                              colors: Colors.white.withOpacity(0.7),
+                              fontWeight: FontWeight.normal,
+                              size: 11.0,
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                    Icon(Platform.isAndroid
-                        ? Icons.show_chart
-                        : CupertinoIcons.graph_circle, color: Colors.white,),
+                    Container(
+                      width: 44.0,
+                      height: 44.0,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.graph_square,
+                        color: Colors.white,
+                        size: 22.0,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              SizedBox(height: 24.0,),
-              SearchBar(
-                hintText: "Search customer or invoice #",
-                hintStyle: WidgetStatePropertyAll(TextStyle(fontFamily: "googleSans", color: ConstantColor.paragraphTextSecondary)),
-                backgroundColor: WidgetStatePropertyAll(Colors.white),
-                elevation: WidgetStatePropertyAll(0.0),
-                shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0))),
-                side: WidgetStateProperty.all(BorderSide(color: ConstantColor.paragraphTextSecondary.withAlpha(50),)),
-              ),
-              SizedBox(height: 16.0,),
-              DefaultTabController(
-                initialIndex: 0,
-                length: myTabs.length,
-                child: SizedBox(
-                  height: 40,
-                  child: Padding(
-                    padding: const EdgeInsets.all(3.0),
-                    child: TabBar(
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontFamily: "googleSans",
-                        fontStyle: FontStyle.normal,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                      dividerColor: Colors.transparent,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      indicator: BoxDecoration(
-                        color: ConstantColor.blueBackground,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontSize: 12,
-                        fontFamily: "googleSans",
-                        fontStyle: FontStyle.normal,
-                        fontWeight: FontWeight.w400,
-                        color: ConstantColor.paragraphTextPrimary,
-                      ),
-                      controller: tabController,
-                      tabs: myTabs,
+              const SizedBox(height: 16.0),
+
+              // 3. Custom Styled Search Bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.01),
+                      blurRadius: 8.0,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                ),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Search customer or invoice #",
+                    hintStyle: TextStyle(
+                      fontFamily: "googleSans",
+                      color: ConstantColor.paragraphTextSecondary.withOpacity(
+                        0.6,
+                      ),
+                      fontSize: 14.0,
+                    ),
+                    prefixIcon: Icon(
+                      CupertinoIcons.search,
+                      color: ConstantColor.paragraphTextSecondary.withOpacity(
+                        0.6,
+                      ),
+                      size: 18.0,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
+                  ),
+                  style: const TextStyle(
+                    fontFamily: "googleSans",
+                    fontSize: 14.0,
+                    color: ConstantColor.headingTextPrimary,
                   ),
                 ),
               ),
+              const SizedBox(height: 16.0),
+
+              // 4. TabBar inside clean Box
+              SizedBox(
+                height: 44.0,
+                child: TabBar(
+                  controller: tabController,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicator: BoxDecoration(
+                    color: ConstantColor.blueBackground,
+                    borderRadius: BorderRadius.circular(10.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ConstantColor.blueBackground.withOpacity(0.15),
+                        blurRadius: 6.0,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: ConstantColor.paragraphTextPrimary,
+                  labelStyle: const TextStyle(
+                    fontSize: 13,
+                    fontFamily: "googleSans",
+                    fontWeight: FontWeight.bold,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 13,
+                    fontFamily: "googleSans",
+                    fontWeight: FontWeight.w600,
+                  ),
+                  tabs: myTabs,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+
+              // 5. TabBarView for list contents
               Expanded(
-                flex: 1,
                 child: TabBarView(
                   controller: tabController,
-                  children: [
+                  children: const [
                     AllPage(),
                     DraftPage(),
                     OverduePage(),

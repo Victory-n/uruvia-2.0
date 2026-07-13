@@ -4,6 +4,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:route_transitions/route_transitions.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/side_bar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uruvia/organizations/organization_onboarding_screen.dart';
 import '../widgets/custom_text.dart';
 
 enum SyncStatus { pending, syncing, completed }
@@ -293,10 +295,21 @@ class _DataSyncPageState extends State<DataSyncPage>
                 // Proceed Button
                 ElevatedButton(
                   onPressed: _isCompleted
-                      ? () => slideRightWidget(
-                          newPage: const SideBarPage(title: ""),
-                          context: context,
-                        )
+                      ? () {
+                          final user = Supabase.instance.client.auth.currentUser;
+                          final hasOnboarded = user?.userMetadata?['has_onboarded_business'] ?? false;
+                          if (hasOnboarded) {
+                            slideRightWidget(
+                              newPage: const SideBarPage(title: ""),
+                              context: context,
+                            );
+                          } else {
+                            slideRightWidget(
+                              newPage: const OrganizationOnboardingScreen(),
+                              context: context,
+                            );
+                          }
+                        }
                       : null,
                   style: ButtonStyle(
                     fixedSize: WidgetStateProperty.all(Size(size.width, 54.0)),
