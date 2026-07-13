@@ -3,6 +3,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uruvia/offline/connectivity_service.dart';
 import 'package:uruvia/offline/inventory_repository.dart';
+import 'package:uruvia/offline/database_helper.dart';
+import 'package:uruvia/screens/tasks/task_model.dart';
+import 'package:uruvia/screens/tasks/tasks_repository.dart';
+import 'package:uruvia/services/notification_service.dart';
 import 'package:uruvia/screens/inventory/add_inventory_page.dart';
 import 'package:uruvia/screens/inventory/inventory_detailed_page.dart';
 import '../../constants/colors.dart';
@@ -56,6 +60,7 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
           _items = items;
           _isLoading = false;
         });
+        _checkLowStockItems(items);
       }
     } catch (e) {
       if (mounted) {
@@ -67,6 +72,131 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
         ).showSnackBar(SnackBar(content: Text('Error loading inventory: $e')));
       }
     }
+  }
+
+  Future<void> _checkLowStockItems(List<Map<String, dynamic>> items) async {
+    final dbHelper = DatabaseHelper.instance;
+    final autoCreate = await dbHelper.getSetting('setting_auto_task_low_stock', defaultValue: true);
+
+    for (var item in items) {
+      final int stock = item['stock'] as int? ?? 0;
+      final int threshold = item['threshold'] as int? ?? 0;
+      if (stock <= threshold) {
+        final itemId = item['id'] as String? ?? '';
+        final itemName = item['name'] as String? ?? 'Item';
+        final sku = item['sku'] as String? ?? '';
+
+        if (autoCreate) {
+          // Auto create task
+          final task = Task(
+            id: 'low_stock_$itemId',
+            title: "Reorder: $itemName",
+            description: "Stock is low: $stock items remaining (Threshold: $threshold). SKU: $sku",
+            dueDate: DateTime.now().add(const Duration(days: 2)),
+            type: 'inventory',
+            relatedItemId: itemId,
+            createdAt: DateTime.now(),
+          );
+          await TasksRepository.instance.addTask(task);
+        } else {
+          // Check if a task is already pending
+          final existingTasks = await TasksRepository.instance.getTasks();
+          final hasPending = existingTasks.any((t) => t.relatedItemId == itemId && !t.isCompleted && t.type == 'inventory');
+          if (!hasPending) {
+            // Show instant notification
+            await NotificationService.instance.showInstantNotification(
+              "Low Stock Alert: $itemName",
+              "Stock is low: $stock remaining. Tap to create reorder task.",
+            );
+            // Show in-app dialog (only one at a time)
+            if (mounted) {
+              _showLowStockDialog(itemId, itemName, stock, threshold, sku);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  void _showLowStockDialog(String itemId, String itemName, int stock, int threshold, String sku) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        title: Row(
+          children: [
+            const Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.orange, size: 24.0),
+            const SizedBox(width: 8.0),
+            googleSansText(
+              text: "Low Stock Alert",
+              colors: ConstantColor.headingTextPrimary,
+              fontWeight: FontWeight.bold,
+              size: 18.0,
+            ),
+          ],
+        ),
+        content: googleSansText(
+          text: "$itemName (SKU: $sku) is low on stock ($stock remaining, threshold is $threshold). Would you like to set a reorder task?",
+          colors: ConstantColor.paragraphTextPrimary,
+          fontWeight: FontWeight.normal,
+          size: 14.5,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: googleSansText(
+              text: "Ignore",
+              colors: ConstantColor.paragraphTextSecondary,
+              fontWeight: FontWeight.bold,
+              size: 14.0,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final task = Task(
+                id: 'low_stock_$itemId',
+                title: "Reorder: $itemName",
+                description: "Stock is low: $stock items remaining (Threshold: $threshold). SKU: $sku",
+                dueDate: DateTime.now().add(const Duration(days: 2)),
+                type: 'inventory',
+                relatedItemId: itemId,
+                createdAt: DateTime.now(),
+              );
+              await TasksRepository.instance.addTask(task);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: googleSansText(
+                    text: "Reorder task created for $itemName",
+                    colors: Colors.white,
+                    fontWeight: FontWeight.normal,
+                    size: 14.0,
+                  ),
+                  backgroundColor: ConstantColor.blueBackground,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ConstantColor.blueBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              elevation: 0.0,
+            ),
+            child: googleSansText(
+              text: "Set Task",
+              colors: Colors.white,
+              fontWeight: FontWeight.bold,
+              size: 14.0,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

@@ -11,6 +11,7 @@ import 'package:uruvia/screens/business health/business_health.dart';
 import 'package:uruvia/screens/inventory/inventory_main_page.dart';
 import 'package:uruvia/screens/invoices/invoice_main_page.dart';
 import 'package:uruvia/screens/settings/settings_page.dart';
+import 'package:uruvia/screens/tasks/tasks_main_page.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 import 'package:uruvia/widgets/offline_banner.dart';
 
@@ -30,6 +31,7 @@ class _SideBarPageState extends State<SideBarPage> {
 
   static const List<NavItem> _navItems = [
     NavItem(label: 'Dashboard', icon: Icons.dashboard_outlined, screen: Dashboard()),
+    NavItem(label: 'Tasks & Reminders', icon: Icons.task_alt, screen: TasksMainPage()),
     NavItem(label: 'Inventory', icon: Icons.inventory_outlined, screen: InventoryMainPage()),
     NavItem(label: 'Invoice', icon: Icons.receipt_long, screen: InvoiceMainPage()),
     NavItem(label: 'Expenses', icon: Icons.payments_outlined, screen: ExpenseListPage()),

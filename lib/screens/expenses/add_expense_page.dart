@@ -6,6 +6,10 @@ import 'package:uruvia/classes/show_half_screen.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/screens/invoices/model/invoice_model.dart'; // For formatDate
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/offline/database_helper.dart';
+import 'package:uruvia/screens/tasks/task_model.dart';
+import 'package:uruvia/screens/tasks/tasks_repository.dart';
+import 'package:uruvia/services/notification_service.dart';
 
 class AddExpensePage extends StatefulWidget {
   const AddExpensePage({super.key});
@@ -21,6 +25,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
   DateTime _selectedDate = DateTime.now();
   String _selectedCategory = "Software";
+
+  // Payment Reminder state
+  bool _setPaymentReminder = false;
+  DateTime _reminderDate = DateTime.now().add(const Duration(days: 1));
 
   // Receipt upload state
   bool _hasReceipt = false;
@@ -75,6 +83,32 @@ class _AddExpensePageState extends State<AddExpensePage> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectReminderDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _reminderDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: ConstantColor.blueBackground,
+              onPrimary: Colors.white,
+              onSurface: ConstantColor.headingTextPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _reminderDate) {
+      setState(() {
+        _reminderDate = picked;
       });
     }
   }
@@ -153,7 +187,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
   }
 
-  void _saveExpense() {
+  Future<void> _saveExpense() async {
     final amountText = _amountController.text.trim();
     final vendorText = _vendorController.text.trim();
 
@@ -190,21 +224,53 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
     final vendor = vendorText.isEmpty ? "Generic Merchant" : vendorText;
 
+    if (_setPaymentReminder) {
+      final taskId = 'expense_pay_${DateTime.now().millisecondsSinceEpoch}';
+      final task = Task(
+        id: taskId,
+        title: "Pay Expense: $vendor",
+        description:
+            "Payment of ₦${formatCurrency(amount)} due for $vendor. Notes: ${_descriptionController.text.trim()}",
+        dueDate: _reminderDate,
+        type: 'expense',
+        relatedItemId: taskId,
+        createdAt: DateTime.now(),
+      );
+      await TasksRepository.instance.addTask(task);
+
+      // Schedule morning notification on reminder date (9:00 AM)
+      final notificationTime = DateTime(
+        _reminderDate.year,
+        _reminderDate.month,
+        _reminderDate.day,
+        9,
+        0,
+      );
+      await NotificationService.instance.scheduleNotification(
+        task.id,
+        "Expense Reminder: $vendor",
+        "Payment of ₦${formatCurrency(amount)} is due today.",
+        notificationTime,
+      );
+    }
+
     // Pop back and show success feedback
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: googleSansText(
-          text: _hasReceipt
-              ? "Recorded expense: ₦${formatCurrency(amount)} at $vendor (Receipt Attached)!"
-              : "Recorded expense: ₦${formatCurrency(amount)} at $vendor!",
-          colors: Colors.white,
-          fontWeight: FontWeight.bold,
-          size: 14.0,
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: googleSansText(
+            text: _hasReceipt
+                ? "Recorded expense: ₦${formatCurrency(amount)} at $vendor (Receipt Attached)!"
+                : "Recorded expense: ₦${formatCurrency(amount)} at $vendor!",
+            colors: Colors.white,
+            fontWeight: FontWeight.bold,
+            size: 14.0,
+          ),
+          backgroundColor: Colors.green,
         ),
-        backgroundColor: Colors.green,
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -442,6 +508,100 @@ class _AddExpensePageState extends State<AddExpensePage> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 14.0),
+                      // Payment Reminder Toggle Switch
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                CupertinoIcons.bell,
+                                color: ConstantColor.paragraphTextSecondary,
+                                size: 18.0,
+                              ),
+                              const SizedBox(width: 8.0),
+                              googleSansText(
+                                text: "Set Payment Reminder",
+                                colors: ConstantColor.headingTextPrimary,
+                                fontWeight: FontWeight.bold,
+                                size: 14.5,
+                              ),
+                            ],
+                          ),
+                          Transform.scale(
+                            scale: 0.8,
+                            child: CupertinoSwitch(
+                              value: _setPaymentReminder,
+                              onChanged: (val) {
+                                setState(() {
+                                  _setPaymentReminder = val;
+                                });
+                              },
+                              activeColor: ConstantColor.blueBackground,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_setPaymentReminder) ...[
+                        const SizedBox(height: 14.0),
+                        // Reminder Date Selector
+                        InkWell(
+                          onTap: () => _selectReminderDate(context),
+                          borderRadius: BorderRadius.circular(10.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 10.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7F8FA),
+                              borderRadius: BorderRadius.circular(10.0),
+                              border: Border.all(
+                                color: const Color(0xFFE8E9EB),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  CupertinoIcons.alarm,
+                                  color: ConstantColor.paragraphTextSecondary,
+                                  size: 18.0,
+                                ),
+                                const SizedBox(width: 8.0),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      googleSansText(
+                                        text: "Reminder Date",
+                                        colors: ConstantColor
+                                            .paragraphTextSecondary,
+                                        fontWeight: FontWeight.normal,
+                                        size: 11.0,
+                                      ),
+                                      const SizedBox(height: 2.0),
+                                      googleSansText(
+                                        text: formatDate(_reminderDate),
+                                        colors:
+                                            ConstantColor.headingTextPrimary,
+                                        fontWeight: FontWeight.bold,
+                                        size: 14.0,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  CupertinoIcons.chevron_down,
+                                  color: ConstantColor.paragraphTextSecondary,
+                                  size: 14.0,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -14,6 +14,9 @@ import 'package:uruvia/screens/invoices/model/invoice_model.dart'; // For format
 import 'package:uruvia/screens/inventory/inventory_main_page.dart';
 import 'package:uruvia/widgets/custom_column_heading_text.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/screens/tasks/task_model.dart';
+import 'package:uruvia/screens/tasks/tasks_repository.dart';
+import 'package:uruvia/screens/tasks/tasks_main_page.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -212,6 +215,123 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ),
                 const SizedBox(height: 24.0),
+
+                // 2.5 Upcoming Tasks Widget
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: FutureBuilder<List<Task>>(
+                    future: TasksRepository.instance.getTasks(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox.shrink();
+                      }
+                      final tasks = snapshot.data ?? [];
+                      final pendingTasks = tasks.where((t) => !t.isCompleted).take(3).toList();
+                      if (pendingTasks.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 24.0),
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16.0),
+                          color: Colors.white,
+                          border: Border.all(color: const Color(0xFFEEEEEE)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.015),
+                              blurRadius: 10.0,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      CupertinoIcons.list_bullet,
+                                      color: ConstantColor.headingTextPrimary,
+                                      size: 18.0,
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                    interText(
+                                      text: "Upcoming Tasks",
+                                      colors: ConstantColor.headingTextPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      size: 16.0,
+                                    ),
+                                  ],
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    slideRightWidget(
+                                      newPage: const TasksMainPage(),
+                                      context: context,
+                                    );
+                                  },
+                                  child: googleSansText(
+                                    text: "See All",
+                                    colors: ConstantColor.blueBackground,
+                                    fontWeight: FontWeight.bold,
+                                    size: 13.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14.0),
+                            ...pendingTasks.map((task) {
+                              final taskColor = task.type == 'inventory'
+                                  ? const Color(0xFFE65100)
+                                  : task.type == 'expense'
+                                      ? const Color(0xFFC62828)
+                                      : task.type == 'invoice'
+                                          ? ConstantColor.blueBackground
+                                          : const Color(0xFF546E7A);
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 8.0,
+                                      height: 8.0,
+                                      decoration: BoxDecoration(
+                                        color: taskColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10.0),
+                                    Expanded(
+                                      child: googleSansText(
+                                        text: task.title,
+                                        colors: ConstantColor.headingTextPrimary,
+                                        fontWeight: FontWeight.w600,
+                                        size: 14.0,
+                                        textAlign: TextAlign.left,
+                                      ),
+                                    ),
+                                    googleSansText(
+                                      text: formatDate(task.dueDate),
+                                      colors: ConstantColor.paragraphTextSecondary,
+                                      fontWeight: FontWeight.normal,
+                                      size: 12.0,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
 
                 // 3. "Get Down to Business" Card
                 Container(

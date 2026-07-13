@@ -21,8 +21,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       pathString,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -65,6 +66,37 @@ class DatabaseHelper {
         updated_at TEXT NOT NULL
       )
     ''');
+
+    // 4. Create tasks and settings tables
+    await _createTasksAndSettingsTables(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createTasksAndSettingsTables(db);
+    }
+  }
+
+  Future<void> _createTasksAndSettingsTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        due_date TEXT NOT NULL,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        type TEXT NOT NULL,
+        related_item_id TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_settings (
+        key TEXT PRIMARY KEY,
+        value INTEGER NOT NULL
+      )
+    ''');
   }
 
   // Clear cache helper
@@ -93,5 +125,32 @@ class DatabaseHelper {
   Future<int> deleteCacheRow(String tableName, String id) async {
     final db = await database;
     return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Get a boolean setting from local cache
+  Future<bool> getSetting(String key, {bool defaultValue = true}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'local_settings',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+    if (result.isEmpty) {
+      return defaultValue;
+    }
+    return result.first['value'] == 1;
+  }
+
+  // Set a boolean setting in local cache
+  Future<void> setSetting(String key, bool value) async {
+    final db = await database;
+    await db.insert(
+      'local_settings',
+      {
+        'key': key,
+        'value': value ? 1 : 0,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }

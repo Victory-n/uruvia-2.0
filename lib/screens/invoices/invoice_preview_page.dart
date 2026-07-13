@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/screens/invoices/model/invoice_model.dart';
 import '../../constants/colors.dart';
 import '../../widgets/custom_text.dart';
+import '../../offline/database_helper.dart';
+import '../../screens/tasks/task_model.dart';
+import '../../screens/tasks/tasks_repository.dart';
+import '../../services/notification_service.dart';
 
 class InvoicePreviewPage extends StatefulWidget {
   final Invoice invoice;
@@ -15,6 +19,42 @@ class InvoicePreviewPage extends StatefulWidget {
 }
 
 class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
+  @override
+  void initState() {
+    super.initState();
+    _scheduleOverdueReminders();
+  }
+
+  Future<void> _scheduleOverdueReminders() async {
+    final invoice = widget.invoice;
+    if (invoice.status.toLowerCase() == 'paid') return;
+
+    final targetTime = invoice.dueDate.add(const Duration(hours: 24));
+
+    // Schedule notification
+    await NotificationService.instance.scheduleNotification(
+      invoice.invoiceNumber,
+      "Invoice Overdue: ${invoice.invoiceNumber}",
+      "Invoice for ${invoice.customerName} of ₦${formatCurrency(invoice.total)} is now overdue.",
+      targetTime,
+    );
+
+    // If auto create is enabled, add a task with that due date
+    final autoCreate = await DatabaseHelper.instance.getSetting('setting_auto_task_overdue_invoice', defaultValue: true);
+    if (autoCreate) {
+      final task = Task(
+        id: 'invoice_overdue_${invoice.invoiceNumber}',
+        title: "Overdue Invoice: ${invoice.invoiceNumber}",
+        description: "Follow up with client ${invoice.customerName} on payment of ₦${formatCurrency(invoice.total)}.",
+        dueDate: targetTime,
+        type: 'invoice',
+        relatedItemId: invoice.invoiceNumber,
+        createdAt: DateTime.now(),
+      );
+      await TasksRepository.instance.addTask(task);
+    }
+  }
+
   // Mock action helper
   void _showMockActionFeedback(String actionName) {
     showDialog(
@@ -510,10 +550,51 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                     width: double.infinity,
                     height: 50.0,
                     child: ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           widget.invoice.status = 'Paid';
                         });
+
+                        // Cancel Overdue Alerts
+                        await NotificationService.instance.cancelNotification(invoice.invoiceNumber);
+
+                        // Complete Overdue Task
+                        final overdueTaskId = 'invoice_overdue_${invoice.invoiceNumber}';
+                        final overdueTask = Task(
+                          id: overdueTaskId,
+                          title: "Overdue Invoice: ${invoice.invoiceNumber}",
+                          description: "",
+                          dueDate: DateTime.now(),
+                          isCompleted: true,
+                          type: 'invoice',
+                          relatedItemId: invoice.invoiceNumber,
+                          createdAt: DateTime.now(),
+                        );
+                        await TasksRepository.instance.updateTask(overdueTask);
+
+                        // Auto-create Sales Fulfillment Task
+                        final autoSales = await DatabaseHelper.instance.getSetting('setting_auto_task_sales_fulfillment', defaultValue: true);
+                        if (autoSales) {
+                          final saleTask = Task(
+                            id: 'sales_fulfillment_${invoice.invoiceNumber}',
+                            title: "Fulfill Order: ${invoice.invoiceNumber}",
+                            description: "Prepare and deliver order to client ${invoice.customerName}.",
+                            dueDate: DateTime.now().add(const Duration(days: 3)),
+                            type: 'sale',
+                            relatedItemId: invoice.invoiceNumber,
+                            createdAt: DateTime.now(),
+                          );
+                          await TasksRepository.instance.addTask(saleTask);
+
+                          // Schedule notification alert for fulfillment reminder
+                          await NotificationService.instance.scheduleNotification(
+                            saleTask.id,
+                            "Fulfillment Warning: ${saleTask.title}",
+                            saleTask.description,
+                            DateTime.now().add(const Duration(days: 2)),
+                          );
+                        }
+
                         _showMockActionFeedback("marked as paid");
                       },
                       icon: const Icon(

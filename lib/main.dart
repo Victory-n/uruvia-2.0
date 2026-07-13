@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/offline/connectivity_service.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/constants/supabase_config.dart';
+import 'package:uruvia/services/notification_service.dart';
 import 'package:uruvia/welcome/page_one.dart';
 
 void main() async {
@@ -15,6 +16,9 @@ void main() async {
 
   // Initialize background internet checking
   ConnectivityService.instance.initialize();
+
+  // Initialize Notification Service
+  await NotificationService.instance.initialize();
 
   runApp(const MyApp());
 }

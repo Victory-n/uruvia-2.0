@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/screens/auth_screens/login_registration_screens.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/offline/database_helper.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -20,6 +21,35 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _reminders = false;
   bool _autoSync = true;
   bool _darkMode = false;
+
+  // New settings for Auto-Create Tasks & Reminders
+  bool _autoTaskLowStock = true;
+  bool _autoTaskOverdueInvoice = true;
+  bool _autoTaskExpenseReminder = false;
+  bool _autoTaskSalesFulfillment = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final dbHelper = DatabaseHelper.instance;
+    final lowStock = await dbHelper.getSetting('setting_auto_task_low_stock', defaultValue: true);
+    final overdueInvoice = await dbHelper.getSetting('setting_auto_task_overdue_invoice', defaultValue: true);
+    final expenseReminder = await dbHelper.getSetting('setting_auto_task_expense_reminder', defaultValue: false);
+    final salesFulfillment = await dbHelper.getSetting('setting_auto_task_sales_fulfillment', defaultValue: true);
+    
+    if (mounted) {
+      setState(() {
+        _autoTaskLowStock = lowStock;
+        _autoTaskOverdueInvoice = overdueInvoice;
+        _autoTaskExpenseReminder = expenseReminder;
+        _autoTaskSalesFulfillment = salesFulfillment;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -239,6 +269,60 @@ class _SettingsPageState extends State<SettingsPage> {
                       setState(() {
                         _reminders = val;
                       });
+                    },
+                  ),
+                ]),
+                const SizedBox(height: 20.0),
+
+                // 3.5 Settings Group: AUTO-TASKS & REMINDERS
+                _buildSectionHeader("AUTO-TASKS & REMINDERS"),
+                _buildGroupedCard([
+                  _buildListTileWithSwitch(
+                    label: "Low Stock Auto-Tasks",
+                    subtitle: "Auto-create tasks when stock is low",
+                    leadingIcon: CupertinoIcons.archivebox_fill,
+                    value: _autoTaskLowStock,
+                    onChanged: (val) {
+                      setState(() {
+                        _autoTaskLowStock = val;
+                      });
+                      DatabaseHelper.instance.setSetting('setting_auto_task_low_stock', val);
+                    },
+                  ),
+                  _buildListTileWithSwitch(
+                    label: "Overdue Invoice Follow-ups",
+                    subtitle: "Auto-create tasks when invoice is overdue",
+                    leadingIcon: CupertinoIcons.doc_text_fill,
+                    value: _autoTaskOverdueInvoice,
+                    onChanged: (val) {
+                      setState(() {
+                        _autoTaskOverdueInvoice = val;
+                      });
+                      DatabaseHelper.instance.setSetting('setting_auto_task_overdue_invoice', val);
+                    },
+                  ),
+                  _buildListTileWithSwitch(
+                    label: "Expense Payment Reminders",
+                    subtitle: "Auto-create tasks for expense reminders",
+                    leadingIcon: CupertinoIcons.creditcard_fill,
+                    value: _autoTaskExpenseReminder,
+                    onChanged: (val) {
+                      setState(() {
+                        _autoTaskExpenseReminder = val;
+                      });
+                      DatabaseHelper.instance.setSetting('setting_auto_task_expense_reminder', val);
+                    },
+                  ),
+                  _buildListTileWithSwitch(
+                    label: "Sales Fulfillment Tasks",
+                    subtitle: "Auto-create tasks when order is paid",
+                    leadingIcon: CupertinoIcons.bag_fill,
+                    value: _autoTaskSalesFulfillment,
+                    onChanged: (val) {
+                      setState(() {
+                        _autoTaskSalesFulfillment = val;
+                      });
+                      DatabaseHelper.instance.setSetting('setting_auto_task_sales_fulfillment', val);
                     },
                   ),
                 ]),

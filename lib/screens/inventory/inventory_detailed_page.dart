@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/offline/inventory_repository.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/offline/database_helper.dart';
+import 'package:uruvia/screens/tasks/task_model.dart';
+import 'package:uruvia/screens/tasks/tasks_repository.dart';
+import 'package:uruvia/services/notification_service.dart';
 
 class InventoryDetailedPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -63,6 +67,33 @@ class _InventoryDetailedPageState extends State<InventoryDetailedPage> {
 
     try {
       await InventoryRepository.instance.updateInventoryItem(widget.product['id'] as String, updates);
+      
+      final itemId = widget.product['id'] as String? ?? '';
+      final itemName = widget.product['name'] as String? ?? 'Item';
+      final sku = widget.product['sku'] as String? ?? '';
+
+      if (_stock <= threshold) {
+        final autoCreate = await DatabaseHelper.instance.getSetting('setting_auto_task_low_stock', defaultValue: true);
+        if (autoCreate) {
+          final task = Task(
+            id: 'low_stock_$itemId',
+            title: "Reorder: $itemName",
+            description: "Stock is low: $_stock items remaining (Threshold: $threshold). SKU: $sku",
+            dueDate: DateTime.now().add(const Duration(days: 2)),
+            type: 'inventory',
+            relatedItemId: itemId,
+            createdAt: DateTime.now(),
+          );
+          await TasksRepository.instance.addTask(task);
+        } else {
+          final existingTasks = await TasksRepository.instance.getTasks();
+          final hasPending = existingTasks.any((t) => t.relatedItemId == itemId && !t.isCompleted && t.type == 'inventory');
+          if (!hasPending && mounted) {
+            await _showLowStockPromptDialog(itemId, itemName, _stock, threshold, sku);
+          }
+        }
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -88,6 +119,75 @@ class _InventoryDetailedPageState extends State<InventoryDetailedPage> {
         });
       }
     }
+  }
+
+  Future<void> _showLowStockPromptDialog(String itemId, String itemName, int stock, int threshold, String sku) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        title: Row(
+          children: [
+            const Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.orange, size: 24.0),
+            const SizedBox(width: 8.0),
+            googleSansText(
+              text: "Low Stock Alert",
+              colors: ConstantColor.headingTextPrimary,
+              fontWeight: FontWeight.bold,
+              size: 18.0,
+            ),
+          ],
+        ),
+        content: googleSansText(
+          text: "$itemName (SKU: $sku) is low on stock ($stock remaining, threshold is $threshold). Would you like to set a reorder task?",
+          colors: ConstantColor.paragraphTextPrimary,
+          fontWeight: FontWeight.normal,
+          size: 14.5,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: googleSansText(
+              text: "Ignore",
+              colors: ConstantColor.paragraphTextSecondary,
+              fontWeight: FontWeight.bold,
+              size: 14.0,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final task = Task(
+                id: 'low_stock_$itemId',
+                title: "Reorder: $itemName",
+                description: "Stock is low: $stock items remaining (Threshold: $threshold). SKU: $sku",
+                dueDate: DateTime.now().add(const Duration(days: 2)),
+                type: 'inventory',
+                relatedItemId: itemId,
+                createdAt: DateTime.now(),
+              );
+              await TasksRepository.instance.addTask(task);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ConstantColor.blueBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              elevation: 0.0,
+            ),
+            child: googleSansText(
+              text: "Set Task",
+              colors: Colors.white,
+              fontWeight: FontWeight.bold,
+              size: 14.0,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _deleteProduct() async {

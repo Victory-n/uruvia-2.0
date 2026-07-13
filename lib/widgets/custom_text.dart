@@ -38,7 +38,7 @@ Widget interText({
 
 Widget googleSansText({
   required String text,
-  required Color colors,
+  Color? colors,
   required FontWeight fontWeight,
   required double size,
   bool? softWrap,
