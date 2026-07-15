@@ -27,7 +27,10 @@ class LoginRegistrationScreens extends StatelessWidget {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 24.0,
+            ),
             child: Column(
               children: [
                 const Spacer(flex: 2),
@@ -45,7 +48,7 @@ class LoginRegistrationScreens extends StatelessWidget {
                             color: Colors.black.withAlpha(13),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       child: Image.asset(
@@ -73,19 +76,6 @@ class LoginRegistrationScreens extends StatelessWidget {
                 ),
 
                 const Spacer(flex: 2),
-
-                // Center Illustration with responsive constraint
-                SizedBox(
-                  height: size.height * 0.25,
-                  child: Center(
-                    child: Image.asset(
-                      "assets/img/3d-assets.png",
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-
-                const Spacer(flex: 3),
 
                 // Actions & Auth Options
                 Column(
@@ -157,14 +147,16 @@ class LoginRegistrationScreens extends StatelessWidget {
                         Expanded(
                           child: Container(
                             height: 1.0,
-                            color: ConstantColor.paragraphTextSecondary.withAlpha(38),
+                            color: ConstantColor.paragraphTextSecondary
+                                .withAlpha(38),
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: interText(
                             text: "OR CONTINUE WITH",
-                            colors: ConstantColor.paragraphTextSecondary.withAlpha(178),
+                            colors: ConstantColor.paragraphTextSecondary
+                                .withAlpha(178),
                             fontWeight: FontWeight.w600,
                             size: 11.0,
                             textAlign: TextAlign.center,
@@ -173,7 +165,8 @@ class LoginRegistrationScreens extends StatelessWidget {
                         Expanded(
                           child: Container(
                             height: 1.0,
-                            color: ConstantColor.paragraphTextSecondary.withAlpha(38),
+                            color: ConstantColor.paragraphTextSecondary
+                                .withAlpha(38),
                           ),
                         ),
                       ],
@@ -195,7 +188,8 @@ class LoginRegistrationScreens extends StatelessWidget {
                               shape: BoxShape.circle,
                               color: Colors.white,
                               border: Border.all(
-                                color: ConstantColor.paragraphTextSecondary.withAlpha(38),
+                                color: ConstantColor.paragraphTextSecondary
+                                    .withAlpha(38),
                                 width: 1.0,
                               ),
                               boxShadow: [
@@ -203,7 +197,7 @@ class LoginRegistrationScreens extends StatelessWidget {
                                   color: Colors.black.withAlpha(8),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
-                                )
+                                ),
                               ],
                             ),
                             child: Center(
@@ -231,7 +225,8 @@ class LoginRegistrationScreens extends StatelessWidget {
                               shape: BoxShape.circle,
                               color: Colors.white,
                               border: Border.all(
-                                color: ConstantColor.paragraphTextSecondary.withAlpha(38),
+                                color: ConstantColor.paragraphTextSecondary
+                                    .withAlpha(38),
                                 width: 1.0,
                               ),
                               boxShadow: [
@@ -239,7 +234,7 @@ class LoginRegistrationScreens extends StatelessWidget {
                                   color: Colors.black.withAlpha(8),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
-                                )
+                                ),
                               ],
                             ),
                             child: Center(
@@ -259,7 +254,7 @@ class LoginRegistrationScreens extends StatelessWidget {
                     ),
                   ],
                 ),
-                const Spacer(flex: 1),
+                const Spacer(flex: 2),
               ],
             ),
           ),

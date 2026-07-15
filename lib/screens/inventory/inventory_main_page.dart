@@ -76,7 +76,10 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
 
   Future<void> _checkLowStockItems(List<Map<String, dynamic>> items) async {
     final dbHelper = DatabaseHelper.instance;
-    final autoCreate = await dbHelper.getSetting('setting_auto_task_low_stock', defaultValue: true);
+    final autoCreate = await dbHelper.getSetting(
+      'setting_auto_task_low_stock',
+      defaultValue: true,
+    );
 
     for (var item in items) {
       final int stock = item['stock'] as int? ?? 0;
@@ -91,7 +94,8 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
           final task = Task(
             id: 'low_stock_$itemId',
             title: "Reorder: $itemName",
-            description: "Stock is low: $stock items remaining (Threshold: $threshold). SKU: $sku",
+            description:
+                "Stock is low: $stock items remaining (Threshold: $threshold). SKU: $sku",
             dueDate: DateTime.now().add(const Duration(days: 2)),
             type: 'inventory',
             relatedItemId: itemId,
@@ -101,7 +105,12 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
         } else {
           // Check if a task is already pending
           final existingTasks = await TasksRepository.instance.getTasks();
-          final hasPending = existingTasks.any((t) => t.relatedItemId == itemId && !t.isCompleted && t.type == 'inventory');
+          final hasPending = existingTasks.any(
+            (t) =>
+                t.relatedItemId == itemId &&
+                !t.isCompleted &&
+                t.type == 'inventory',
+          );
           if (!hasPending) {
             // Show instant notification
             await NotificationService.instance.showInstantNotification(
@@ -119,7 +128,13 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
     }
   }
 
-  void _showLowStockDialog(String itemId, String itemName, int stock, int threshold, String sku) {
+  void _showLowStockDialog(
+    String itemId,
+    String itemName,
+    int stock,
+    int threshold,
+    String sku,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -129,7 +144,11 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
         ),
         title: Row(
           children: [
-            const Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.orange, size: 24.0),
+            const Icon(
+              CupertinoIcons.exclamationmark_triangle_fill,
+              color: Colors.orange,
+              size: 24.0,
+            ),
             const SizedBox(width: 8.0),
             googleSansText(
               text: "Low Stock Alert",
@@ -140,7 +159,8 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
           ],
         ),
         content: googleSansText(
-          text: "$itemName (SKU: $sku) is low on stock ($stock remaining, threshold is $threshold). Would you like to set a reorder task?",
+          text:
+              "$itemName (SKU: $sku) is low on stock ($stock remaining, threshold is $threshold). Would you like to set a reorder task?",
           colors: ConstantColor.paragraphTextPrimary,
           fontWeight: FontWeight.normal,
           size: 14.5,
@@ -161,7 +181,8 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
               final task = Task(
                 id: 'low_stock_$itemId',
                 title: "Reorder: $itemName",
-                description: "Stock is low: $stock items remaining (Threshold: $threshold). SKU: $sku",
+                description:
+                    "Stock is low: $stock items remaining (Threshold: $threshold). SKU: $sku",
                 dueDate: DateTime.now().add(const Duration(days: 2)),
                 type: 'inventory',
                 relatedItemId: itemId,
@@ -221,6 +242,13 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
       appBar: AppBar(
         elevation: 1.0,
         backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(
+            CupertinoIcons.bars,
+            color: ConstantColor.headingTextPrimary,
+          ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
         title: Row(
           children: [
             const CircleAvatar(

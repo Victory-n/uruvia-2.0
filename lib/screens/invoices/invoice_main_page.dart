@@ -49,16 +49,12 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
         elevation: 0.0,
         scrolledUnderElevation: 0.0,
         backgroundColor: const Color(0xFFF9FAFC),
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(
-                CupertinoIcons.bars,
-                color: ConstantColor.headingTextPrimary,
-              ),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
+        leading: IconButton(
+          icon: const Icon(
+            CupertinoIcons.bars,
+            color: ConstantColor.headingTextPrimary,
+          ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
         title: googleSansText(
           text: "Invoices",

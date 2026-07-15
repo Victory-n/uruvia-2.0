@@ -45,16 +45,12 @@ class _DashboardState extends State<Dashboard> {
         elevation: 0.0,
         scrolledUnderElevation: 0.0,
         backgroundColor: const Color(0xFFF9FAFC),
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(
-                CupertinoIcons.bars,
-                color: ConstantColor.headingTextPrimary,
-              ),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
+        leading: IconButton(
+          icon: const Icon(
+            CupertinoIcons.bars,
+            color: ConstantColor.headingTextPrimary,
+          ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -226,7 +222,10 @@ class _DashboardState extends State<Dashboard> {
                         return const SizedBox.shrink();
                       }
                       final tasks = snapshot.data ?? [];
-                      final pendingTasks = tasks.where((t) => !t.isCompleted).take(3).toList();
+                      final pendingTasks = tasks
+                          .where((t) => !t.isCompleted)
+                          .take(3)
+                          .toList();
                       if (pendingTasks.isEmpty) {
                         return const SizedBox.shrink();
                       }
@@ -289,10 +288,10 @@ class _DashboardState extends State<Dashboard> {
                               final taskColor = task.type == 'inventory'
                                   ? const Color(0xFFE65100)
                                   : task.type == 'expense'
-                                      ? const Color(0xFFC62828)
-                                      : task.type == 'invoice'
-                                          ? ConstantColor.blueBackground
-                                          : const Color(0xFF546E7A);
+                                  ? const Color(0xFFC62828)
+                                  : task.type == 'invoice'
+                                  ? ConstantColor.blueBackground
+                                  : const Color(0xFF546E7A);
 
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 10.0),
@@ -310,7 +309,8 @@ class _DashboardState extends State<Dashboard> {
                                     Expanded(
                                       child: googleSansText(
                                         text: task.title,
-                                        colors: ConstantColor.headingTextPrimary,
+                                        colors:
+                                            ConstantColor.headingTextPrimary,
                                         fontWeight: FontWeight.w600,
                                         size: 14.0,
                                         textAlign: TextAlign.left,
@@ -318,7 +318,8 @@ class _DashboardState extends State<Dashboard> {
                                     ),
                                     googleSansText(
                                       text: formatDate(task.dueDate),
-                                      colors: ConstantColor.paragraphTextSecondary,
+                                      colors:
+                                          ConstantColor.paragraphTextSecondary,
                                       fontWeight: FontWeight.normal,
                                       size: 12.0,
                                     ),

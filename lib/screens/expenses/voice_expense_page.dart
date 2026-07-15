@@ -3,6 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/services/voice_expense_service.dart';
+import 'package:uruvia/services/vocabulary_map.dart';
+import 'package:uruvia/offline/database_helper.dart';
 
 class VoiceExpensePage extends StatefulWidget {
   const VoiceExpensePage({super.key});
@@ -12,11 +15,263 @@ class VoiceExpensePage extends StatefulWidget {
 }
 
 class _VoiceExpensePageState extends State<VoiceExpensePage> {
-  // Mock Speech Recording states
-  bool _isListening = true;
+  final VoiceExpenseService _voiceService = VoiceExpenseService();
+  bool _isListening = false;
+  bool _isInitialized = false;
+  String _transcribedText = '';
+  String _initializationError = '';
+  bool _showDisclosure = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkDisclosureStatus();
+  }
+
+  Future<void> _checkDisclosureStatus() async {
+    final hasSeen = await DatabaseHelper.instance.getSetting('has_seen_voice_permission_disclosure', defaultValue: false);
+    if (hasSeen) {
+      if (mounted) {
+        setState(() {
+          _showDisclosure = false;
+        });
+        _initSpeech();
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _showDisclosure = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _initSpeech() async {
+    final available = await _voiceService.initialize(
+      onStatus: (status) {
+        print("Speech Status: $status");
+        if (status == 'done' || status == 'notListening') {
+          if (mounted) {
+            setState(() {
+              _isListening = false;
+            });
+          }
+        }
+      },
+      onError: (error) {
+        print("Speech Error: $error");
+        if (mounted) {
+          setState(() {
+            _isListening = false;
+            _initializationError = error;
+          });
+        }
+      },
+    );
+    
+    if (mounted) {
+      setState(() {
+        _isInitialized = available;
+        if (!available) {
+          _initializationError = "Speech recognition not available. Please check permissions.";
+          _showDisclosure = true;
+          DatabaseHelper.instance.setSetting('has_seen_voice_permission_disclosure', false);
+        } else {
+          _startListening();
+        }
+      });
+    }
+  }
+
+  void _startListening() async {
+    if (!_isInitialized) return;
+    setState(() {
+      _isListening = true;
+      _transcribedText = '';
+      _initializationError = '';
+    });
+    try {
+      await _voiceService.startListening(
+        onResult: (text) {
+          if (mounted) {
+            setState(() {
+              _transcribedText = text;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+          _initializationError = e.toString();
+        });
+      }
+    }
+  }
+
+  void _stopListening() async {
+    await _voiceService.stopListening();
+    if (mounted) {
+      setState(() {
+        _isListening = false;
+      });
+    }
+  }
+
+  void _toggleListening() {
+    if (_isListening) {
+      _stopListening();
+    } else {
+      _startListening();
+    }
+  }
+
+  @override
+  void dispose() {
+    _voiceService.cancelListening();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_showDisclosure) {
+      return Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24.0),
+            topRight: Radius.circular(24.0),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 1. Drag Handle
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  width: 36.0,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(2.25),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24.0),
+
+              // 2. Icon and Title
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFEFF6FF),
+                ),
+                child: const Icon(
+                  CupertinoIcons.mic_circle_fill,
+                  color: ConstantColor.blueBackground,
+                  size: 48.0,
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              googleSansText(
+                text: "Enable Voice Logging",
+                colors: ConstantColor.headingTextPrimary,
+                fontWeight: FontWeight.bold,
+                size: 20.0,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12.0),
+              googleSansText(
+                text: "To quickly log expenses by speaking, Uruvia requires Microphone and Speech-to-Text permissions. These features enable Uruvia to hear and transcribe your voice logs locally on your device.",
+                colors: ConstantColor.paragraphTextSecondary,
+                fontWeight: FontWeight.normal,
+                size: 13.5,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24.0),
+
+              // 3. Disclosure Details List
+              _buildDisclosureRow(
+                icon: CupertinoIcons.mic_fill,
+                title: "Microphone Access",
+                description: "Used to capture your voice when recording an expense log.",
+              ),
+              const SizedBox(height: 16.0),
+              _buildDisclosureRow(
+                icon: CupertinoIcons.waveform,
+                title: "Speech Recognition",
+                description: "Processes and transcribes your audio into text locally on this device.",
+              ),
+              const SizedBox(height: 32.0),
+
+              // 4. Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                      child: googleSansText(
+                        text: "Not Now",
+                        colors: const Color(0xFF475569),
+                        fontWeight: FontWeight.bold,
+                        size: 14.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await DatabaseHelper.instance.setSetting('has_seen_voice_permission_disclosure', true);
+                        if (mounted) {
+                          setState(() {
+                            _showDisclosure = false;
+                          });
+                          _initSpeech();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0.0,
+                        backgroundColor: ConstantColor.blueBackground,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                      child: googleSansText(
+                        text: "Enable",
+                        colors: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        size: 14.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -65,9 +320,7 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
                 // Refresh Button
                 IconButton(
                   onPressed: () {
-                    setState(() {
-                      _isListening = true;
-                    });
+                    _startListening();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: googleSansText(
@@ -109,9 +362,9 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
             ),
             const SizedBox(height: 12.0),
 
-            // 3. Prompt Section Card
+            // 3. Prompt or Transcribed Text Section
             googleSansText(
-              text: "Say what you bought, e.g.,",
+              text: _transcribedText.isNotEmpty ? "Transcription" : "Say what you bought, e.g.,",
               colors: ConstantColor.paragraphTextSecondary,
               fontWeight: FontWeight.normal,
               size: 13.0,
@@ -121,18 +374,32 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
               width: double.infinity,
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F6FE),
+                color: _transcribedText.isNotEmpty ? Colors.white : const Color(0xFFF2F6FE),
                 borderRadius: BorderRadius.circular(14.0),
-                border: Border.all(color: const Color(0xFFE3EDFB)),
+                border: Border.all(
+                  color: _transcribedText.isNotEmpty ? const Color(0xFFE2E8F0) : const Color(0xFFE3EDFB),
+                ),
               ),
               child: googleSansText(
-                text: "\"Bought diesel 20 litres for 12,000 naira\"",
+                text: _transcribedText.isNotEmpty
+                    ? _transcribedText
+                    : "\"Bought diesel 20 litres for 12,000 naira\"",
                 colors: ConstantColor.headingTextPrimary,
-                fontWeight: FontWeight.bold,
+                fontWeight: _transcribedText.isNotEmpty ? FontWeight.normal : FontWeight.bold,
                 size: 14.5,
                 textAlign: TextAlign.center,
               ),
             ),
+            if (_initializationError.isNotEmpty) ...[
+              const SizedBox(height: 10.0),
+              googleSansText(
+                text: _initializationError,
+                colors: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                size: 12.0,
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: 36.0),
 
             // 4. Concentric Pulsing Listening Circles
@@ -174,11 +441,7 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
                 ),
                 // Inner Microphone Circle Button
                 GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isListening = !_isListening;
-                    });
-                  },
+                  onTap: _isInitialized ? _toggleListening : _initSpeech,
                   child: Container(
                     width: 74.0,
                     height: 74.0,
@@ -283,7 +546,10 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      _stopListening();
+                      Navigator.pop(context);
+                    },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(
                         color: Color(0xFFE2E8F0),
@@ -305,26 +571,21 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
                 const SizedBox(width: 12.0),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      // Trigger dynamic autofill prompt
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: googleSansText(
-                            text:
-                                "Processed voice input: Filled Diesel expense ₦12,000!",
-                            colors: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            size: 14.0,
-                          ),
-                          backgroundColor: ConstantColor.blueBackground,
-                        ),
-                      );
-                    },
+                    onPressed: _transcribedText.trim().isEmpty
+                        ? null
+                        : () {
+                            _stopListening();
+                            final parsedResult = parseExpenseFromText(_transcribedText);
+                            Navigator.pop(context, parsedResult);
+                          },
                     style: ElevatedButton.styleFrom(
                       elevation: 0.0,
-                      backgroundColor: const Color(0xFFEFF6FF),
-                      foregroundColor: const Color(0xFF2563EB),
+                      backgroundColor: _transcribedText.trim().isEmpty
+                          ? Colors.grey.shade100
+                          : const Color(0xFFEFF6FF),
+                      foregroundColor: _transcribedText.trim().isEmpty
+                          ? Colors.grey.shade400
+                          : const Color(0xFF2563EB),
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
@@ -332,7 +593,9 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
                     ),
                     child: googleSansText(
                       text: "Confirm",
-                      colors: const Color(0xFF2563EB),
+                      colors: _transcribedText.trim().isEmpty
+                          ? Colors.grey.shade400
+                          : const Color(0xFF2563EB),
                       fontWeight: FontWeight.bold,
                       size: 14.5,
                     ),
@@ -357,6 +620,51 @@ class _VoiceExpensePageState extends State<VoiceExpensePage> {
         color: const Color(0xFF3B82F6),
         borderRadius: BorderRadius.circular(1.75),
       ),
+    );
+  }
+
+  Widget _buildDisclosureRow({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFF475569),
+            size: 20.0,
+          ),
+        ),
+        const SizedBox(width: 12.0),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              googleSansText(
+                text: title,
+                colors: ConstantColor.headingTextPrimary,
+                fontWeight: FontWeight.bold,
+                size: 14.0,
+              ),
+              const SizedBox(height: 2.0),
+              googleSansText(
+                text: description,
+                colors: ConstantColor.paragraphTextSecondary,
+                fontWeight: FontWeight.normal,
+                size: 12.0,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

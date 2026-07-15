@@ -522,16 +522,12 @@ class _TasksMainPageState extends State<TasksMainPage>
         elevation: 0.0,
         scrolledUnderElevation: 0.0,
         backgroundColor: Colors.white,
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(
-                CupertinoIcons.bars,
-                color: ConstantColor.headingTextPrimary,
-              ),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
+        leading: IconButton(
+          icon: const Icon(
+            CupertinoIcons.bars,
+            color: ConstantColor.headingTextPrimary,
+          ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
         title: googleSansText(
           text: "Tasks & Reminders",

@@ -771,7 +771,49 @@ class _AddExpensePageState extends State<AddExpensePage> {
                           color: Colors.white,
                           elevation: 2.0,
                           child: IconButton(
-                            onPressed: () => showHalfScreenModal(context),
+                            onPressed: () async {
+                              final result = await showHalfScreenModal(context);
+                              if (result != null && mounted) {
+                                setState(() {
+                                  if (result['amount'] != null) {
+                                    final double amt = result['amount'];
+                                    _amountController.text = amt == amt.toInt() ? amt.toInt().toString() : amt.toString();
+                                  }
+                                  if (result['merchant'] != null && result['merchant'] != 'Generic Merchant') {
+                                    _vendorController.text = result['merchant'];
+                                  }
+                                  if (result['description'] != null) {
+                                    _descriptionController.text = result['description'];
+                                  }
+                                  if (result['category'] != null) {
+                                    final cat = result['category'];
+                                    if (_categories.contains(cat)) {
+                                      _selectedCategory = cat;
+                                    }
+                                  }
+                                });
+
+                                String feedback = "Autofilled: ";
+                                final List<String> filled = [];
+                                if (result['amount'] != null) filled.add("Amount (₦${result['amount']})");
+                                if (result['description'] != null && result['description'].isNotEmpty) filled.add("Description");
+                                if (result['merchant'] != null && result['merchant'] != 'Generic Merchant') filled.add("Merchant");
+                                if (result['category'] != null) filled.add("Category (${result['category']})");
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: googleSansText(
+                                      text: feedback + (filled.isEmpty ? "nothing" : filled.join(", ")),
+                                      colors: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      size: 13.0,
+                                    ),
+                                    backgroundColor: ConstantColor.blueBackground,
+                                    duration: const Duration(seconds: 3),
+                                  ),
+                                );
+                              }
+                            },
                             icon: Icon(
                               Platform.isAndroid
                                   ? Icons.mic
