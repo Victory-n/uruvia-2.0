@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:route_transitions/route_transitions.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 import 'package:uruvia/side_bar.dart';
@@ -84,8 +82,6 @@ class _OrganizationOnboardingScreenState
   static const Color _inputBorderColor = Color(0xFFE5E7EB);
   static const Color _gradientStart = Color(0xFFEEF2FF);
   static const Color _gradientEnd = Color(0xFFE0E7FF);
-
-
 
   final List<String> _businessSizes = [
     '1 - 5 employees (Micro)',
@@ -550,7 +546,6 @@ class _OrganizationOnboardingScreenState
               ),
             ),
           ),
-
         ],
       ),
     );

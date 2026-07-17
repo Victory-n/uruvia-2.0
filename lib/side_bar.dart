@@ -12,6 +12,7 @@ import 'package:uruvia/screens/inventory/inventory_main_page.dart';
 import 'package:uruvia/screens/invoices/invoice_main_page.dart';
 import 'package:uruvia/screens/settings/settings_page.dart';
 import 'package:uruvia/screens/tasks/tasks_main_page.dart';
+import 'package:uruvia/screens/support/support_page.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 import 'package:uruvia/widgets/offline_banner.dart';
 
@@ -37,6 +38,7 @@ class _SideBarPageState extends State<SideBarPage> {
     NavItem(label: 'Expenses', icon: Icons.payments_outlined, screen: ExpenseListPage()),
     NavItem(label: 'Business Health', icon: Icons.health_and_safety_outlined, screen: BusinessHealthPage()),
     NavItem(label: 'Settings & Profile', icon: Icons.settings_outlined, screen: SettingsPage()),
+    NavItem(label: 'Support & Help', icon: Icons.help_outline, screen: SupportPage()),
   ];
 
   void _onItemTapped(int index) {

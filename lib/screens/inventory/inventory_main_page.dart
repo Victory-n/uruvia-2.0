@@ -242,13 +242,15 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
       appBar: AppBar(
         elevation: 1.0,
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(
-            CupertinoIcons.bars,
-            color: ConstantColor.headingTextPrimary,
-          ),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
+        leading: Navigator.canPop(context)
+            ? null
+            : IconButton(
+                icon: const Icon(
+                  CupertinoIcons.bars,
+                  color: ConstantColor.headingTextPrimary,
+                ),
+                onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
+              ),
         title: Row(
           children: [
             const CircleAvatar(
@@ -267,7 +269,7 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
             ),
           ],
         ),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: ConnectivityService.instance.isConnected,

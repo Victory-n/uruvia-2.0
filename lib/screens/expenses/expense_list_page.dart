@@ -163,13 +163,15 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
         elevation: 0.0,
         scrolledUnderElevation: 0.0,
         backgroundColor: const Color(0xFFF9FAFC),
-        leading: IconButton(
-          icon: const Icon(
-            CupertinoIcons.bars,
-            color: ConstantColor.headingTextPrimary,
-          ),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
+        leading: Navigator.canPop(context)
+            ? null
+            : IconButton(
+                icon: const Icon(
+                  CupertinoIcons.bars,
+                  color: ConstantColor.headingTextPrimary,
+                ),
+                onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
+              ),
         title: googleSansText(
           text: "Expenses",
           colors: ConstantColor.headingTextPrimary,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/screens/expenses/voice_expense_page.dart';
-import 'package:uruvia/widgets/half_screen_page.dart';
 
 Future<Map<String, dynamic>?> showHalfScreenModal(BuildContext context) {
   return showModalBottomSheet<Map<String, dynamic>>(
@@ -9,9 +8,7 @@ Future<Map<String, dynamic>?> showHalfScreenModal(BuildContext context) {
     builder: (BuildContext context) {
       return const FractionallySizedBox(
         heightFactor: 0.8,
-        child: SingleChildScrollView(
-          child: VoiceExpensePage(),
-        ),
+        child: SingleChildScrollView(child: VoiceExpensePage()),
       );
     },
   );

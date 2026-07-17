@@ -45,18 +45,20 @@ class _DashboardState extends State<Dashboard> {
         elevation: 0.0,
         scrolledUnderElevation: 0.0,
         backgroundColor: const Color(0xFFF9FAFC),
-        leading: IconButton(
-          icon: const Icon(
-            CupertinoIcons.bars,
-            color: ConstantColor.headingTextPrimary,
-          ),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
+        leading: Navigator.canPop(context)
+            ? null
+            : IconButton(
+                icon: const Icon(
+                  CupertinoIcons.bars,
+                  color: ConstantColor.headingTextPrimary,
+                ),
+                onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
+              ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: () => Scaffold.of(context).openDrawer(),
+              onTap: () => Scaffold.maybeOf(context)?.openDrawer(),
               child: CircleAvatar(
                 radius: 15,
                 backgroundColor: const Color(0xFFEFF6FF),
