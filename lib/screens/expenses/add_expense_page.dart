@@ -10,6 +10,7 @@ import 'package:uruvia/offline/database_helper.dart';
 import 'package:uruvia/screens/tasks/task_model.dart';
 import 'package:uruvia/screens/tasks/tasks_repository.dart';
 import 'package:uruvia/services/notification_service.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class AddExpensePage extends StatefulWidget {
   const AddExpensePage({super.key});
@@ -192,33 +193,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
     final vendorText = _vendorController.text.trim();
 
     if (amountText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: googleSansText(
-            text: "Please enter an expense amount",
-            colors: Colors.white,
-            fontWeight: FontWeight.normal,
-            size: 14.0,
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      CustomSnackbar.showFailed(context, "Please enter an expense amount");
       return;
     }
 
     final amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: googleSansText(
-            text: "Please enter a valid expense amount",
-            colors: Colors.white,
-            fontWeight: FontWeight.normal,
-            size: 14.0,
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      CustomSnackbar.showFailed(context, "Please enter a valid expense amount");
       return;
     }
 
@@ -253,23 +234,24 @@ class _AddExpensePageState extends State<AddExpensePage> {
         notificationTime,
       );
     }
+    final expenseId = 'exp_${DateTime.now().millisecondsSinceEpoch}';
+    final dbHelper = DatabaseHelper.instance;
+    await dbHelper.cacheUpsert('local_expenses', {
+      'id': expenseId,
+      'amount': amount,
+      'status': 'Approved',
+      'created_at': _selectedDate.toUtc().toIso8601String(),
+      'vendor': vendor,
+      'category': _selectedCategory,
+    });
 
     // Pop back and show success feedback
     if (mounted) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: googleSansText(
-            text: _hasReceipt
-                ? "Recorded expense: ₦${formatCurrency(amount)} at $vendor (Receipt Attached)!"
-                : "Recorded expense: ₦${formatCurrency(amount)} at $vendor!",
-            colors: Colors.white,
-            fontWeight: FontWeight.bold,
-            size: 14.0,
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+      final msg = _hasReceipt
+          ? "Recorded expense: ₦${formatCurrency(amount)} at $vendor (Receipt Attached)!"
+          : "Recorded expense: ₦${formatCurrency(amount)} at $vendor!";
+      CustomSnackbar.showSuccess(context, msg);
     }
   }
 
@@ -800,17 +782,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                 if (result['merchant'] != null && result['merchant'] != 'Generic Merchant') filled.add("Merchant");
                                 if (result['category'] != null) filled.add("Category (${result['category']})");
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: googleSansText(
-                                      text: feedback + (filled.isEmpty ? "nothing" : filled.join(", ")),
-                                      colors: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      size: 13.0,
-                                    ),
-                                    backgroundColor: ConstantColor.blueBackground,
-                                    duration: const Duration(seconds: 3),
-                                  ),
+                                CustomSnackbar.showSuccess(
+                                  context,
+                                  feedback + (filled.isEmpty ? "nothing" : filled.join(", ")),
                                 );
                               }
                             },

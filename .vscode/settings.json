@@ -1,3 +1,7 @@
 {
-  "emulator.emulatorPathWindows": "C:\\Users\\ndukw\\AppData\\Local\\Android\\Sdk\\emulator"
+  "emulator.emulatorPathWindows": "C:\\Users\\ndukw\\AppData\\Local\\Android\\Sdk\\emulator",
+  "editor.wordWrap": "on",
+  "files.exclude": {
+    "**/.dart": true
+  }
 }

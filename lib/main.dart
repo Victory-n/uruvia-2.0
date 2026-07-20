@@ -5,6 +5,7 @@ import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/constants/supabase_config.dart';
 import 'package:uruvia/services/notification_service.dart';
 import 'package:uruvia/welcome/page_one.dart';
+import 'package:uruvia/screens/auth_screens/auto_login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +30,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+
     return MaterialApp(
       title: 'Uruvia',
       debugShowCheckedModeBanner: false,
@@ -37,7 +40,7 @@ class MyApp extends StatelessWidget {
           seedColor: ConstantColor.lightBackground,
         ),
       ),
-      home: PageOne(),
+      home: session != null ? const AutoLogin() : const PageOne(),
     );
   }
 }

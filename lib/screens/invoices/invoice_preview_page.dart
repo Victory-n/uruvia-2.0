@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/screens/invoices/model/invoice_model.dart';
 import '../../constants/colors.dart';
 import '../../widgets/custom_text.dart';
+import '../../widgets/whatsapp_share_sheet.dart';
 import '../../offline/database_helper.dart';
 import '../../screens/tasks/task_model.dart';
 import '../../screens/tasks/tasks_repository.dart';
 import '../../services/notification_service.dart';
+import 'package:uruvia/screens/expenses/sales/sales_repository.dart';
 
 class InvoicePreviewPage extends StatefulWidget {
   final Invoice invoice;
@@ -555,6 +557,9 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                           widget.invoice.status = 'Paid';
                         });
 
+                        // Automatically add Paid Invoice as a Sale
+                        await SalesRepository.instance.addSaleFromInvoice(widget.invoice);
+
                         // Cancel Overdue Alerts
                         await NotificationService.instance.cancelNotification(invoice.invoiceNumber);
 
@@ -669,8 +674,16 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                     const SizedBox(width: 12.0),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () =>
-                            _showMockActionFeedback("shared with client"),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => WhatsAppShareSheet(
+                              invoice: widget.invoice,
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           elevation: 0.0,
                           backgroundColor: ConstantColor.blueBackground,

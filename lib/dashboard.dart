@@ -18,6 +18,52 @@ import 'package:uruvia/screens/tasks/task_model.dart';
 import 'package:uruvia/screens/tasks/tasks_repository.dart';
 import 'package:uruvia/screens/tasks/tasks_main_page.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:uruvia/offline/database_helper.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
+
+class DashboardInvoice {
+  final String id;
+  final double amount;
+  final String status; // 'Paid', 'Sent', 'Overdue', 'Draft'
+  final DateTime date;
+
+  DashboardInvoice({
+    required this.id,
+    required this.amount,
+    required this.status,
+    required this.date,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'amount': amount,
+        'status': status,
+        'created_at': date.toIso8601String(),
+      };
+}
+
+class DashboardExpense {
+  final String id;
+  final double amount;
+  final String status; // 'Approved', 'Pending', 'Rejected'
+  final DateTime date;
+
+  DashboardExpense({
+    required this.id,
+    required this.amount,
+    required this.status,
+    required this.date,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'amount': amount,
+        'status': status,
+        'created_at': date.toIso8601String(),
+      };
+}
+
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
 
@@ -26,6 +72,152 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
+  String _selectedPeriod = 'This Month';
+
+  final List<String> _periods = [
+    'This Month',
+    'This Quarter',
+    'This Year',
+    'All Time',
+  ];
+
+  List<DashboardInvoice> _invoices = [];
+  List<DashboardExpense> _expenses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDatabaseData();
+  }
+
+  Future<void> _loadDatabaseData() async {
+    try {
+      // 1. Query SQLite local cache
+      final dbHelper = DatabaseHelper.instance;
+      final cachedInvoices = await dbHelper.queryCache('local_invoices');
+      final cachedExpenses = await dbHelper.queryCache('local_expenses');
+
+      if (mounted && cachedInvoices.isNotEmpty) {
+        final List<DashboardInvoice> localInvoices = cachedInvoices.map((row) {
+          return DashboardInvoice(
+            id: row['id'] as String,
+            amount: (row['amount'] as num).toDouble(),
+            status: row['status'] as String,
+            date: DateTime.parse(row['created_at'] as String),
+          );
+        }).toList();
+        setState(() {
+          _invoices = localInvoices;
+        });
+      }
+
+      if (mounted && cachedExpenses.isNotEmpty) {
+        final List<DashboardExpense> localExpenses = cachedExpenses.map((row) {
+          return DashboardExpense(
+            id: row['id'] as String,
+            amount: (row['amount'] as num).toDouble(),
+            status: row['status'] as String,
+            date: DateTime.parse(row['created_at'] as String),
+          );
+        }).toList();
+        setState(() {
+          _expenses = localExpenses;
+        });
+      }
+
+      // 2. Fetch live data from Supabase database
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final invoicesData = await Supabase.instance.client
+            .from('invoices')
+            .select()
+            .eq('user_id', user.id);
+
+        final expensesData = await Supabase.instance.client
+            .from('expenses')
+            .select()
+            .eq('user_id', user.id);
+
+        final List<DashboardInvoice> remoteInvoices = [];
+        for (var row in (invoicesData as List)) {
+          final inv = DashboardInvoice(
+            id: row['id']?.toString() ?? '',
+            amount: ((row['amount'] ?? row['total']) ?? 0.0).toDouble(),
+            status: row['status'] ?? 'Paid',
+            date: row['created_at'] != null
+                ? DateTime.parse(row['created_at'])
+                : (row['invoice_date'] != null
+                    ? DateTime.parse(row['invoice_date'])
+                    : DateTime.now()),
+          );
+          remoteInvoices.add(inv);
+          await dbHelper.cacheUpsert('local_invoices', inv.toMap());
+        }
+
+        final List<DashboardExpense> remoteExpenses = [];
+        for (var row in (expensesData as List)) {
+          final exp = DashboardExpense(
+            id: row['id']?.toString() ?? '',
+            amount: (row['amount'] ?? 0.0).toDouble(),
+            status: row['status'] ?? 'Approved',
+            date: row['created_at'] != null
+                ? DateTime.parse(row['created_at'])
+                : (row['date'] != null
+                    ? DateTime.parse(row['date'])
+                    : DateTime.now()),
+          );
+          remoteExpenses.add(exp);
+          await dbHelper.cacheUpsert('local_expenses', exp.toMap());
+        }
+
+        if (mounted && (remoteInvoices.isNotEmpty || remoteExpenses.isNotEmpty)) {
+          setState(() {
+            if (remoteInvoices.isNotEmpty) _invoices = remoteInvoices;
+            if (remoteExpenses.isNotEmpty) _expenses = remoteExpenses;
+          });
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Database sync info / fallback to cache: $e");
+      }
+    }
+  }
+
+  bool _isDateInPeriod(DateTime date, String period) {
+    final now = DateTime.now();
+    switch (period) {
+      case 'This Month':
+        return date.year == now.year && date.month == now.month;
+      case 'This Quarter':
+        final currentQuarter = ((now.month - 1) ~/ 3) + 1;
+        final dateQuarter = ((date.month - 1) ~/ 3) + 1;
+        return date.year == now.year && dateQuarter == currentQuarter;
+      case 'This Year':
+        return date.year == now.year;
+      case 'All Time':
+      default:
+        return true;
+    }
+  }
+
+  double get _totalRevenue {
+    return _invoices
+        .where((inv) =>
+            inv.status == 'Paid' && _isDateInPeriod(inv.date, _selectedPeriod))
+        .fold(0.0, (sum, inv) => sum + inv.amount);
+  }
+
+  double get _totalExpense {
+    return _expenses
+        .where((exp) =>
+            exp.status == 'Approved' &&
+            _isDateInPeriod(exp.date, _selectedPeriod))
+        .fold(0.0, (sum, exp) => sum + exp.amount);
+  }
+
+  double get _netProfit => _totalRevenue - _totalExpense;
+
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
@@ -34,10 +226,9 @@ class _DashboardState extends State<Dashboard> {
         ? firstName[0].toUpperCase()
         : 'U';
 
-    // Mock static dashboard values to match other redesigned lists
-    const double revenueVal = 850000.0;
-    const double expenseVal = 87200.0;
-    const double profitVal = revenueVal - expenseVal;
+    final revenueVal = _totalRevenue;
+    final expenseVal = _totalExpense;
+    final profitVal = _netProfit;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFC),
@@ -87,18 +278,7 @@ class _DashboardState extends State<Dashboard> {
               if (isOnline) {
                 return IconButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: googleSansText(
-                          text: "Cloud sync complete!",
-                          colors: Colors.white,
-                          fontWeight: FontWeight.normal,
-                          size: 14.0,
-                        ),
-                        backgroundColor: Colors.green,
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
+                    CustomSnackbar.showSuccess(context, "Cloud sync complete!");
                   },
                   icon: Icon(
                     Platform.isAndroid
@@ -169,11 +349,58 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ),
 
-                // 2. Overview Metrics Grid
+                // 2. Overview Metrics Grid with Period Filter Toggle
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Period Filter Toggle Bar
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: _periods.map((period) {
+                            final isSelected = _selectedPeriod == period;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(period),
+                                selected: isSelected,
+                                onSelected: (_) {
+                                  setState(() {
+                                    _selectedPeriod = period;
+                                  });
+                                },
+                                selectedColor: const Color(0xFFEFF6FF),
+                                backgroundColor: Colors.white,
+                                showCheckmark: false,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                ),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? ConstantColor.blueBackground
+                                      : const Color(0xFFE2E8F0),
+                                  width: isSelected ? 1.5 : 1.0,
+                                ),
+                                labelStyle: TextStyle(
+                                  fontFamily: "Inter",
+                                  fontSize: 12.5,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? ConstantColor.blueBackground
+                                      : ConstantColor.paragraphTextSecondary,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 16.0),
+
                       Row(
                         children: [
                           // Total Revenue
@@ -205,8 +432,12 @@ class _DashboardState extends State<Dashboard> {
                         title: "Net Profit",
                         value: "₦${formatCurrency(profitVal)}",
                         icon: CupertinoIcons.graph_circle_fill,
-                        iconColor: ConstantColor.blueBackground,
-                        iconBg: const Color(0xFFEFF6FF),
+                        iconColor: profitVal >= 0
+                            ? ConstantColor.blueBackground
+                            : const Color(0xFFC62828),
+                        iconBg: profitVal >= 0
+                            ? const Color(0xFFEFF6FF)
+                            : const Color(0xFFFFEBEE),
                         isFullWidth: true,
                       ),
                     ],

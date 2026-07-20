@@ -5,6 +5,7 @@ import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/screens/auth_screens/registration_page.dart';
 import 'package:uruvia/welcome/data_sync.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -51,25 +52,14 @@ class _LoginPageState extends State<LoginPage> {
           setState(() {
             _isLoading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.message),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-          slideRightWidget(newPage: const DataSyncPage(), context: context);
+          CustomSnackbar.showFailed(context, error.message);
         }
       } catch (error) {
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('An unexpected error occurred'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          CustomSnackbar.showFailed(context, 'An unexpected error occurred');
         }
       }
     }
@@ -252,13 +242,9 @@ class _LoginPageState extends State<LoginPage> {
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "Forgot password functionality coming soon!",
-                            ),
-                            duration: Duration(seconds: 2),
-                          ),
+                        CustomSnackbar.showNormal(
+                          context,
+                          "Forgot password functionality coming soon!",
                         );
                       },
                       child: interText(

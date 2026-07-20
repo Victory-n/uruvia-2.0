@@ -12,6 +12,7 @@ import 'package:uruvia/screens/inventory/inventory_detailed_page.dart';
 import '../../constants/colors.dart';
 import '../../widgets/custom_column_heading_text.dart';
 import '../../widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class InventoryMainPage extends StatefulWidget {
   const InventoryMainPage({super.key});
@@ -67,9 +68,7 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading inventory: $e')));
+        CustomSnackbar.showFailed(context, 'Error loading inventory: $e');
       }
     }
   }
@@ -189,16 +188,9 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
                 createdAt: DateTime.now(),
               );
               await TasksRepository.instance.addTask(task);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: googleSansText(
-                    text: "Reorder task created for $itemName",
-                    colors: Colors.white,
-                    fontWeight: FontWeight.normal,
-                    size: 14.0,
-                  ),
-                  backgroundColor: ConstantColor.blueBackground,
-                ),
+              CustomSnackbar.showSuccess(
+                context,
+                "Reorder task created for $itemName",
               );
             },
             style: ElevatedButton.styleFrom(
@@ -251,23 +243,14 @@ class _InventoryMainPageState extends State<InventoryMainPage> {
                 ),
                 onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
               ),
-        title: Row(
-          children: [
-            const CircleAvatar(
-              radius: 20,
-              backgroundColor: ConstantColor.blueBackground,
-              child: Icon(Icons.inventory, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12.0),
-            interText(
-              text: "Uruvia",
-              colors: Colors.black,
-              fontWeight: FontWeight.bold,
-              size: 20.0,
-              textAlign: TextAlign.center,
-              softWrap: true,
-            ),
-          ],
+        centerTitle: true,
+        title: interText(
+          text: "Inventory",
+          colors: Colors.black,
+          fontWeight: FontWeight.bold,
+          size: 20.0,
+          textAlign: TextAlign.center,
+          softWrap: true,
         ),
         automaticallyImplyLeading: true,
         actions: [

@@ -8,6 +8,7 @@ import 'package:uruvia/offline/database_helper.dart';
 import 'package:uruvia/screens/tasks/task_model.dart';
 import 'package:uruvia/screens/tasks/tasks_repository.dart';
 import 'package:uruvia/services/notification_service.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class InventoryDetailedPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -95,22 +96,12 @@ class _InventoryDetailedPageState extends State<InventoryDetailedPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Product updated successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        CustomSnackbar.showSuccess(context, 'Product updated successfully!');
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating product: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        CustomSnackbar.showFailed(context, 'Error updating product: $e');
       }
     } finally {
       if (mounted) {
@@ -219,22 +210,12 @@ class _InventoryDetailedPageState extends State<InventoryDetailedPage> {
     try {
       await InventoryRepository.instance.deleteInventoryItem(widget.product['id'] as String);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Product deleted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        CustomSnackbar.showSuccess(context, 'Product deleted successfully!');
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting product: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        CustomSnackbar.showFailed(context, 'Error deleting product: $e');
       }
     } finally {
       if (mounted) {

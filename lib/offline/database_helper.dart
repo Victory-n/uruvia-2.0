@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       pathString,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -67,14 +67,50 @@ class DatabaseHelper {
       )
     ''');
 
-    // 4. Create tasks and settings tables
+    // 4. Create tasks, settings, invoices and expenses tables
     await _createTasksAndSettingsTables(db);
+    await _createFinancialTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createTasksAndSettingsTables(db);
     }
+    if (oldVersion < 3) {
+      await _createFinancialTables(db);
+    }
+  }
+
+  Future<void> _createFinancialTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_invoices (
+        id TEXT PRIMARY KEY,
+        amount REAL NOT NULL,
+        status TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_expenses (
+        id TEXT PRIMARY KEY,
+        amount REAL NOT NULL,
+        status TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_sales (
+        id TEXT PRIMARY KEY,
+        customer_name TEXT NOT NULL,
+        invoice_number TEXT NOT NULL,
+        amount REAL NOT NULL,
+        date_paid TEXT NOT NULL,
+        status TEXT NOT NULL,
+        category TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _createTasksAndSettingsTables(Database db) async {
@@ -103,6 +139,24 @@ class DatabaseHelper {
   Future<void> clearTable(String tableName) async {
     final db = await database;
     await db.delete(tableName);
+  }
+
+  // Clear all local database tables
+  Future<void> clearAllData() async {
+    final db = await database;
+    final tables = [
+      'offline_actions',
+      'local_profiles',
+      'local_inventory_items',
+      'local_invoices',
+      'local_expenses',
+      'local_sales',
+      'local_tasks',
+      'local_settings',
+    ];
+    for (final table in tables) {
+      await db.delete(table);
+    }
   }
 
   // Insert or replace a row in local cache

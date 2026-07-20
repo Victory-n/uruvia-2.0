@@ -6,6 +6,11 @@ import 'package:uruvia/screens/invoices/invoice_preview_page.dart';
 import 'package:uruvia/screens/invoices/model/invoice_model.dart';
 import '../../constants/colors.dart';
 import '../../widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
+
+import 'package:uruvia/screens/customer directory/customer_model.dart';
+import 'package:uruvia/screens/customer directory/customer_repository.dart';
+import 'package:uruvia/offline/database_helper.dart';
 
 class AddInvoicePage extends StatefulWidget {
   const AddInvoicePage({super.key});
@@ -20,11 +25,13 @@ class _InvoiceItemState {
   int quantity;
 
   _InvoiceItemState({
-    required String description,
-    required double price,
-    required this.quantity,
-  }) : descController = TextEditingController(text: description),
-       priceController = TextEditingController(text: price.toStringAsFixed(0));
+    String description = "",
+    double price = 0.0,
+    this.quantity = 1,
+  })  : descController = TextEditingController(text: description),
+        priceController = TextEditingController(
+          text: price > 0 ? price.toStringAsFixed(0) : "",
+        );
 
   void dispose() {
     descController.dispose();
@@ -50,6 +57,7 @@ class _AddInvoicePageState extends State<AddInvoicePage> {
 
   // Items
   final List<_InvoiceItemState> _items = [];
+  List<Customer> _quickCustomers = [];
 
   @override
   void initState() {
@@ -64,21 +72,32 @@ class _AddInvoicePageState extends State<AddInvoicePage> {
     _customerEmailController = TextEditingController();
     _customerPhoneController = TextEditingController();
 
-    _bankNameController = TextEditingController(text: "MoniePoint");
-    _accountNumberController = TextEditingController(text: "8029130533");
-    _accountNameController = TextEditingController(text: "Ndukwe Victory");
+    _bankNameController = TextEditingController();
+    _accountNumberController = TextEditingController();
+    _accountNameController = TextEditingController();
 
     _taxController = TextEditingController(text: "0.0");
     _discountController = TextEditingController(text: "0.0");
 
-    // Add default item
+    // Add initial empty item
     _items.add(
       _InvoiceItemState(
-        description: "Consulting Services",
-        price: 3200.0,
+        description: "",
+        price: 0.0,
         quantity: 1,
       ),
     );
+
+    _loadQuickCustomers();
+  }
+
+  Future<void> _loadQuickCustomers() async {
+    final customers = await CustomerRepository.instance.getCustomers();
+    if (mounted) {
+      setState(() {
+        _quickCustomers = customers;
+      });
+    }
   }
 
   @override
@@ -153,18 +172,7 @@ class _AddInvoicePageState extends State<AddInvoicePage> {
       _customerEmailController.text = email;
       _customerPhoneController.text = phone;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: googleSansText(
-          text: "Loaded client: $name",
-          colors: Colors.white,
-          fontWeight: FontWeight.normal,
-          size: 14.0,
-        ),
-        backgroundColor: ConstantColor.blueBackground,
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    CustomSnackbar.showNormal(context, "Loaded client: $name");
   }
 
   // Build the compiled Invoice model
@@ -237,16 +245,9 @@ class _AddInvoicePageState extends State<AddInvoicePage> {
         actions: [
           IconButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: googleSansText(
-                    text: "Uploading and Syncing Invoice...",
-                    colors: Colors.white,
-                    fontWeight: FontWeight.normal,
-                    size: 14.0,
-                  ),
-                  backgroundColor: ConstantColor.blueBackground,
-                ),
+              CustomSnackbar.showNormal(
+                context,
+                "Uploading and Syncing Invoice...",
               );
             },
             icon: Platform.isAndroid
@@ -337,43 +338,29 @@ class _AddInvoicePageState extends State<AddInvoicePage> {
                         keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 16.0),
-                      googleSansText(
-                        text: "QUICK PICK FROM DIRECTORY",
-                        colors: ConstantColor.paragraphTextSecondary,
-                        fontWeight: FontWeight.bold,
-                        size: 11.0,
-                      ),
-                      const SizedBox(height: 8.0),
-                      Wrap(
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        children: [
-                          _buildQuickPickChip(
-                            label: "Tech Corp",
-                            onTap: () => _quickLoadCustomer(
-                              "Tech Corp Solutions",
-                              "contact@techcorp.com",
-                              "+234 812 345 6789",
-                            ),
-                          ),
-                          _buildQuickPickChip(
-                            label: "Banana Bread",
-                            onTap: () => _quickLoadCustomer(
-                              "720_bananabread",
-                              "business@email.com",
-                              "+234 567 890 4745",
-                            ),
-                          ),
-                          _buildQuickPickChip(
-                            label: "Ndukwe V.",
-                            onTap: () => _quickLoadCustomer(
-                              "Ndukwe Victory",
-                              "victory@uruvia.app",
-                              "+234 902 444 5555",
-                            ),
-                          ),
-                        ],
-                      ),
+                      if (_quickCustomers.isNotEmpty) ...[
+                        googleSansText(
+                          text: "QUICK PICK FROM DIRECTORY",
+                          colors: ConstantColor.paragraphTextSecondary,
+                          fontWeight: FontWeight.bold,
+                          size: 11.0,
+                        ),
+                        const SizedBox(height: 8.0),
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: _quickCustomers.map((cust) {
+                            return _buildQuickPickChip(
+                              label: cust.name,
+                              onTap: () => _quickLoadCustomer(
+                                cust.name,
+                                cust.email ?? '',
+                                cust.phone,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -758,19 +745,24 @@ class _AddInvoicePageState extends State<AddInvoicePage> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Mock save as draft
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: googleSansText(
-                                text: "Draft saved locally!",
-                                colors: Colors.white,
-                                fontWeight: FontWeight.normal,
-                                size: 14.0,
-                              ),
-                              backgroundColor: Colors.black87,
-                            ),
-                          );
+                        onPressed: () async {
+                          final invoice = _compileInvoice();
+                          final dbHelper = DatabaseHelper.instance;
+                          await dbHelper.cacheUpsert('local_invoices', {
+                            'id': invoice.invoiceNumber,
+                            'amount': invoice.total,
+                            'status': 'Draft',
+                            'created_at': invoice.invoiceDate.toUtc().toIso8601String(),
+                            'customer_name': invoice.customerName,
+                            'due_date': invoice.dueDate.toUtc().toIso8601String(),
+                          });
+                          if (mounted) {
+                            CustomSnackbar.showSuccess(
+                              context,
+                              "Draft invoice ${invoice.invoiceNumber} saved!",
+                            );
+                            Navigator.pop(context);
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           elevation: 0.0,

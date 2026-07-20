@@ -6,6 +6,7 @@ import 'package:uruvia/screens/tasks/task_model.dart';
 import 'package:uruvia/screens/tasks/tasks_repository.dart';
 import 'package:uruvia/services/notification_service.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 import 'package:uruvia/screens/invoices/model/invoice_model.dart'; // For formatDate helper
 
 class TasksMainPage extends StatefulWidget {
@@ -115,17 +116,9 @@ class _TasksMainPageState extends State<TasksMainPage>
             onPressed: () {
               Navigator.pop(context);
               // Navigate to Inventory page or just pop back to sidebar where they can select Inventory
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: googleSansText(
-                    text:
-                        "Please select 'Inventory' from the sidebar drawer to update stock counts.",
-                    colors: Colors.white,
-                    fontWeight: FontWeight.normal,
-                    size: 14.0,
-                  ),
-                  backgroundColor: ConstantColor.blueBackground,
-                ),
+              CustomSnackbar.showNormal(
+                context,
+                "Please select 'Inventory' from the sidebar drawer to update stock counts.",
               );
             },
             style: ElevatedButton.styleFrom(
@@ -327,16 +320,9 @@ class _TasksMainPageState extends State<TasksMainPage>
                         onPressed: () async {
                           final title = titleController.text.trim();
                           if (title.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: googleSansText(
-                                  text: "Please enter a task title",
-                                  colors: Colors.white,
-                                  fontWeight: FontWeight.normal,
-                                  size: 14.0,
-                                ),
-                                backgroundColor: Colors.redAccent,
-                              ),
+                            CustomSnackbar.showFailed(
+                              context,
+                              "Please enter a task title",
                             );
                             return;
                           }
@@ -622,16 +608,7 @@ class _TasksMainPageState extends State<TasksMainPage>
           onDismissed: (direction) async {
             await TasksRepository.instance.deleteTask(task.id);
             await NotificationService.instance.cancelNotification(task.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: googleSansText(
-                  text: "Task deleted",
-                  colors: Colors.white,
-                  size: 14.0,
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-            );
+            CustomSnackbar.showNormal(context, "Task deleted");
             _loadTasks();
           },
           background: Container(

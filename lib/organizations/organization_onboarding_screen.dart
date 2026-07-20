@@ -5,9 +5,11 @@ import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 import 'package:uruvia/side_bar.dart';
 import 'package:uruvia/offline/connectivity_service.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class OrganizationOnboardingScreen extends StatefulWidget {
-  const OrganizationOnboardingScreen({super.key});
+  final bool isFromSettings;
+  const OrganizationOnboardingScreen({super.key, this.isFromSettings = false});
 
   @override
   State<OrganizationOnboardingScreen> createState() =>
@@ -68,8 +70,8 @@ class _OrganizationOnboardingScreenState
   }
 
   // Step 2 Controllers & State
-  final _countryController = TextEditingController(text: "United States");
-  final _currencyController = TextEditingController(text: "USD");
+  final _countryController = TextEditingController(text: "Nigeria");
+  final _currencyController = TextEditingController(text: "NGN (₦)");
   String _selectedBusinessSize = '';
 
   // Step 3 Controllers & State
@@ -132,13 +134,47 @@ class _OrganizationOnboardingScreenState
   }
 
   void _showSnackBar(String message, Color bgColor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: bgColor,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (bgColor == Colors.red || bgColor == Colors.redAccent) {
+      CustomSnackbar.showFailed(context, message);
+    } else if (bgColor == Colors.green ||
+        bgColor == ConstantColor.paragraphTextPrimary) {
+      CustomSnackbar.showSuccess(context, message);
+    } else {
+      CustomSnackbar.showNormal(context, message);
+    }
+  }
+
+  Future<void> _skipOnboarding() async {
+    setState(() => _isLoading = true);
+    try {
+      if (ConnectivityService.instance.isConnected.value) {
+        await Supabase.instance.client.auth.updateUser(
+          UserAttributes(
+            data: {
+              'has_skipped_onboarding': true,
+              'has_onboarded_business': false,
+            },
+          ),
+        );
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+
+    if (mounted) {
+      if (widget.isFromSettings && Navigator.canPop(context)) {
+        Navigator.pop(context, false);
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SideBarPage(title: "")),
+          (route) => false,
+        );
+      }
+    }
   }
 
   Future<void> _completeOnboarding() async {
@@ -154,6 +190,7 @@ class _OrganizationOnboardingScreenState
             UserAttributes(
               data: {
                 'has_onboarded_business': true,
+                'has_skipped_onboarding': false,
                 'business_name': _businessNameController.text.trim(),
                 'business_logo_name': _uploadedLogoName,
                 'business_logo_size': _uploadedLogoSize,
@@ -178,14 +215,17 @@ class _OrganizationOnboardingScreenState
         }
 
         if (mounted) {
-          // Go to Dashboard Sidebar page
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SideBarPage(title: ""),
-            ),
-            (route) => false,
-          );
+          if (widget.isFromSettings && Navigator.canPop(context)) {
+            Navigator.pop(context, true);
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SideBarPage(title: ""),
+              ),
+              (route) => false,
+            );
+          }
         }
       } catch (error) {
         if (mounted) {
@@ -840,17 +880,7 @@ class _OrganizationOnboardingScreenState
                     // Back button or Skip button
                     if (_currentStep == 0)
                       TextButton(
-                        onPressed: () {
-                          // Allow skipping
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const SideBarPage(title: ""),
-                            ),
-                            (route) => false,
-                          );
-                        },
+                        onPressed: _isLoading ? null : _skipOnboarding,
                         child: interText(
                           text: "Skip Setup",
                           colors: ConstantColor.paragraphTextSecondary,

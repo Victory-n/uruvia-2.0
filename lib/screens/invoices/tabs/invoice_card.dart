@@ -13,6 +13,7 @@ class InvoiceCard extends StatelessWidget {
   final double amount;
   final DateTime dueDate;
   final String status; // 'Paid', 'Sent', 'Overdue', 'Draft'
+  final Invoice? fullInvoice;
 
   const InvoiceCard({
     super.key,
@@ -21,6 +22,7 @@ class InvoiceCard extends StatelessWidget {
     required this.amount,
     required this.dueDate,
     required this.status,
+    this.fullInvoice,
   });
 
   // Initials generator
@@ -74,82 +76,24 @@ class InvoiceCard extends StatelessWidget {
     }
   }
 
-  // Compile detailed mock invoice details for preview
-  Invoice _compileMockInvoice() {
-    List<InvoiceItem> items = [];
-    String customerEmail = 'client@email.com';
-    String customerPhone = '+234 800 000 0000';
-    double taxRate = 0.0;
-    double discount = 0.0;
-
-    if (customerName.contains('Tech Corp')) {
-      customerEmail = 'finance@techcorp.com';
-      customerPhone = '+234 812 345 6789';
-      items = [
-        InvoiceItem(
-          description: "Software Development (Sprint 4)",
-          quantity: 1,
-          unitPrice: 400000.0,
-        ),
-        InvoiceItem(
-          description: "Cloud Infrastructure Setup",
-          quantity: 1,
-          unitPrice: 50000.0,
-        ),
-      ];
-    } else if (customerName.contains('Banana Bread') ||
-        customerName.contains('720')) {
-      customerEmail = 'business@email.com';
-      customerPhone = '+234 567 890 4745';
-      items = [
-        InvoiceItem(
-          description: "Midi Banana Bread x Chocolate chips (dark)",
-          quantity: 1,
-          unitPrice: 5500.0,
-        ),
-        InvoiceItem(
-          description: "Delivery Fees",
-          quantity: 1,
-          unitPrice: 2700.0,
-        ),
-      ];
-    } else if (customerName.contains('Ndukwe')) {
-      customerEmail = 'victory@uruvia.app';
-      customerPhone = '+234 902 444 5555';
-      items = [
-        InvoiceItem(
-          description: "Consulting Services (Strategy)",
-          quantity: 10,
-          unitPrice: 120000.0,
-        ),
-        InvoiceItem(
-          description: "UI/UX Consultation",
-          quantity: 1,
-          unitPrice: 45000.0,
-        ),
-      ];
-    } else {
-      // Default / general fallback
-      customerEmail = 'customer@business.com';
-      items = [
-        InvoiceItem(
-          description: "General Consulting Services",
-          quantity: 1,
-          unitPrice: amount,
-        ),
-      ];
-    }
-
+  // Compile invoice model fallback for preview
+  Invoice _compileFallbackInvoice() {
     return Invoice(
       invoiceNumber: invoiceNumber,
       invoiceDate: dueDate.subtract(const Duration(days: 14)),
       dueDate: dueDate,
       customerName: customerName,
-      customerEmail: customerEmail,
-      customerPhone: customerPhone,
-      items: items,
-      taxRate: taxRate,
-      discount: discount,
+      customerEmail: 'client@email.com',
+      customerPhone: '',
+      items: [
+        InvoiceItem(
+          description: "Service Item",
+          quantity: 1,
+          unitPrice: amount,
+        ),
+      ],
+      taxRate: 0.0,
+      discount: 0.0,
       status: status,
     );
   }
@@ -177,9 +121,9 @@ class InvoiceCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            final mockInvoice = _compileMockInvoice();
+            final targetInvoice = fullInvoice ?? _compileFallbackInvoice();
             slideRightWidget(
-              newPage: InvoicePreviewPage(invoice: mockInvoice),
+              newPage: InvoicePreviewPage(invoice: targetInvoice),
               context: context,
             );
           },

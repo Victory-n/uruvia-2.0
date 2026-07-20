@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:route_transitions/route_transitions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/screens/auth_screens/opts/otp_verify_page.dart';
-import 'package:uruvia/welcome/data_sync.dart';
+
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -56,31 +58,24 @@ class _RegistrationPageState extends State<RegistrationPage> {
           setState(() {
             _isLoading = false;
           });
-          slideRightWidget(newPage: const DataSyncPage(), context: context);
+          slideRightWidget(
+            newPage: OtpVerifyPage(email: _emailController.text.trim()),
+            context: context,
+          );
         }
       } on AuthException catch (error) {
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.message),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          CustomSnackbar.showFailed(context, error.message);
         }
       } catch (error) {
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('An unexpected error occurred'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          CustomSnackbar.showFailed(context, 'An unexpected error occurred');
         }
       }
     }

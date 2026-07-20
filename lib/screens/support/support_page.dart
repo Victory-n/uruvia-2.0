@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class SupportPage extends StatefulWidget {
   const SupportPage({super.key});
@@ -81,18 +82,7 @@ class _SupportPageState extends State<SupportPage> {
       // Fallback: Copy to clipboard
       await Clipboard.setData(ClipboardData(text: copyText));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: googleSansText(
-              text: "$typeName copied to clipboard!",
-              colors: Colors.white,
-              fontWeight: FontWeight.normal,
-              size: 14.0,
-            ),
-            backgroundColor: ConstantColor.blueBackground,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        CustomSnackbar.showSuccess(context, "$typeName copied to clipboard!");
       }
     }
   }

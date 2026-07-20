@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/offline/inventory_repository.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class AddInventoryPage extends StatefulWidget {
   const AddInventoryPage({super.key});
@@ -67,22 +68,15 @@ class _AddInventoryPageState extends State<AddInventoryPage> {
       await InventoryRepository.instance.addInventoryItem(newItem);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Product added successfully! Syncing in progress...'),
-            backgroundColor: Colors.green,
-          ),
+        CustomSnackbar.showSuccess(
+          context,
+          'Product added successfully! Syncing in progress...',
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error adding product: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        CustomSnackbar.showFailed(context, 'Error adding product: $e');
       }
     } finally {
       if (mounted) {

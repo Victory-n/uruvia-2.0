@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/screens/auth_screens/login_page.dart';
 import 'package:uruvia/widgets/custom_text.dart';
+import 'package:uruvia/classes/custom_snackbar.dart';
 
 class OtpVerifyPage extends StatefulWidget {
   final String email;
@@ -76,31 +77,19 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
         email: widget.email,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verification code resent successfully'),
-            backgroundColor: Colors.green,
-          ),
+        CustomSnackbar.showSuccess(
+          context,
+          'Verification code resent successfully',
         );
         _startResendTimer();
       }
     } on AuthException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.message),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomSnackbar.showFailed(context, error.message);
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('An unexpected error occurred'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomSnackbar.showFailed(context, 'An unexpected error occurred');
       }
     } finally {
       if (mounted) {
@@ -114,12 +103,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
   Future<void> _verifyOtp() async {
     final code = _otpController.text.trim();
     if (code.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter the full 6-digit code'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      CustomSnackbar.showFailed(context, 'Please enter the full 6-digit code');
       return;
     }
 
@@ -135,11 +119,9 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email verified successfully! Please log in.'),
-            backgroundColor: Colors.green,
-          ),
+        CustomSnackbar.showSuccess(
+          context,
+          'Email verified successfully! Please log in.',
         );
         // Navigate to login page and clear navigation stack
         Navigator.of(context).pushAndRemoveUntil(
@@ -149,20 +131,13 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
       }
     } on AuthException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.message),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomSnackbar.showFailed(context, error.message);
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('An unexpected error occurred during verification'),
-            backgroundColor: Colors.redAccent,
-          ),
+        CustomSnackbar.showFailed(
+          context,
+          'An unexpected error occurred during verification',
         );
       }
     } finally {

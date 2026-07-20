@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:uruvia/offline/database_helper.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -59,6 +60,24 @@ class NotificationService {
     }
   }
 
+  // Check if notification category is enabled in settings
+  Future<bool> _isNotificationCategoryEnabled(String category) async {
+    final dbHelper = DatabaseHelper.instance;
+    switch (category.toLowerCase()) {
+      case 'invoice':
+      case 'new_invoice':
+        return await dbHelper.getSetting('setting_notification_new_invoices', defaultValue: true);
+      case 'low_stock':
+      case 'stock':
+        return await dbHelper.getSetting('setting_notification_low_stock', defaultValue: true);
+      case 'reminder':
+      case 'task':
+        return await dbHelper.getSetting('setting_notification_reminders', defaultValue: true);
+      default:
+        return true;
+    }
+  }
+
   // Request alert permissions from user
   Future<bool> requestPermissions() async {
     final bool? iosGranted = await _notificationsPlugin
@@ -86,7 +105,16 @@ class NotificationService {
     String title,
     String body, {
     String? payload,
+    String category = 'general',
   }) async {
+    final enabled = await _isNotificationCategoryEnabled(category);
+    if (!enabled) {
+      if (kDebugMode) {
+        print("Notification suppressed for category: $category");
+      }
+      return;
+    }
+
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
           'uruvia_general_channel',
@@ -125,7 +153,15 @@ class NotificationService {
     String body,
     DateTime scheduledTime, {
     String? payload,
+    String category = 'reminder',
   }) async {
+    final enabled = await _isNotificationCategoryEnabled(category);
+    if (!enabled) {
+      if (kDebugMode) {
+        print("Scheduled notification suppressed for category: $category");
+      }
+      return;
+    }
     final tz.TZDateTime scheduledTZTime = tz.TZDateTime.from(
       scheduledTime,
       tz.local,

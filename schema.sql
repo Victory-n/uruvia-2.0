@@ -1,66 +1,182 @@
--- Create a profiles table in the public schema
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  first_name text not null,
-  last_name text not null,
+-- 1. Profiles Table
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  first_name text NOT NULL,
+  last_name text NOT NULL,
   email text,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable Row-Level Security (RLS)
-alter table public.profiles enable row level security;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Create policies for profile access
-create policy "Public profiles are viewable by everyone" on public.profiles
-  for select using (true);
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
+CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles
+  FOR SELECT USING (true);
 
-create policy "Users can update their own profile" on public.profiles
-  for update to authenticated
-  using ((select auth.uid()) = id)
-  with check ((select auth.uid()) = id);
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+CREATE POLICY "Users can update their own profile" ON public.profiles
+  FOR UPDATE TO authenticated
+  USING ((select auth.uid()) = id)
+  WITH CHECK ((select auth.uid()) = id);
 
--- Create a trigger function that automatically inserts a profile row on signup
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, first_name, last_name, email)
-  values (
+-- Trigger function to automatically insert profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, first_name, last_name, email)
+  VALUES (
     new.id,
-    coalesce(new.raw_user_meta_data->>'first_name', ''),
-    coalesce(new.raw_user_meta_data->>'last_name', ''),
+    COALESCE(new.raw_user_meta_data->>'first_name', ''),
+    COALESCE(new.raw_user_meta_data->>'last_name', ''),
     new.email
   );
-  return new;
-end;
-$$ language plpgsql security definer;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Bind the trigger function to auth.users insertions
-create or replace trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- Create inventory_items table in the public schema
-create table public.inventory_items (
-  id text primary key,
-  name text not null,
-  sku text not null,
-  stock integer not null default 0,
-  threshold integer not null default 10,
+
+-- 2. Inventory Items Table
+CREATE TABLE IF NOT EXISTS public.inventory_items (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  sku text NOT NULL,
+  stock integer NOT NULL DEFAULT 0,
+  threshold integer NOT NULL DEFAULT 10,
   image_url text,
   retail_price numeric,
   supplier text,
-  low_stock_alert boolean not null default false,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+  low_stock_alert boolean NOT NULL DEFAULT false,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable Row-Level Security (RLS)
-alter table public.inventory_items enable row level security;
+ALTER TABLE public.inventory_items ENABLE ROW LEVEL SECURITY;
 
--- Create policies for inventory access
-create policy "Allow read for everyone" on public.inventory_items
-  for select using (true);
+DROP POLICY IF EXISTS "Allow read for everyone" ON public.inventory_items;
+CREATE POLICY "Allow read for everyone" ON public.inventory_items
+  FOR SELECT USING (true);
 
-create policy "Allow write for authenticated users" on public.inventory_items
-  for all to authenticated
-  using (true)
-  with check (true);
+DROP POLICY IF EXISTS "Allow write for authenticated users" ON public.inventory_items;
+CREATE POLICY "Allow write for authenticated users" ON public.inventory_items
+  FOR ALL TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+
+-- 3. Sales Table
+CREATE TABLE IF NOT EXISTS public.sales (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
+  customer_name text NOT NULL,
+  invoice_number text NOT NULL,
+  amount numeric NOT NULL,
+  date_paid timestamp with time zone NOT NULL,
+  status text NOT NULL,
+  category text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow sales access for authenticated users" ON public.sales;
+CREATE POLICY "Allow sales access for authenticated users" ON public.sales
+  FOR ALL TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+
+-- 4. Invoices Table
+CREATE TABLE IF NOT EXISTS public.invoices (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
+  amount numeric NOT NULL,
+  status text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow invoices access for authenticated users" ON public.invoices;
+CREATE POLICY "Allow invoices access for authenticated users" ON public.invoices
+  FOR ALL TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+
+-- 5. Expenses Table
+CREATE TABLE IF NOT EXISTS public.expenses (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
+  amount numeric NOT NULL,
+  status text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow expenses access for authenticated users" ON public.expenses;
+CREATE POLICY "Allow expenses access for authenticated users" ON public.expenses
+  FOR ALL TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+
+-- 6. Service Requests Table (LOGISTICS & CAC REGISTRATION)
+CREATE TABLE IF NOT EXISTS public.service_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
+  service_type text NOT NULL,
+  form_data jsonb NOT NULL,
+  payment_status text DEFAULT 'pending_quote',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.service_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow service_requests access for authenticated users" ON public.service_requests;
+CREATE POLICY "Allow service_requests access for authenticated users" ON public.service_requests
+  FOR ALL TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+
+-- 7. Tasks & Reminders Table (Cloud Backup for Tasks)
+CREATE TABLE IF NOT EXISTS public.tasks (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
+  title text NOT NULL,
+  description text,
+  due_date timestamp with time zone NOT NULL,
+  is_completed boolean NOT NULL DEFAULT false,
+  type text NOT NULL DEFAULT 'manual',
+  related_item_id text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow tasks access for authenticated users" ON public.tasks;
+CREATE POLICY "Allow tasks access for authenticated users" ON public.tasks
+  FOR ALL TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+
+-- 8. User Settings Table (Cloud Backup for Notification Toggles & App Preferences)
+CREATE TABLE IF NOT EXISTS public.user_settings (
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  settings jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow user_settings access for authenticated users" ON public.user_settings;
+CREATE POLICY "Allow user_settings access for authenticated users" ON public.user_settings
+  FOR ALL TO authenticated
+  USING (true)
+  WITH CHECK (true);

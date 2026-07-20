@@ -10,6 +10,8 @@ import 'package:uruvia/screens/invoices/tabs/draft_page.dart';
 import 'package:uruvia/screens/invoices/tabs/overdue_page.dart';
 import 'package:uruvia/screens/invoices/tabs/paid_page.dart';
 
+import 'package:uruvia/offline/database_helper.dart';
+import 'package:uruvia/screens/invoices/model/invoice_model.dart';
 import '../../widgets/custom_text.dart';
 
 class InvoiceMainPage extends StatefulWidget {
@@ -29,10 +31,56 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
   ];
   TabController? tabController;
 
+  double _outstandingAmount = 0.0;
+  double _overdueAmount = 0.0;
+  double _collectedThisMonth = 0.0;
+
   @override
   void initState() {
     tabController = TabController(vsync: this, length: myTabs.length);
     super.initState();
+    _loadMetrics();
+  }
+
+  Future<void> _loadMetrics() async {
+    final dbHelper = DatabaseHelper.instance;
+    final cachedInvoices = await dbHelper.queryCache('local_invoices');
+    final cachedSales = await dbHelper.queryCache('local_sales');
+
+    double outstanding = 0.0;
+    double overdue = 0.0;
+    double collected = 0.0;
+
+    for (var inv in cachedInvoices) {
+      final amount = (inv['amount'] as num? ?? 0.0).toDouble();
+      final status = (inv['status'] as String? ?? '').toLowerCase();
+      if (status == 'overdue') {
+        overdue += amount;
+        outstanding += amount;
+      } else if (status == 'sent' || status == 'pending' || status == 'draft') {
+        outstanding += amount;
+      }
+    }
+
+    final now = DateTime.now();
+    for (var sale in cachedSales) {
+      final dateStr = sale['date_paid'] as String?;
+      final amount = (sale['amount'] as num? ?? 0.0).toDouble();
+      if (dateStr != null) {
+        final date = DateTime.tryParse(dateStr);
+        if (date != null && date.year == now.year && date.month == now.month) {
+          collected += amount;
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _outstandingAmount = outstanding;
+        _overdueAmount = overdue;
+        _collectedThisMonth = collected;
+      });
+    }
   }
 
   @override
@@ -137,7 +185,7 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
                                 ),
                                 const SizedBox(height: 2.0),
                                 googleSansText(
-                                  text: "₦1,245,000",
+                                  text: "₦${formatCurrency(_outstandingAmount)}",
                                   colors: ConstantColor.headingTextPrimary,
                                   fontWeight: FontWeight.w900,
                                   size: 14.0,
@@ -195,7 +243,7 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
                                 ),
                                 const SizedBox(height: 2.0),
                                 googleSansText(
-                                  text: "₦1,245,000",
+                                  text: "₦${formatCurrency(_overdueAmount)}",
                                   colors: const Color(0xFFC62828),
                                   fontWeight: FontWeight.w900,
                                   size: 14.0,
@@ -248,7 +296,7 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
                         ),
                         const SizedBox(height: 4.0),
                         googleSansText(
-                          text: "₦850,000",
+                          text: "₦${formatCurrency(_collectedThisMonth)}",
                           colors: Colors.white,
                           fontWeight: FontWeight.w900,
                           size: 26.0,

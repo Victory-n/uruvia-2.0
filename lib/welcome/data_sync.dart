@@ -297,16 +297,24 @@ class _DataSyncPageState extends State<DataSyncPage>
                   onPressed: _isCompleted
                       ? () {
                           final user = Supabase.instance.client.auth.currentUser;
-                          final hasOnboarded = user?.userMetadata?['has_onboarded_business'] ?? false;
+                          final hasOnboarded = (user?.userMetadata?['has_onboarded_business'] ?? false) ||
+                              (user?.userMetadata?['has_skipped_onboarding'] ?? false);
                           if (hasOnboarded) {
-                            slideRightWidget(
-                              newPage: const SideBarPage(title: ""),
-                              context: context,
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SideBarPage(title: ""),
+                              ),
+                              (route) => false,
                             );
                           } else {
-                            slideRightWidget(
-                              newPage: const OrganizationOnboardingScreen(),
-                              context: context,
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const OrganizationOnboardingScreen(),
+                              ),
+                              (route) => false,
                             );
                           }
                         }
