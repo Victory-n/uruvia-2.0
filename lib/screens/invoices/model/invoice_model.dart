@@ -22,7 +22,12 @@ class Invoice {
   final List<InvoiceItem> items;
   final double taxRate; // in percentage, e.g. 5.0 for 5%
   final double discount; // flat discount amount in NGN
-  
+
+  // Business / Sender details
+  final String businessName;
+  final String businessEmail;
+  final String businessPhone;
+
   // Banking / Payment details
   final String bankName;
   final String accountNumber;
@@ -39,6 +44,9 @@ class Invoice {
     required this.items,
     this.taxRate = 0.0,
     this.discount = 0.0,
+    this.businessName = '',
+    this.businessEmail = '',
+    this.businessPhone = '',
     this.bankName = "MoniePoint",
     this.accountNumber = "8029130533",
     this.accountName = "Ndukwe Victory",
@@ -49,6 +57,7 @@ class Invoice {
   double get taxAmount => subtotal * (taxRate / 100.0);
   double get total => subtotal + taxAmount - discount;
 }
+
 
 // Global utilities for formatting in invoice views
 String formatCurrency(num amount) {

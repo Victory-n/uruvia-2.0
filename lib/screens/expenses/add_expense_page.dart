@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/classes/show_half_screen.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/screens/invoices/model/invoice_model.dart'; // For formatDate
@@ -34,6 +37,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
   // Receipt upload state
   bool _hasReceipt = false;
   String? _receiptName;
+  String _receiptSizeLabel = "";
+  File? _receiptFile;
+  final ImagePicker _imagePicker = ImagePicker();
 
   final List<String> _categories = [
     "Software",
@@ -114,6 +120,34 @@ class _AddExpensePageState extends State<AddExpensePage> {
     }
   }
 
+  // Pick receipt from camera or gallery using image_picker
+  Future<void> _pickReceipt(ImageSource source) async {
+    try {
+      final XFile? picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+      final file = File(picked.path);
+      final sizeBytes = await file.length();
+      final sizeMb = (sizeBytes / (1024 * 1024)).toStringAsFixed(1);
+      if (mounted) {
+        setState(() {
+          _receiptFile = file;
+          _hasReceipt = true;
+          _receiptName = picked.name;
+          _receiptSizeLabel = "$sizeMb MB";
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomSnackbar.showFailed(context, "Could not pick image: $e");
+      }
+    }
+  }
+
   // Show bottom sheet picker for receipt
   void _showReceiptPicker() {
     showModalBottomSheet(
@@ -155,10 +189,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    setState(() {
-                      _hasReceipt = true;
-                      _receiptName = "IMG_receipt_camera.jpg";
-                    });
+                    _pickReceipt(ImageSource.camera);
                   },
                 ),
                 ListTile(
@@ -174,10 +205,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    setState(() {
-                      _hasReceipt = true;
-                      _receiptName = "receipt_july_12.png";
-                    });
+                    _pickReceipt(ImageSource.gallery);
                   },
                 ),
               ],
@@ -236,14 +264,30 @@ class _AddExpensePageState extends State<AddExpensePage> {
     }
     final expenseId = 'exp_${DateTime.now().millisecondsSinceEpoch}';
     final dbHelper = DatabaseHelper.instance;
-    await dbHelper.cacheUpsert('local_expenses', {
+    final expensePayload = {
       'id': expenseId,
       'amount': amount,
       'status': 'Approved',
       'created_at': _selectedDate.toUtc().toIso8601String(),
       'vendor': vendor,
       'category': _selectedCategory,
-    });
+    };
+    await dbHelper.cacheUpsert('local_expenses', expensePayload);
+
+    // Persist expense to Supabase so dashboard remote sync picks it up
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        await Supabase.instance.client.from('expenses').upsert({
+          ...expensePayload,
+          'user_id': user.id,
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving expense to Supabase: $e');
+      }
+    }
 
     // Pop back and show success feedback
     if (mounted) {
@@ -352,6 +396,119 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   ),
                 ),
                 const SizedBox(height: 16.0),
+
+                // 5. Voice Scan Option Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F6FE),
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: ConstantColor.blueBackground.withOpacity(0.1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            googleSansText(
+                              text: "Scan Receipt by Voice",
+                              colors: ConstantColor.blueBackground,
+                              fontWeight: FontWeight.bold,
+                              size: 15.0,
+                            ),
+                            const SizedBox(height: 4.0),
+                            googleSansText(
+                              text:
+                                  "Tell Uruvia what you bought and let AI auto-fill the forms.",
+                              colors: ConstantColor.paragraphTextSecondary,
+                              fontWeight: FontWeight.normal,
+                              size: 12.0,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                      AvatarGlow(
+                        startDelay: const Duration(milliseconds: 1000),
+                        glowColor: Colors.blue,
+                        glowShape: BoxShape.circle,
+                        glowRadiusFactor: 0.15,
+                        animate: true,
+                        curve: Curves.elasticOut,
+                        child: Material(
+                          shape: const CircleBorder(),
+                          color: Colors.white,
+                          elevation: 2.0,
+                          child: IconButton(
+                            onPressed: () async {
+                              final result = await showHalfScreenModal(context);
+                              if (result != null && mounted) {
+                                setState(() {
+                                  if (result['amount'] != null) {
+                                    final double amt = result['amount'];
+                                    _amountController.text = amt == amt.toInt()
+                                        ? amt.toInt().toString()
+                                        : amt.toString();
+                                  }
+                                  if (result['merchant'] != null &&
+                                      result['merchant'] !=
+                                          'Generic Merchant') {
+                                    _vendorController.text = result['merchant'];
+                                  }
+                                  if (result['description'] != null) {
+                                    _descriptionController.text =
+                                        result['description'];
+                                  }
+                                  if (result['category'] != null) {
+                                    final cat = result['category'];
+                                    if (_categories.contains(cat)) {
+                                      _selectedCategory = cat;
+                                    }
+                                  }
+                                });
+
+                                String feedback = "Autofilled: ";
+                                final List<String> filled = [];
+                                if (result['amount'] != null)
+                                  filled.add("Amount (₦${result['amount']})");
+                                if (result['description'] != null &&
+                                    result['description'].isNotEmpty)
+                                  filled.add("Description");
+                                if (result['merchant'] != null &&
+                                    result['merchant'] != 'Generic Merchant')
+                                  filled.add("Merchant");
+                                if (result['category'] != null)
+                                  filled.add(
+                                    "Category (${result['category']})",
+                                  );
+
+                                CustomSnackbar.showSuccess(
+                                  context,
+                                  feedback +
+                                      (filled.isEmpty
+                                          ? "nothing"
+                                          : filled.join(", ")),
+                                );
+                              }
+                            },
+                            icon: Icon(
+                              Platform.isAndroid
+                                  ? Icons.mic
+                                  : CupertinoIcons.mic_fill,
+                              color: ConstantColor.blueBackground,
+                              size: 22.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30.0),
 
                 // 2. Category Selector List
                 googleSansText(
@@ -654,18 +811,26 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         )
                       : Row(
                           children: [
-                            Container(
-                              height: 48.0,
-                              width: 48.0,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              child: const Icon(
-                                CupertinoIcons.doc_text_fill,
-                                color: ConstantColor.blueBackground,
-                                size: 24.0,
-                              ),
+                            // Thumbnail if we have a real file, else icon
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10.0),
+                              child: _receiptFile != null
+                                  ? Image.file(
+                                      _receiptFile!,
+                                      width: 56.0,
+                                      height: 56.0,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      height: 56.0,
+                                      width: 56.0,
+                                      color: const Color(0xFFEFF6FF),
+                                      child: const Icon(
+                                        CupertinoIcons.doc_text_fill,
+                                        color: ConstantColor.blueBackground,
+                                        size: 24.0,
+                                      ),
+                                    ),
                             ),
                             const SizedBox(width: 12.0),
                             Expanded(
@@ -680,7 +845,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                   ),
                                   const SizedBox(height: 2.0),
                                   googleSansText(
-                                    text: "Ready to upload • 1.2 MB",
+                                    text:
+                                        "Ready to upload • $_receiptSizeLabel",
                                     colors: const Color(0xFF2E7D32),
                                     fontWeight: FontWeight.bold,
                                     size: 11.5,
@@ -693,6 +859,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                 setState(() {
                                   _hasReceipt = false;
                                   _receiptName = null;
+                                  _receiptFile = null;
+                                  _receiptSizeLabel = "";
                                 });
                               },
                               icon: const Icon(
@@ -705,103 +873,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         ),
                 ),
                 const SizedBox(height: 16.0),
-
-                // 5. Voice Scan Option Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF2F6FE),
-                    borderRadius: BorderRadius.circular(16.0),
-                    border: Border.all(
-                      color: ConstantColor.blueBackground.withOpacity(0.1),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            googleSansText(
-                              text: "Scan Receipt by Voice",
-                              colors: ConstantColor.blueBackground,
-                              fontWeight: FontWeight.bold,
-                              size: 15.0,
-                            ),
-                            const SizedBox(height: 4.0),
-                            googleSansText(
-                              text:
-                                  "Tell Uruvia what you bought and let AI auto-fill the forms.",
-                              colors: ConstantColor.paragraphTextSecondary,
-                              fontWeight: FontWeight.normal,
-                              size: 12.0,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8.0),
-                      AvatarGlow(
-                        startDelay: const Duration(milliseconds: 1000),
-                        glowColor: Colors.blue,
-                        glowShape: BoxShape.circle,
-                        glowRadiusFactor: 0.15,
-                        animate: true,
-                        curve: Curves.elasticOut,
-                        child: Material(
-                          shape: const CircleBorder(),
-                          color: Colors.white,
-                          elevation: 2.0,
-                          child: IconButton(
-                            onPressed: () async {
-                              final result = await showHalfScreenModal(context);
-                              if (result != null && mounted) {
-                                setState(() {
-                                  if (result['amount'] != null) {
-                                    final double amt = result['amount'];
-                                    _amountController.text = amt == amt.toInt() ? amt.toInt().toString() : amt.toString();
-                                  }
-                                  if (result['merchant'] != null && result['merchant'] != 'Generic Merchant') {
-                                    _vendorController.text = result['merchant'];
-                                  }
-                                  if (result['description'] != null) {
-                                    _descriptionController.text = result['description'];
-                                  }
-                                  if (result['category'] != null) {
-                                    final cat = result['category'];
-                                    if (_categories.contains(cat)) {
-                                      _selectedCategory = cat;
-                                    }
-                                  }
-                                });
-
-                                String feedback = "Autofilled: ";
-                                final List<String> filled = [];
-                                if (result['amount'] != null) filled.add("Amount (₦${result['amount']})");
-                                if (result['description'] != null && result['description'].isNotEmpty) filled.add("Description");
-                                if (result['merchant'] != null && result['merchant'] != 'Generic Merchant') filled.add("Merchant");
-                                if (result['category'] != null) filled.add("Category (${result['category']})");
-
-                                CustomSnackbar.showSuccess(
-                                  context,
-                                  feedback + (filled.isEmpty ? "nothing" : filled.join(", ")),
-                                );
-                              }
-                            },
-                            icon: Icon(
-                              Platform.isAndroid
-                                  ? Icons.mic
-                                  : CupertinoIcons.mic_fill,
-                              color: ConstantColor.blueBackground,
-                              size: 22.0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30.0),
 
                 // 6. Submit Primary Button
                 SizedBox(

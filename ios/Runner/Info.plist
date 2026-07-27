@@ -49,5 +49,16 @@
 	<string>Uruvia needs microphone access to log expenses by voice</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Uruvia needs microphone access to hear your expense logs</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>uruvia</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

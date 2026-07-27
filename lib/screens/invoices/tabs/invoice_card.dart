@@ -14,6 +14,7 @@ class InvoiceCard extends StatelessWidget {
   final DateTime dueDate;
   final String status; // 'Paid', 'Sent', 'Overdue', 'Draft'
   final Invoice? fullInvoice;
+  final VoidCallback? onRefresh;
 
   const InvoiceCard({
     super.key,
@@ -23,6 +24,7 @@ class InvoiceCard extends StatelessWidget {
     required this.dueDate,
     required this.status,
     this.fullInvoice,
+    this.onRefresh,
   });
 
   // Initials generator
@@ -120,12 +122,15 @@ class InvoiceCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
+          onTap: () async {
             final targetInvoice = fullInvoice ?? _compileFallbackInvoice();
-            slideRightWidget(
+            await slideRightWidget(
               newPage: InvoicePreviewPage(invoice: targetInvoice),
               context: context,
             );
+            if (onRefresh != null) {
+              onRefresh!();
+            }
           },
           borderRadius: BorderRadius.circular(16.0),
           child: Padding(

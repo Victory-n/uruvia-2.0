@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/offline/inventory_repository.dart';
 import 'package:uruvia/widgets/custom_text.dart';
@@ -25,6 +26,10 @@ class _AddInventoryPageState extends State<AddInventoryPage> {
   bool _lowStockAlert = false;
   bool _isLoading = false;
 
+  // Product image
+  File? _productImage;
+  final ImagePicker _imagePicker = ImagePicker();
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -34,6 +39,83 @@ class _AddInventoryPageState extends State<AddInventoryPage> {
     _thresholdController.dispose();
     _supplierController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickProductImage(ImageSource source) async {
+    try {
+      final XFile? picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+      if (mounted) {
+        setState(() {
+          _productImage = File(picked.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomSnackbar.showFailed(context, 'Could not pick image: $e');
+      }
+    }
+  }
+
+  void _showImageSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              googleSansText(
+                text: 'Product Image',
+                colors: ConstantColor.headingTextPrimary,
+                fontWeight: FontWeight.bold,
+                size: 16.0,
+              ),
+              const SizedBox(height: 16.0),
+              ListTile(
+                leading: const Icon(CupertinoIcons.camera, color: ConstantColor.blueBackground),
+                title: googleSansText(
+                  text: 'Take Photo',
+                  colors: ConstantColor.headingTextPrimary,
+                  fontWeight: FontWeight.bold,
+                  size: 14.5,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickProductImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(CupertinoIcons.photo, color: ConstantColor.blueBackground),
+                title: googleSansText(
+                  text: 'Choose from Gallery',
+                  colors: ConstantColor.headingTextPrimary,
+                  fontWeight: FontWeight.bold,
+                  size: 14.5,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickProductImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _saveProduct() async {
@@ -57,7 +139,9 @@ class _AddInventoryPageState extends State<AddInventoryPage> {
       'sku': sku,
       'stock': stock,
       'threshold': threshold,
-      'image_url': 'assets/img/inventory/inventory-1.png',
+      'image_url': _productImage != null
+          ? _productImage!.path
+          : 'assets/img/inventory/inventory-1.png',
       'retail_price': retailPrice,
       'supplier': supplier.isEmpty ? 'Generic Supplier' : supplier,
       'low_stock_alert': _lowStockAlert,
@@ -117,6 +201,116 @@ class _AddInventoryPageState extends State<AddInventoryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Product Image Picker
+                googleSansText(
+                  text: 'PRODUCT IMAGE',
+                  colors: ConstantColor.paragraphTextSecondary,
+                  fontWeight: FontWeight.bold,
+                  size: 11.0,
+                ),
+                const SizedBox(height: 8.0),
+                GestureDetector(
+                  onTap: _showImageSourceSheet,
+                  child: Container(
+                    width: double.infinity,
+                    height: 160.0,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(
+                        color: _productImage != null
+                            ? ConstantColor.blueBackground.withOpacity(0.4)
+                            : Colors.grey.shade200,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: _productImage != null
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(11.0),
+                                child: Image.file(
+                                  _productImage!,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _productImage = null),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6.0),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.redAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 14.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 8,
+                                right: 8,
+                                child: GestureDetector(
+                                  onTap: _showImageSourceSheet,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.55),
+                                      borderRadius: BorderRadius.circular(20.0),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(CupertinoIcons.camera, color: Colors.white, size: 13.0),
+                                        const SizedBox(width: 4.0),
+                                        googleSansText(
+                                          text: 'Change',
+                                          colors: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          size: 11.5,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                CupertinoIcons.camera_fill,
+                                color: ConstantColor.paragraphTextSecondary.withOpacity(0.5),
+                                size: 32.0,
+                              ),
+                              const SizedBox(height: 10.0),
+                              googleSansText(
+                                text: 'Tap to add product image',
+                                colors: ConstantColor.headingTextPrimary,
+                                fontWeight: FontWeight.bold,
+                                size: 14.0,
+                              ),
+                              const SizedBox(height: 4.0),
+                              googleSansText(
+                                text: 'Camera or Gallery • PNG, JPG up to 5MB',
+                                colors: ConstantColor.paragraphTextSecondary,
+                                fontWeight: FontWeight.normal,
+                                size: 11.5,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+
                 Container(
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(

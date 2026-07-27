@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/screens/invoices/model/invoice_model.dart';
 import '../../constants/colors.dart';
 import '../../widgets/custom_text.dart';
@@ -10,6 +12,8 @@ import '../../screens/tasks/task_model.dart';
 import '../../screens/tasks/tasks_repository.dart';
 import '../../services/notification_service.dart';
 import 'package:uruvia/screens/expenses/sales/sales_repository.dart';
+import '../../services/pdf_invoice_service.dart';
+import '../../classes/custom_snackbar.dart';
 
 class InvoicePreviewPage extends StatefulWidget {
   final Invoice invoice;
@@ -28,32 +32,42 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
   }
 
   Future<void> _scheduleOverdueReminders() async {
-    final invoice = widget.invoice;
-    if (invoice.status.toLowerCase() == 'paid') return;
+    try {
+      final invoice = widget.invoice;
+      if (invoice.status.toLowerCase() == 'paid') return;
 
-    final targetTime = invoice.dueDate.add(const Duration(hours: 24));
+      final targetTime = invoice.dueDate.add(const Duration(hours: 24));
 
-    // Schedule notification
-    await NotificationService.instance.scheduleNotification(
-      invoice.invoiceNumber,
-      "Invoice Overdue: ${invoice.invoiceNumber}",
-      "Invoice for ${invoice.customerName} of ₦${formatCurrency(invoice.total)} is now overdue.",
-      targetTime,
-    );
-
-    // If auto create is enabled, add a task with that due date
-    final autoCreate = await DatabaseHelper.instance.getSetting('setting_auto_task_overdue_invoice', defaultValue: true);
-    if (autoCreate) {
-      final task = Task(
-        id: 'invoice_overdue_${invoice.invoiceNumber}',
-        title: "Overdue Invoice: ${invoice.invoiceNumber}",
-        description: "Follow up with client ${invoice.customerName} on payment of ₦${formatCurrency(invoice.total)}.",
-        dueDate: targetTime,
-        type: 'invoice',
-        relatedItemId: invoice.invoiceNumber,
-        createdAt: DateTime.now(),
+      // Schedule notification
+      await NotificationService.instance.scheduleNotification(
+        invoice.invoiceNumber,
+        "Invoice Overdue: ${invoice.invoiceNumber}",
+        "Invoice for ${invoice.customerName} of ₦${formatCurrency(invoice.total)} is now overdue.",
+        targetTime,
       );
-      await TasksRepository.instance.addTask(task);
+
+      // If auto create is enabled, add a task with that due date
+      final autoCreate = await DatabaseHelper.instance.getSetting(
+        'setting_auto_task_overdue_invoice',
+        defaultValue: true,
+      );
+      if (autoCreate) {
+        final task = Task(
+          id: 'invoice_overdue_${invoice.invoiceNumber}',
+          title: "Overdue Invoice: ${invoice.invoiceNumber}",
+          description:
+              "Follow up with client ${invoice.customerName} on payment of ₦${formatCurrency(invoice.total)}.",
+          dueDate: targetTime,
+          type: 'invoice',
+          relatedItemId: invoice.invoiceNumber,
+          createdAt: DateTime.now(),
+        );
+        await TasksRepository.instance.addTask(task);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Warning: Could not schedule overdue reminder: $e');
+      }
     }
   }
 
@@ -103,6 +117,100 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
     );
   }
 
+  Future<void> _handleSavePdf() async {
+    try {
+      final file = await PdfInvoiceService.saveInvoicePdfLocally(
+        widget.invoice,
+      );
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                CupertinoIcons.checkmark_seal_fill,
+                color: ConstantColor.blueBackground,
+                size: 28.0,
+              ),
+              const SizedBox(width: 8.0),
+              googleSansText(
+                text: "PDF Saved",
+                colors: ConstantColor.headingTextPrimary,
+                fontWeight: FontWeight.bold,
+                size: 20.0,
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              googleSansText(
+                text:
+                    "Invoice ${widget.invoice.invoiceNumber} has been downloaded and saved as a PDF document.",
+                colors: ConstantColor.paragraphTextPrimary,
+                fontWeight: FontWeight.normal,
+                size: 14.5,
+              ),
+              const SizedBox(height: 12.0),
+              Container(
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: SelectableText(
+                  file.path,
+                  style: const TextStyle(
+                    fontSize: 12.0,
+                    color: ConstantColor.paragraphTextSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                PdfInvoiceService.shareInvoicePdf(widget.invoice);
+              },
+              child: googleSansText(
+                text: "Share PDF",
+                colors: ConstantColor.blueBackground,
+                fontWeight: FontWeight.bold,
+                size: 15.0,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ConstantColor.blueBackground,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: googleSansText(
+                text: "Done",
+                colors: Colors.white,
+                fontWeight: FontWeight.bold,
+                size: 15.0,
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      CustomSnackbar.showFailed(context, "Failed to save PDF: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final invoice = widget.invoice;
@@ -132,8 +240,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
         ),
         actions: [
           IconButton(
-            onPressed: () =>
-                _showMockActionFeedback("downloaded to local storage"),
+            onPressed: _handleSavePdf,
             icon: Platform.isAndroid
                 ? const Icon(
                     Icons.download_rounded,
@@ -181,17 +288,8 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                             width: 64,
                             height: 64,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: ConstantColor.blueBackground.withOpacity(
-                                  0.3,
-                                ),
-                                width: 2.0,
-                              ),
                               image: const DecorationImage(
-                                image: AssetImage(
-                                  "assets/img/invoice-logo.png",
-                                ),
+                                image: AssetImage("assets/img/logo.png"),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -202,20 +300,20 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 interText(
-                                  text: "Uruvia Technologies",
+                                  text: invoice.businessName,
                                   colors: ConstantColor.headingTextPrimary,
                                   fontWeight: FontWeight.bold,
                                   size: 18.0,
                                 ),
                                 const SizedBox(height: 4.0),
                                 interText(
-                                  text: "hello@uruvia.app",
+                                  text: invoice.businessEmail,
                                   colors: ConstantColor.paragraphTextSecondary,
                                   fontWeight: FontWeight.normal,
                                   size: 13.0,
                                 ),
                                 interText(
-                                  text: "+234 812 345 6789",
+                                  text: invoice.businessPhone,
                                   colors: ConstantColor.paragraphTextSecondary,
                                   fontWeight: FontWeight.normal,
                                   size: 13.0,
@@ -558,13 +656,58 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                         });
 
                         // Automatically add Paid Invoice as a Sale
-                        await SalesRepository.instance.addSaleFromInvoice(widget.invoice);
+                        await SalesRepository.instance.addSaleFromInvoice(
+                          widget.invoice,
+                        );
+
+                        // Persist the updated invoice status locally
+                        final dbHelper = DatabaseHelper.instance;
+                        await dbHelper.cacheUpsert('local_invoices', {
+                          'id': invoice.invoiceNumber,
+                          'amount': invoice.total,
+                          'status': 'Paid',
+                          'created_at': invoice.invoiceDate
+                              .toUtc()
+                              .toIso8601String(),
+                          'customer_name': invoice.customerName,
+                          'due_date': invoice.dueDate.toUtc().toIso8601String(),
+                        });
+
+                        // Persist the updated invoice status to Supabase if logged in
+                        try {
+                          final user =
+                              Supabase.instance.client.auth.currentUser;
+                          if (user != null) {
+                            await Supabase.instance.client
+                                .from('invoices')
+                                .upsert({
+                                  'id': invoice.invoiceNumber,
+                                  'user_id': user.id,
+                                  'amount': invoice.total,
+                                  'status': 'Paid',
+                                  'created_at': invoice.invoiceDate
+                                      .toUtc()
+                                      .toIso8601String(),
+                                  'customer_name': invoice.customerName,
+                                  'due_date': invoice.dueDate
+                                      .toUtc()
+                                      .toIso8601String(),
+                                });
+                          }
+                        } catch (e) {
+                          if (kDebugMode) {
+                            print("Error updating remote invoice status: $e");
+                          }
+                        }
 
                         // Cancel Overdue Alerts
-                        await NotificationService.instance.cancelNotification(invoice.invoiceNumber);
+                        await NotificationService.instance.cancelNotification(
+                          invoice.invoiceNumber,
+                        );
 
                         // Complete Overdue Task
-                        final overdueTaskId = 'invoice_overdue_${invoice.invoiceNumber}';
+                        final overdueTaskId =
+                            'invoice_overdue_${invoice.invoiceNumber}';
                         final overdueTask = Task(
                           id: overdueTaskId,
                           title: "Overdue Invoice: ${invoice.invoiceNumber}",
@@ -578,13 +721,20 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                         await TasksRepository.instance.updateTask(overdueTask);
 
                         // Auto-create Sales Fulfillment Task
-                        final autoSales = await DatabaseHelper.instance.getSetting('setting_auto_task_sales_fulfillment', defaultValue: true);
+                        final autoSales = await DatabaseHelper.instance
+                            .getSetting(
+                              'setting_auto_task_sales_fulfillment',
+                              defaultValue: true,
+                            );
                         if (autoSales) {
                           final saleTask = Task(
                             id: 'sales_fulfillment_${invoice.invoiceNumber}',
                             title: "Fulfill Order: ${invoice.invoiceNumber}",
-                            description: "Prepare and deliver order to client ${invoice.customerName}.",
-                            dueDate: DateTime.now().add(const Duration(days: 3)),
+                            description:
+                                "Prepare and deliver order to client ${invoice.customerName}.",
+                            dueDate: DateTime.now().add(
+                              const Duration(days: 3),
+                            ),
                             type: 'sale',
                             relatedItemId: invoice.invoiceNumber,
                             createdAt: DateTime.now(),
@@ -592,12 +742,13 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                           await TasksRepository.instance.addTask(saleTask);
 
                           // Schedule notification alert for fulfillment reminder
-                          await NotificationService.instance.scheduleNotification(
-                            saleTask.id,
-                            "Fulfillment Warning: ${saleTask.title}",
-                            saleTask.description,
-                            DateTime.now().add(const Duration(days: 2)),
-                          );
+                          await NotificationService.instance
+                              .scheduleNotification(
+                                saleTask.id,
+                                "Fulfillment Warning: ${saleTask.title}",
+                                saleTask.description,
+                                DateTime.now().add(const Duration(days: 2)),
+                              );
                         }
 
                         _showMockActionFeedback("marked as paid");
@@ -636,8 +787,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () =>
-                            _showMockActionFeedback("saved as PDF"),
+                        onPressed: _handleSavePdf,
                         style: ElevatedButton.styleFrom(
                           elevation: 0.0,
                           backgroundColor: Colors.white,
@@ -679,9 +829,8 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                             context: context,
                             isScrollControlled: true,
                             backgroundColor: Colors.transparent,
-                            builder: (context) => WhatsAppShareSheet(
-                              invoice: widget.invoice,
-                            ),
+                            builder: (context) =>
+                                WhatsAppShareSheet(invoice: widget.invoice),
                           );
                         },
                         style: ElevatedButton.styleFrom(

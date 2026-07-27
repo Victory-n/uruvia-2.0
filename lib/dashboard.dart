@@ -36,11 +36,11 @@ class DashboardInvoice {
   });
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'amount': amount,
-        'status': status,
-        'created_at': date.toIso8601String(),
-      };
+    'id': id,
+    'amount': amount,
+    'status': status,
+    'created_at': date.toIso8601String(),
+  };
 }
 
 class DashboardExpense {
@@ -57,11 +57,11 @@ class DashboardExpense {
   });
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'amount': amount,
-        'status': status,
-        'created_at': date.toIso8601String(),
-      };
+    'id': id,
+    'amount': amount,
+    'status': status,
+    'created_at': date.toIso8601String(),
+  };
 }
 
 class Dashboard extends StatefulWidget {
@@ -92,40 +92,44 @@ class _DashboardState extends State<Dashboard> {
 
   Future<void> _loadDatabaseData() async {
     try {
-      // 1. Query SQLite local cache
+      // 1. Query SQLite local cache first for an immediate render
       final dbHelper = DatabaseHelper.instance;
       final cachedInvoices = await dbHelper.queryCache('local_invoices');
       final cachedExpenses = await dbHelper.queryCache('local_expenses');
 
-      if (mounted && cachedInvoices.isNotEmpty) {
-        final List<DashboardInvoice> localInvoices = cachedInvoices.map((row) {
-          return DashboardInvoice(
-            id: row['id'] as String,
-            amount: (row['amount'] as num).toDouble(),
-            status: row['status'] as String,
-            date: DateTime.parse(row['created_at'] as String),
-          );
-        }).toList();
+      // Build maps keyed by id for easy deduplication later
+      final Map<String, DashboardInvoice> invoiceMap = {};
+      final Map<String, DashboardExpense> expenseMap = {};
+
+      for (var row in cachedInvoices) {
+        final id = row['id'] as String? ?? '';
+        invoiceMap[id] = DashboardInvoice(
+          id: id,
+          amount: (row['amount'] as num).toDouble(),
+          status: row['status'] as String,
+          date: DateTime.parse(row['created_at'] as String),
+        );
+      }
+
+      for (var row in cachedExpenses) {
+        final id = row['id'] as String? ?? '';
+        expenseMap[id] = DashboardExpense(
+          id: id,
+          amount: (row['amount'] as num).toDouble(),
+          status: row['status'] as String,
+          date: DateTime.parse(row['created_at'] as String),
+        );
+      }
+
+      // Show local cache immediately
+      if (mounted) {
         setState(() {
-          _invoices = localInvoices;
+          if (invoiceMap.isNotEmpty) _invoices = invoiceMap.values.toList();
+          if (expenseMap.isNotEmpty) _expenses = expenseMap.values.toList();
         });
       }
 
-      if (mounted && cachedExpenses.isNotEmpty) {
-        final List<DashboardExpense> localExpenses = cachedExpenses.map((row) {
-          return DashboardExpense(
-            id: row['id'] as String,
-            amount: (row['amount'] as num).toDouble(),
-            status: row['status'] as String,
-            date: DateTime.parse(row['created_at'] as String),
-          );
-        }).toList();
-        setState(() {
-          _expenses = localExpenses;
-        });
-      }
-
-      // 2. Fetch live data from Supabase database
+      // 2. Fetch live data from Supabase and merge (remote wins for same IDs)
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
         final invoicesData = await Supabase.instance.client
@@ -138,51 +142,53 @@ class _DashboardState extends State<Dashboard> {
             .select()
             .eq('user_id', user.id);
 
-        final List<DashboardInvoice> remoteInvoices = [];
         for (var row in (invoicesData as List)) {
+          final id = row['id']?.toString() ?? '';
           final inv = DashboardInvoice(
-            id: row['id']?.toString() ?? '',
+            id: id,
             amount: ((row['amount'] ?? row['total']) ?? 0.0).toDouble(),
-            status: row['status'] ?? 'Paid',
+            status: row['status'] ?? 'Draft',
             date: row['created_at'] != null
                 ? DateTime.parse(row['created_at'])
                 : (row['invoice_date'] != null
-                    ? DateTime.parse(row['invoice_date'])
-                    : DateTime.now()),
+                      ? DateTime.parse(row['invoice_date'])
+                      : DateTime.now()),
           );
-          remoteInvoices.add(inv);
+          invoiceMap[id] = inv; // Remote overwrites local for same id
           await dbHelper.cacheUpsert('local_invoices', inv.toMap());
         }
 
-        final List<DashboardExpense> remoteExpenses = [];
         for (var row in (expensesData as List)) {
+          final id = row['id']?.toString() ?? '';
           final exp = DashboardExpense(
-            id: row['id']?.toString() ?? '',
+            id: id,
             amount: (row['amount'] ?? 0.0).toDouble(),
             status: row['status'] ?? 'Approved',
             date: row['created_at'] != null
                 ? DateTime.parse(row['created_at'])
                 : (row['date'] != null
-                    ? DateTime.parse(row['date'])
-                    : DateTime.now()),
+                      ? DateTime.parse(row['date'])
+                      : DateTime.now()),
           );
-          remoteExpenses.add(exp);
+          expenseMap[id] = exp; // Remote overwrites local for same id
           await dbHelper.cacheUpsert('local_expenses', exp.toMap());
         }
 
-        if (mounted && (remoteInvoices.isNotEmpty || remoteExpenses.isNotEmpty)) {
+        // Update UI with merged result
+        if (mounted) {
           setState(() {
-            if (remoteInvoices.isNotEmpty) _invoices = remoteInvoices;
-            if (remoteExpenses.isNotEmpty) _expenses = remoteExpenses;
+            if (invoiceMap.isNotEmpty) _invoices = invoiceMap.values.toList();
+            if (expenseMap.isNotEmpty) _expenses = expenseMap.values.toList();
           });
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print("Database sync info / fallback to cache: $e");
+        print("Dashboard data sync info / fallback to cache: $e");
       }
     }
   }
+
 
   bool _isDateInPeriod(DateTime date, String period) {
     final now = DateTime.now();
@@ -203,16 +209,21 @@ class _DashboardState extends State<Dashboard> {
 
   double get _totalRevenue {
     return _invoices
-        .where((inv) =>
-            inv.status == 'Paid' && _isDateInPeriod(inv.date, _selectedPeriod))
+        .where(
+          (inv) =>
+              inv.status.toLowerCase() == 'paid' &&
+              _isDateInPeriod(inv.date, _selectedPeriod),
+        )
         .fold(0.0, (sum, inv) => sum + inv.amount);
   }
 
   double get _totalExpense {
     return _expenses
-        .where((exp) =>
-            exp.status == 'Approved' &&
-            _isDateInPeriod(exp.date, _selectedPeriod))
+        .where(
+          (exp) =>
+              exp.status.toLowerCase() == 'approved' &&
+              _isDateInPeriod(exp.date, _selectedPeriod),
+        )
         .fold(0.0, (sum, exp) => sum + exp.amount);
   }
 
@@ -245,30 +256,18 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
               ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GestureDetector(
-              onTap: () => Scaffold.maybeOf(context)?.openDrawer(),
-              child: CircleAvatar(
-                radius: 15,
-                backgroundColor: const Color(0xFFEFF6FF),
-                child: googleSansText(
-                  text: userInitials,
-                  colors: ConstantColor.blueBackground,
-                  fontWeight: FontWeight.bold,
-                  size: 13.0,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8.0),
-            googleSansText(
-              text: "Uruvia",
-              colors: ConstantColor.headingTextPrimary,
+        title: GestureDetector(
+          onTap: () => Scaffold.maybeOf(context)?.openDrawer(),
+          child: CircleAvatar(
+            radius: 15,
+            backgroundColor: const Color(0xFFEFF6FF),
+            child: googleSansText(
+              text: userInitials,
+              colors: ConstantColor.blueBackground,
               fontWeight: FontWeight.bold,
-              size: 18.0,
+              size: 13.0,
             ),
-          ],
+          ),
         ),
         centerTitle: true,
         actions: [

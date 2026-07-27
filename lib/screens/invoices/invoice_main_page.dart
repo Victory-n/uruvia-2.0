@@ -34,6 +34,7 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
   double _outstandingAmount = 0.0;
   double _overdueAmount = 0.0;
   double _collectedThisMonth = 0.0;
+  int _refreshKey = 0;
 
   @override
   void initState() {
@@ -50,10 +51,19 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
     double outstanding = 0.0;
     double overdue = 0.0;
     double collected = 0.0;
+    final now = DateTime.now();
 
     for (var inv in cachedInvoices) {
       final amount = (inv['amount'] as num? ?? 0.0).toDouble();
-      final status = (inv['status'] as String? ?? '').toLowerCase();
+      final statusFromDb = (inv['status'] as String? ?? '').toLowerCase();
+      final dueDateStr = inv['due_date'] as String?;
+      final dueDate = dueDateStr != null ? DateTime.tryParse(dueDateStr) : null;
+
+      var status = statusFromDb;
+      if (statusFromDb != 'paid' && dueDate != null && dueDate.isBefore(now)) {
+        status = 'overdue';
+      }
+
       if (status == 'overdue') {
         overdue += amount;
         outstanding += amount;
@@ -62,7 +72,6 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
       }
     }
 
-    final now = DateTime.now();
     for (var sale in cachedSales) {
       final dateStr = sale['date_paid'] as String?;
       final amount = (sale['amount'] as num? ?? 0.0).toDouble();
@@ -115,8 +124,13 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
         centerTitle: true,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () =>
-            slideUpWidget(newPage: const AddInvoicePage(), context: context),
+        onPressed: () async {
+          await slideUpWidget(newPage: const AddInvoicePage(), context: context);
+          if (mounted) {
+            setState(() => _refreshKey++);
+            _loadMetrics();
+          }
+        },
         backgroundColor: ConstantColor.blueBackground,
         elevation: 4.0,
         shape: RoundedRectangleBorder(
@@ -421,11 +435,11 @@ class _InvoiceMainPageState extends State<InvoiceMainPage>
               Expanded(
                 child: TabBarView(
                   controller: tabController,
-                  children: const [
-                    AllPage(),
-                    DraftPage(),
-                    OverduePage(),
-                    PaidPage(),
+                  children: [
+                    AllPage(key: ValueKey(_refreshKey), onRefresh: _loadMetrics),
+                    DraftPage(onRefresh: _loadMetrics),
+                    OverduePage(onRefresh: _loadMetrics),
+                    PaidPage(onRefresh: _loadMetrics),
                   ],
                 ),
               ),

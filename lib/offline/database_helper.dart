@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       pathString,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -79,6 +79,20 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       await _createFinancialTables(db);
     }
+    if (oldVersion < 4) {
+      try {
+        await db.execute('ALTER TABLE local_expenses ADD COLUMN vendor TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE local_expenses ADD COLUMN category TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE local_invoices ADD COLUMN customer_name TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE local_invoices ADD COLUMN due_date TEXT;');
+      } catch (_) {}
+    }
   }
 
   Future<void> _createFinancialTables(Database db) async {
@@ -87,7 +101,9 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         amount REAL NOT NULL,
         status TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        customer_name TEXT,
+        due_date TEXT
       )
     ''');
 
@@ -96,7 +112,9 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         amount REAL NOT NULL,
         status TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        vendor TEXT,
+        category TEXT
       )
     ''');
 

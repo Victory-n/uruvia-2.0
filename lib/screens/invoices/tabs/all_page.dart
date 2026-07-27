@@ -6,7 +6,8 @@ import 'package:uruvia/screens/invoices/tabs/invoice_card.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 
 class AllPage extends StatefulWidget {
-  const AllPage({super.key});
+  final VoidCallback? onRefresh;
+  const AllPage({super.key, this.onRefresh});
 
   @override
   State<AllPage> createState() => _AllPageState();
@@ -25,9 +26,23 @@ class _AllPageState extends State<AllPage> {
   Future<void> _loadInvoices() async {
     final dbHelper = DatabaseHelper.instance;
     final cachedInvoices = await dbHelper.queryCache('local_invoices', orderBy: 'created_at DESC');
+    
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> processedInvoices = cachedInvoices.map((inv) {
+      final Map<String, dynamic> mutableInv = Map.from(inv);
+      final statusFromDb = mutableInv['status'] as String? ?? 'Draft';
+      final dueDateStr = mutableInv['due_date'] as String?;
+      final dueDate = dueDateStr != null ? DateTime.tryParse(dueDateStr) : null;
+      
+      if (statusFromDb.toLowerCase() != 'paid' && dueDate != null && dueDate.isBefore(now)) {
+        mutableInv['status'] = 'Overdue';
+      }
+      return mutableInv;
+    }).toList();
+
     if (mounted) {
       setState(() {
-        _invoices = cachedInvoices;
+        _invoices = processedInvoices;
         _isLoading = false;
       });
     }
@@ -89,6 +104,12 @@ class _AllPageState extends State<AllPage> {
               amount: amount,
               dueDate: dueDate,
               status: status,
+              onRefresh: () {
+                _loadInvoices();
+                if (widget.onRefresh != null) {
+                  widget.onRefresh!();
+                }
+              },
             );
           }).toList(),
         ),

@@ -1,5 +1,6 @@
-import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/widgets/custom_text.dart';
@@ -33,31 +34,93 @@ class _OrganizationOnboardingScreenState
   String? _uploadedLogoSize;
   bool _isUploadingLogo = false;
   double _uploadProgress = 0.0;
+  File? _logoFile;
+  final ImagePicker _imagePicker = ImagePicker();
 
-  void _simulateLogoUpload() {
-    setState(() {
-      _isUploadingLogo = true;
-      _uploadProgress = 0.0;
-    });
-
-    // Simulate file upload progress
-    Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
-      setState(() {
-        _uploadProgress += 0.1;
-        if (_uploadProgress >= 1.0) {
-          _uploadProgress = 1.0;
+  Future<void> _pickLogo(ImageSource source) async {
+    try {
+      final XFile? picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 90,
+      );
+      if (picked == null) return;
+      final file = File(picked.path);
+      final sizeBytes = await file.length();
+      final sizeKb = (sizeBytes / 1024).round();
+      final sizeLabel = sizeKb >= 1024
+          ? '${(sizeKb / 1024).toStringAsFixed(1)} MB'
+          : '$sizeKb KB';
+      if (mounted) {
+        setState(() {
+          _logoFile = file;
+          _uploadedLogoName = picked.name;
+          _uploadedLogoSize = sizeLabel;
           _isUploadingLogo = false;
-          _uploadedLogoName = "company_brand_logo.png";
-          _uploadedLogoSize = "840 KB";
-          timer.cancel();
-        }
-      });
-    });
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomSnackbar.showFailed(context, 'Could not pick image: $e');
+      }
+    }
+  }
+
+  void _showLogoSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              interText(
+                text: 'Upload Business Logo',
+                colors: ConstantColor.headingTextPrimary,
+                fontWeight: FontWeight.bold,
+                size: 16.0,
+              ),
+              const SizedBox(height: 16.0),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: ConstantColor.blueBackground),
+                title: interText(
+                  text: 'Take Photo',
+                  colors: ConstantColor.headingTextPrimary,
+                  fontWeight: FontWeight.w600,
+                  size: 14.5,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickLogo(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: ConstantColor.blueBackground),
+                title: interText(
+                  text: 'Choose from Gallery',
+                  colors: ConstantColor.headingTextPrimary,
+                  fontWeight: FontWeight.w600,
+                  size: 14.5,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickLogo(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _removeLogo() {
@@ -66,6 +129,7 @@ class _OrganizationOnboardingScreenState
       _uploadedLogoSize = null;
       _uploadProgress = 0.0;
       _isUploadingLogo = false;
+      _logoFile = null;
     });
   }
 
@@ -193,6 +257,7 @@ class _OrganizationOnboardingScreenState
                 'has_skipped_onboarding': false,
                 'business_name': _businessNameController.text.trim(),
                 'business_logo_name': _uploadedLogoName,
+                'business_logo_path': _logoFile?.path,
                 'business_logo_size': _uploadedLogoSize,
                 'business_country': _countryController.text.trim(),
                 'business_currency': _currencyController.text.trim(),
@@ -454,7 +519,7 @@ class _OrganizationOnboardingScreenState
           GestureDetector(
             onTap: (_isUploadingLogo || _uploadedLogoName != null)
                 ? null
-                : _simulateLogoUpload,
+                : _showLogoSourceSheet,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: double.infinity,
@@ -533,17 +598,28 @@ class _OrganizationOnboardingScreenState
                   ] else if (_uploadedLogoName != null) ...[
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.image_outlined,
-                            color: Colors.green,
-                            size: 24,
-                          ),
+                        // Show real logo thumbnail if available
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: _logoFile != null
+                              ? Image.file(
+                                  _logoFile!,
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.image_outlined,
+                                    color: Colors.green,
+                                    size: 24,
+                                  ),
+                                ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

@@ -11,6 +11,7 @@ import 'package:uruvia/screens/customer directory/customer_repository.dart';
 import 'package:uruvia/screens/customer directory/customer_model.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 import 'package:uruvia/classes/custom_snackbar.dart';
+import 'package:uruvia/services/pdf_invoice_service.dart';
 
 class WhatsAppShareSheet extends StatefulWidget {
   final Invoice invoice;
@@ -118,12 +119,20 @@ class _WhatsAppShareSheetState extends State<WhatsAppShareSheet> {
     final phone = rawPhone.replaceAll(RegExp(r'[^\d+]'), '');
 
     if (_includePdfAttachment) {
-      // Use share_plus to share file & message
-      // If a physical file exists, we share it; otherwise share text via share_plus
-      final result = await Share.share(
-        _messagePreview,
-        subject: 'Invoice #${widget.invoice.invoiceNumber}',
-      );
+      try {
+        await PdfInvoiceService.shareInvoicePdf(
+          widget.invoice,
+          text: _messagePreview,
+        );
+      } catch (e) {
+        if (mounted) {
+          CustomSnackbar.showFailed(context, "Could not attach PDF: $e");
+        }
+        await Share.share(
+          _messagePreview,
+          subject: 'Invoice #${widget.invoice.invoiceNumber}',
+        );
+      }
     } else {
       // Launch WhatsApp directly via web link if available or fallback to share
       final String encodedText = Uri.encodeComponent(_messagePreview);
@@ -386,7 +395,14 @@ class _WhatsAppShareSheetState extends State<WhatsAppShareSheet> {
           Center(
             child: TextButton(
               onPressed: () {
-                Share.share(_messagePreview);
+                if (_includePdfAttachment) {
+                  PdfInvoiceService.shareInvoicePdf(
+                    widget.invoice,
+                    text: _messagePreview,
+                  );
+                } else {
+                  Share.share(_messagePreview);
+                }
               },
               child: googleSansText(
                 text: "More Sharing Options",

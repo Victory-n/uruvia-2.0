@@ -6,7 +6,8 @@ import 'package:uruvia/screens/invoices/tabs/invoice_card.dart';
 import 'package:uruvia/widgets/custom_text.dart';
 
 class PaidPage extends StatefulWidget {
-  const PaidPage({super.key});
+  final VoidCallback? onRefresh;
+  const PaidPage({super.key, this.onRefresh});
 
   @override
   State<PaidPage> createState() => _PaidPageState();
@@ -24,15 +25,30 @@ class _PaidPageState extends State<PaidPage> {
 
   Future<void> _loadInvoices() async {
     final dbHelper = DatabaseHelper.instance;
-    final cachedInvoices = await dbHelper.queryCache(
-      'local_invoices',
-      where: 'LOWER(status) = ?',
-      whereArgs: ['paid'],
-      orderBy: 'created_at DESC',
-    );
+    final cachedInvoices = await dbHelper.queryCache('local_invoices', orderBy: 'created_at DESC');
+    
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> processedInvoices = [];
+    for (var inv in cachedInvoices) {
+      final statusFromDb = inv['status'] as String? ?? 'Draft';
+      final dueDateStr = inv['due_date'] as String?;
+      final dueDate = dueDateStr != null ? DateTime.tryParse(dueDateStr) : null;
+      
+      var status = statusFromDb;
+      if (statusFromDb.toLowerCase() != 'paid' && dueDate != null && dueDate.isBefore(now)) {
+        status = 'Overdue';
+      }
+      
+      if (status.toLowerCase() == 'paid') {
+        final Map<String, dynamic> mutableInv = Map.from(inv);
+        mutableInv['status'] = status;
+        processedInvoices.add(mutableInv);
+      }
+    }
+
     if (mounted) {
       setState(() {
-        _invoices = cachedInvoices;
+        _invoices = processedInvoices;
         _isLoading = false;
       });
     }
@@ -94,6 +110,12 @@ class _PaidPageState extends State<PaidPage> {
               amount: amount,
               dueDate: dueDate,
               status: status,
+              onRefresh: () {
+                _loadInvoices();
+                if (widget.onRefresh != null) {
+                  widget.onRefresh!();
+                }
+              },
             );
           }).toList(),
         ),
