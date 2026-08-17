@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uruvia/individual/dashboard.dart';
 import 'package:uruvia/offline/connectivity_service.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/constants/supabase_config.dart';
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: session != null ? const AutoLogin() : const PageOne(),
+      // home: session != null ? const AutoLogin() : const Dashboard(),
     );
   }
 }

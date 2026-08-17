@@ -9,6 +9,7 @@ import 'package:uruvia/offline/database_helper.dart';
 import 'package:uruvia/services/subscription_service.dart';
 import 'package:uruvia/widgets/paywall_dialog.dart';
 import 'package:uruvia/classes/custom_snackbar.dart';
+import 'package:uruvia/screens/settings/delete_account_progress_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -165,6 +166,59 @@ class _SettingsPageState extends State<SettingsPage> {
           CustomSnackbar.showFailed(context, "Failed to update account mode: $error");
         }
       }
+    }
+  }
+
+  Future<void> _showDeleteAccountDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: googleSansText(
+          text: "Delete Account?",
+          colors: ConstantColor.headingTextPrimary,
+          fontWeight: FontWeight.bold,
+          size: 18.0,
+        ),
+        content: googleSansText(
+          text:
+              "Are you sure you want to delete your account? This action will initiate permanent removal of your account and all associated data.",
+          colors: ConstantColor.paragraphTextSecondary,
+          fontWeight: FontWeight.normal,
+          size: 14.0,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: googleSansText(
+              text: "Cancel",
+              colors: ConstantColor.paragraphTextSecondary,
+              fontWeight: FontWeight.w600,
+              size: 14.0,
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC62828),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: googleSansText(
+              text: "Yes, Delete",
+              colors: Colors.white,
+              fontWeight: FontWeight.bold,
+              size: 14.0,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DeleteAccountProgressPage(),
+        ),
+      );
     }
   }
 
@@ -716,6 +770,45 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(width: 8.0),
                           googleSansText(
                             text: "Log Out",
+                            colors: const Color(0xFFC62828),
+                            fontWeight: FontWeight.bold,
+                            size: 15.0,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+
+                // 8. Delete Account Option Button
+                Container(
+                  width: double.infinity,
+                  height: 50.0,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: const Color(0xFFEF5350),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _showDeleteAccountDialog,
+                      borderRadius: BorderRadius.circular(12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            CupertinoIcons.trash,
+                            color: Color(0xFFC62828),
+                            size: 18.0,
+                          ),
+                          const SizedBox(width: 8.0),
+                          googleSansText(
+                            text: "Delete Account",
                             colors: const Color(0xFFC62828),
                             fontWeight: FontWeight.bold,
                             size: 15.0,

@@ -54,6 +54,9 @@ dependencies:
   image_picker: ^1.2.3
   flutter_launcher_icons: ^0.14.4
   app_links: ^7.2.1
+  intl: ^0.20.3
+  flip_card_plus: ^1.0.5
+  home_widget: ^0.9.3
 
 dev_dependencies:
   flutter_test:
