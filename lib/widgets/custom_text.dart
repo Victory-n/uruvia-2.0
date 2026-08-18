@@ -42,6 +42,7 @@ Widget googleSansText({
   required FontWeight fontWeight,
   required double size,
   bool? softWrap,
+  double? letterSpacing,
   TextAlign? textAlign,
 }) => Text(
   text,
