@@ -41,8 +41,9 @@ class MyApp extends StatelessWidget {
           seedColor: ConstantColor.lightBackground,
         ),
       ),
-      home: session != null ? const AutoLogin() : const PageOne(),
+      // home: session != null ? const AutoLogin() : const PageOne(),
       // home: session != null ? const AutoLogin() : const Dashboard(),
+      home: session == null ? const AutoLogin() : const Dashboard(),
     );
   }
 }
