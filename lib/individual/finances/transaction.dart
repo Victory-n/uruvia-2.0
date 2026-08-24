@@ -1,8 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
-import 'package:uruvia/individual/sidebar.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../../shared/widgets/custom_text.dart';
 
 class IndividualTransactionPage extends StatefulWidget {
   const IndividualTransactionPage({super.key});
@@ -74,9 +72,6 @@ class _IndividualTransactionPageState extends State<IndividualTransactionPage> {
         : _mockTransactions.where((t) => t['isIncome'] == false).toList();
 
     return Scaffold(
-      drawer: const IndividualDrawer(
-        selectedIndex: 3,
-      ), // Index 3 for Transactions
       backgroundColor: ConstantColor.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.white,

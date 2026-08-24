@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../../../../shared/widgets/custom_text.dart';
 
 class CreateSavingEventForm extends StatefulWidget {
   final String initialType; // 'Target Goal' or 'Locked Term'

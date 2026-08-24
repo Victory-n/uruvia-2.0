@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/individual/finances/events/forms/create_saving_event_form.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../../../../shared/widgets/custom_text.dart';
 
 class SavingsTypesSheet extends StatelessWidget {
   const SavingsTypesSheet({super.key});

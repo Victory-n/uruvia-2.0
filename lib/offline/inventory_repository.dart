@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uruvia/offline/connectivity_service.dart';
-import 'package:uruvia/offline/database_helper.dart';
 import 'package:uruvia/offline/sync_service.dart';
+import 'connectivity_service.dart';
+import 'database_helper.dart';
 
 class InventoryRepository {
   static final InventoryRepository _instance = InventoryRepository._internal();
@@ -85,17 +85,27 @@ class InventoryRepository {
         return;
       } catch (e) {
         if (kDebugMode) {
-          print('Failed to write directly to remote database. Queuing action: $e');
+          print(
+            'Failed to write directly to remote database. Queuing action: $e',
+          );
         }
       }
     }
 
     // 3. Fallback: Queue offline outbox action
-    await SyncService.instance.enqueueAction('INSERT', 'inventory_items', item['id'] as String, item);
+    await SyncService.instance.enqueueAction(
+      'INSERT',
+      'inventory_items',
+      item['id'] as String,
+      item,
+    );
   }
 
   // Update an existing inventory item
-  Future<void> updateInventoryItem(String id, Map<String, dynamic> updates) async {
+  Future<void> updateInventoryItem(
+    String id,
+    Map<String, dynamic> updates,
+  ) async {
     // 1. Fetch current item from cache and merge updates
     final List<Map<String, dynamic>> localRows = await _dbHelper.queryCache(
       'local_inventory_items',
@@ -111,7 +121,7 @@ class InventoryRepository {
     }
 
     final mergedItem = Map<String, dynamic>.from(localRows.first);
-    
+
     if (mergedItem['low_stock_alert'] is int) {
       mergedItem['low_stock_alert'] = mergedItem['low_stock_alert'] == 1;
     }
@@ -120,7 +130,7 @@ class InventoryRepository {
     updates.forEach((key, value) {
       mergedItem[key] = value;
     });
-    
+
     // Update timestamp
     mergedItem['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
@@ -142,13 +152,20 @@ class InventoryRepository {
         return;
       } catch (e) {
         if (kDebugMode) {
-          print('Failed to update directly to remote database. Queuing action: $e');
+          print(
+            'Failed to update directly to remote database. Queuing action: $e',
+          );
         }
       }
     }
 
     // 4. Fallback: Queue offline outbox action
-    await SyncService.instance.enqueueAction('UPDATE', 'inventory_items', id, mergedItem);
+    await SyncService.instance.enqueueAction(
+      'UPDATE',
+      'inventory_items',
+      id,
+      mergedItem,
+    );
   }
 
   // Delete an inventory item
@@ -167,12 +184,19 @@ class InventoryRepository {
         return;
       } catch (e) {
         if (kDebugMode) {
-          print('Failed to delete directly from remote database. Queuing action: $e');
+          print(
+            'Failed to delete directly from remote database. Queuing action: $e',
+          );
         }
       }
     }
 
     // 3. Fallback: Queue offline outbox action
-    await SyncService.instance.enqueueAction('DELETE', 'inventory_items', id, {});
+    await SyncService.instance.enqueueAction(
+      'DELETE',
+      'inventory_items',
+      id,
+      {},
+    );
   }
 }

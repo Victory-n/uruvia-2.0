@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uruvia/offline/database_helper.dart';
+import 'database_helper.dart';
 
 class SyncService {
   static final SyncService _instance = SyncService._internal();
@@ -33,7 +33,9 @@ class SyncService {
     });
 
     if (kDebugMode) {
-      print('Queued offline action ($actionType) on table $tableName for record $recordId');
+      print(
+        'Queued offline action ($actionType) on table $tableName for record $recordId',
+      );
     }
   }
 
@@ -48,7 +50,7 @@ class SyncService {
 
     try {
       final db = await _dbHelper.database;
-      
+
       while (true) {
         // Query the oldest action in FIFO order
         final List<Map<String, dynamic>> actions = await db.query(
@@ -69,22 +71,34 @@ class SyncService {
         final String actionType = action['action_type'] as String;
         final String tableName = action['table_name'] as String;
         final String recordId = action['record_id'] as String;
-        final Map<String, dynamic> payload = jsonDecode(action['payload'] as String) as Map<String, dynamic>;
+        final Map<String, dynamic> payload =
+            jsonDecode(action['payload'] as String) as Map<String, dynamic>;
 
-        bool success = await _syncAction(actionType, tableName, recordId, payload);
-        
+        bool success = await _syncAction(
+          actionType,
+          tableName,
+          recordId,
+          payload,
+        );
+
         if (success) {
           // Remove action from local queue
-          await db.delete('offline_actions', where: 'id = ?', whereArgs: [actionId]);
+          await db.delete(
+            'offline_actions',
+            where: 'id = ?',
+            whereArgs: [actionId],
+          );
           if (kDebugMode) {
             print('Successfully synced and removed action ID: $actionId');
           }
         } else {
           // If we fail because of connectivity, pause and retry later.
           if (kDebugMode) {
-            print('Failed to sync action ID: $actionId. Stopping synchronization loop.');
+            print(
+              'Failed to sync action ID: $actionId. Stopping synchronization loop.',
+            );
           }
-          break; 
+          break;
         }
       }
     } catch (e) {
@@ -107,31 +121,35 @@ class SyncService {
       if (actionType == 'INSERT' || actionType == 'UPDATE') {
         // SQLite stores boolean values as 0 or 1, but Supabase expects actual booleans.
         final cleanedPayload = Map<String, dynamic>.from(payload);
-        
-        if (cleanedPayload.containsKey('low_stock_alert') && cleanedPayload['low_stock_alert'] is int) {
-          cleanedPayload['low_stock_alert'] = cleanedPayload['low_stock_alert'] == 1;
+
+        if (cleanedPayload.containsKey('low_stock_alert') &&
+            cleanedPayload['low_stock_alert'] is int) {
+          cleanedPayload['low_stock_alert'] =
+              cleanedPayload['low_stock_alert'] == 1;
         }
 
-        await _supabaseClient
-            .from(tableName)
-            .upsert(cleanedPayload);
+        await _supabaseClient.from(tableName).upsert(cleanedPayload);
       } else if (actionType == 'DELETE') {
-        await _supabaseClient
-            .from(tableName)
-            .delete()
-            .eq('id', recordId);
+        await _supabaseClient.from(tableName).delete().eq('id', recordId);
       }
       return true;
     } on PostgrestException catch (e) {
       if (kDebugMode) {
-        print('Supabase PostgrestException while syncing $tableName: ${e.message} (${e.code})');
+        print(
+          'Supabase PostgrestException while syncing $tableName: ${e.message} (${e.code})',
+        );
       }
       // If error is schema, conflict or validation constraint, discard it from queue to avoid blockages
-      if (e.code == '400' || e.code == '409' || e.code == '23505' || e.code == '23503') {
+      if (e.code == '400' ||
+          e.code == '409' ||
+          e.code == '23505' ||
+          e.code == '23503') {
         if (kDebugMode) {
-          print('Constraint / Bad Request error: Discarding action to prevent blocking the queue.');
+          print(
+            'Constraint / Bad Request error: Discarding action to prevent blocking the queue.',
+          );
         }
-        return true; 
+        return true;
       }
       return false; // Temporary connection error
     } catch (e) {

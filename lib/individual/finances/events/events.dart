@@ -5,9 +5,8 @@ import 'package:uruvia/individual/finances/events/forms/create_saving_event_form
 import 'package:uruvia/individual/finances/events/intro_modal.dart';
 import 'package:uruvia/individual/finances/events/widgets/event_type_card.dart';
 import 'package:uruvia/individual/finances/events/widgets/savings_types_sheet.dart';
-import 'package:uruvia/individual/sidebar.dart';
-import 'package:uruvia/shared_features/budgeting/budgeting_screen.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../../../shared/features/budgeting/budgeting_screen.dart';
+import '../../../shared/widgets/custom_text.dart';
 
 class IndividualEventsPage extends StatefulWidget {
   const IndividualEventsPage({super.key});
@@ -33,7 +32,6 @@ class _IndividualEventsPageState extends State<IndividualEventsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const IndividualDrawer(selectedIndex: 4), // Index 4 for Events
       backgroundColor: ConstantColor.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.white,

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:uruvia/offline/database_helper.dart';
+import '../offline/database_helper.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -66,13 +66,22 @@ class NotificationService {
     switch (category.toLowerCase()) {
       case 'invoice':
       case 'new_invoice':
-        return await dbHelper.getSetting('setting_notification_new_invoices', defaultValue: true);
+        return await dbHelper.getSetting(
+          'setting_notification_new_invoices',
+          defaultValue: true,
+        );
       case 'low_stock':
       case 'stock':
-        return await dbHelper.getSetting('setting_notification_low_stock', defaultValue: true);
+        return await dbHelper.getSetting(
+          'setting_notification_low_stock',
+          defaultValue: true,
+        );
       case 'reminder':
       case 'task':
-        return await dbHelper.getSetting('setting_notification_reminders', defaultValue: true);
+        return await dbHelper.getSetting(
+          'setting_notification_reminders',
+          defaultValue: true,
+        );
       default:
         return true;
     }

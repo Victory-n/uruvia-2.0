@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../../../shared/widgets/custom_text.dart';
 
 class EventsIntroModal extends StatelessWidget {
   const EventsIntroModal({super.key});

@@ -1,1 +1,1 @@
-export 'package:uruvia/shared_features/wallet/wallet_page.dart';
+export 'package:uruvia/shared/features/wallet/wallet_page.dart';

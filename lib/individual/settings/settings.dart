@@ -1,10 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
-import 'package:uruvia/individual/settings/widgets/dimples_mascot_card.dart';
-import 'package:uruvia/individual/settings/widgets/dimples_widget_preview_sheet.dart';
-import 'package:uruvia/individual/sidebar.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../../shared/widgets/custom_text.dart';
 
 class IndividualSettingsPage extends StatefulWidget {
   final String userEmail;
@@ -27,14 +24,9 @@ class _IndividualSettingsPageState extends State<IndividualSettingsPage> {
   bool _homeWidgetSyncEnabled = true;
   bool _comedicNudgesEnabled = true;
 
-  void _openWidgetPreviewSheet() {
-    DimplesWidgetPreviewSheet.show(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const IndividualDrawer(selectedIndex: 6),
       backgroundColor: ConstantColor.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -192,12 +184,6 @@ class _IndividualSettingsPageState extends State<IndividualSettingsPage> {
               ],
             ),
           ),
-          if (_dimplesMascotEnabled) ...[
-            const SizedBox(height: 14.0),
-            DimplesMascotCard(
-              onPreviewHomeScreenWidget: _openWidgetPreviewSheet,
-            ),
-          ],
           const SizedBox(height: 24.0),
 
           // Preferences Section

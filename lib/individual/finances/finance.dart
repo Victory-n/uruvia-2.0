@@ -1,12 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/individual/finances/reports/financial_reports.dart';
 import 'package:uruvia/individual/finances/transaction.dart';
-import 'package:uruvia/individual/sidebar.dart';
-import 'package:uruvia/shared_features/budgeting/budgeting_screen.dart';
-import 'package:uruvia/shared_features/calculator/savings_calculator_screen.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../../shared/features/budgeting/budgeting_screen.dart';
+import '../../shared/features/calculator/savings_calculator_screen.dart';
+import '../../shared/widgets/custom_text.dart';
 
 class IndividualFinancePage extends StatefulWidget {
   const IndividualFinancePage({super.key});
@@ -21,7 +19,6 @@ class _IndividualFinancePageState extends State<IndividualFinancePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const IndividualDrawer(selectedIndex: 2),
       backgroundColor: ConstantColor.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.white,

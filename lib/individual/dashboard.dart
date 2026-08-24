@@ -1,12 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
-import 'package:uruvia/individual/sidebar.dart';
-import 'package:uruvia/shared_features/wallet/models/wallet_account_type.dart';
-import 'package:uruvia/shared_features/wallet/setup_virtual_account_modal.dart';
-import 'package:uruvia/shared_features/wallet/virtual_card_widget.dart';
-import 'package:uruvia/shared_features/wallet/wallet_page.dart';
-import 'package:uruvia/widgets/custom_text.dart';
+import '../shared/features/wallet/setup_virtual_account_modal.dart';
+import '../shared/features/wallet/virtual_card_widget.dart';
+import '../shared/features/wallet/wallet_page.dart';
+import '../shared/widgets/custom_text.dart';
 
 class IndividualDashboard extends StatefulWidget {
   final String userName;
@@ -45,7 +42,6 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const IndividualDrawer(selectedIndex: 0),
       backgroundColor: ConstantColor.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.white,
