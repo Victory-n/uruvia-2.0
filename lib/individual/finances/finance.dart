@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/individual/finances/reports/financial_reports.dart';
 import 'package:uruvia/individual/finances/transaction.dart';
+import '../sidebar/individual_sidebar.dart';
 import '../../shared/features/budgeting/budgeting_screen.dart';
 import '../../shared/features/calculator/savings_calculator_screen.dart';
 import '../../shared/widgets/custom_text.dart';
@@ -20,6 +21,9 @@ class _IndividualFinancePageState extends State<IndividualFinancePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ConstantColor.lightBackground,
+      drawer: const IndividualSidebar(
+        currentRoute: IndividualSidebarRoute.finances,
+      ),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,

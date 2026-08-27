@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'profile_information_screen.dart';
+import '../sidebar/individual_sidebar.dart';
 import '../../shared/widgets/custom_text.dart';
 
 class IndividualSettingsPage extends StatefulWidget {
@@ -28,6 +30,10 @@ class _IndividualSettingsPageState extends State<IndividualSettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ConstantColor.lightBackground,
+      drawer: IndividualSidebar(
+        currentRoute: IndividualSidebarRoute.settings,
+        userEmail: widget.userEmail,
+      ),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
@@ -80,7 +86,13 @@ class _IndividualSettingsPageState extends State<IndividualSettingsPage> {
                     size: 12.0,
                   ),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileInformationScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(

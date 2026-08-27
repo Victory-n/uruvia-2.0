@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'sidebar/individual_sidebar.dart';
 import '../shared/features/wallet/setup_virtual_account_modal.dart';
 import '../shared/features/wallet/virtual_card_widget.dart';
 import '../shared/features/wallet/wallet_page.dart';
@@ -18,6 +19,13 @@ typedef Dashboard = IndividualDashboard;
 
 class _IndividualDashboardState extends State<IndividualDashboard> {
   bool _isVirtualAccountSetup = false;
+
+  Future<void> _handleRefresh() async {
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   void _openSetupModal() {
     SetupVirtualAccountModal.show(
@@ -43,6 +51,10 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ConstantColor.lightBackground,
+      drawer: IndividualSidebar(
+        currentRoute: IndividualSidebarRoute.dashboard,
+        userName: widget.userName,
+      ),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
@@ -73,12 +85,17 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: RefreshIndicator(
+        color: ConstantColor.blueBackground,
+        onRefresh: _handleRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Welcome Header Card (Pure UI)
             Container(
               width: double.infinity,
@@ -213,7 +230,8 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildSummaryCard({

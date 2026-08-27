@@ -58,6 +58,7 @@ dependencies:
   flip_card_plus: ^1.0.5
   home_widget: ^0.9.3
   flutter_native_splash: ^2.4.8
+  whatsapp: ^4.0.1
 
 dev_dependencies:
   flutter_test:
@@ -126,3 +127,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  color: "#F8F9FF"
+  image: assets/img/logo.png
+  color_dark: "#0B1C30"
+  image_dark: assets/img/logo.png
+  android_12:
+    color: "#F8F9FF"
+    image: assets/img/logo.png
+    color_dark: "#0B1C30"
+    image_dark: assets/img/logo.png
+  web: false
+

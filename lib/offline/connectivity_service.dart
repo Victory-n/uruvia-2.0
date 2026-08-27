@@ -11,6 +11,10 @@ class ConnectivityService {
 
   // Expose the current status as a ValueNotifier
   final ValueNotifier<bool> isConnected = ValueNotifier<bool>(true);
+
+  /// Convenience getter to check if current connection state is online
+  bool get isOnline => isConnected.value;
+
   StreamSubscription<InternetConnectionStatus>? _subscription;
 
   // Initialize the stream listener

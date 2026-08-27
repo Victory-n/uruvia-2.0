@@ -1,17 +1,25 @@
--- 1. Profiles Table
+-- 1. Profiles Table (Base user record created upon registration)
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
-  first_name text NOT NULL,
-  last_name text NOT NULL,
-  email text,
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  firstname TEXT NOT NULL,
+  lastname TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  phone_number TEXT,
+  profile_image TEXT,
+  region TEXT CHECK (region IN ('Africa', 'Europe', 'Asia', 'America', 'Australia')),
+  currency TEXT CHECK (currency IN ('NGN', 'USD', 'EUR', 'AUD')),
+  account_type TEXT CHECK (account_type IN ('individual', 'business')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
-CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+CREATE POLICY "Users can view own profile" ON public.profiles
+  FOR SELECT TO authenticated
+  USING ((select auth.uid()) = id);
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile" ON public.profiles
@@ -19,16 +27,85 @@ CREATE POLICY "Users can update their own profile" ON public.profiles
   USING ((select auth.uid()) = id)
   WITH CHECK ((select auth.uid()) = id);
 
+-- 2. Business Accounts Table (Created if account_type = 'business')
+CREATE TABLE IF NOT EXISTS public.business_accounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  business_name TEXT NOT NULL,
+  business_email TEXT,
+  business_phone_number TEXT,
+  business_image TEXT,
+  certificate_of_registration TEXT,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended', 'banned')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.business_accounts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Owners can view own business accounts" ON public.business_accounts;
+CREATE POLICY "Owners can view own business accounts" ON public.business_accounts
+  FOR SELECT TO authenticated
+  USING ((select auth.uid()) = owner_id);
+
+DROP POLICY IF EXISTS "Owners can update own business accounts" ON public.business_accounts;
+CREATE POLICY "Owners can update own business accounts" ON public.business_accounts
+  FOR UPDATE TO authenticated
+  USING ((select auth.uid()) = owner_id)
+  WITH CHECK ((select auth.uid()) = owner_id);
+
+DROP POLICY IF EXISTS "Owners can insert business account" ON public.business_accounts;
+CREATE POLICY "Owners can insert business account" ON public.business_accounts
+  FOR INSERT TO authenticated
+  WITH CHECK ((select auth.uid()) = owner_id);
+
+-- Foreign Key Index for performance
+CREATE INDEX IF NOT EXISTS idx_business_accounts_owner_id ON public.business_accounts(owner_id);
+
+-- Universal trigger function for updating updated_at timestamp automatically
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_profiles_updated_at ON public.profiles;
+CREATE TRIGGER set_profiles_updated_at
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_business_accounts_updated_at ON public.business_accounts;
+CREATE TRIGGER set_business_accounts_updated_at
+  BEFORE UPDATE ON public.business_accounts
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
 -- Trigger function to automatically insert profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, first_name, last_name, email)
+  INSERT INTO public.profiles (
+    id,
+    firstname,
+    lastname,
+    email,
+    phone_number,
+    profile_image,
+    region,
+    currency,
+    account_type
+  )
   VALUES (
     new.id,
-    COALESCE(new.raw_user_meta_data->>'first_name', ''),
-    COALESCE(new.raw_user_meta_data->>'last_name', ''),
-    new.email
+    COALESCE(new.raw_user_meta_data->>'firstname', new.raw_user_meta_data->>'first_name', ''),
+    COALESCE(new.raw_user_meta_data->>'lastname', new.raw_user_meta_data->>'last_name', ''),
+    new.email,
+    new.raw_user_meta_data->>'phone_number',
+    new.raw_user_meta_data->>'profile_image',
+    COALESCE(new.raw_user_meta_data->>'region', 'Africa'),
+    COALESCE(new.raw_user_meta_data->>'currency', 'NGN'),
+    COALESCE(new.raw_user_meta_data->>'account_type', 'individual')
   );
   RETURN new;
 END;
@@ -38,145 +115,3 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
-
-
--- 2. Inventory Items Table
-CREATE TABLE IF NOT EXISTS public.inventory_items (
-  id text PRIMARY KEY,
-  name text NOT NULL,
-  sku text NOT NULL,
-  stock integer NOT NULL DEFAULT 0,
-  threshold integer NOT NULL DEFAULT 10,
-  image_url text,
-  retail_price numeric,
-  supplier text,
-  low_stock_alert boolean NOT NULL DEFAULT false,
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-ALTER TABLE public.inventory_items ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow read for everyone" ON public.inventory_items;
-CREATE POLICY "Allow read for everyone" ON public.inventory_items
-  FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Allow write for authenticated users" ON public.inventory_items;
-CREATE POLICY "Allow write for authenticated users" ON public.inventory_items
-  FOR ALL TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
-
--- 3. Sales Table
-CREATE TABLE IF NOT EXISTS public.sales (
-  id text PRIMARY KEY,
-  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
-  customer_name text NOT NULL,
-  invoice_number text NOT NULL,
-  amount numeric NOT NULL,
-  date_paid timestamp with time zone NOT NULL,
-  status text NOT NULL,
-  category text NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow sales access for authenticated users" ON public.sales;
-CREATE POLICY "Allow sales access for authenticated users" ON public.sales
-  FOR ALL TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
-
--- 4. Invoices Table
-CREATE TABLE IF NOT EXISTS public.invoices (
-  id text PRIMARY KEY,
-  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
-  amount numeric NOT NULL,
-  status text NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow invoices access for authenticated users" ON public.invoices;
-CREATE POLICY "Allow invoices access for authenticated users" ON public.invoices
-  FOR ALL TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
-
--- 5. Expenses Table
-CREATE TABLE IF NOT EXISTS public.expenses (
-  id text PRIMARY KEY,
-  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
-  amount numeric NOT NULL,
-  status text NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow expenses access for authenticated users" ON public.expenses;
-CREATE POLICY "Allow expenses access for authenticated users" ON public.expenses
-  FOR ALL TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
-
--- 6. Service Requests Table (LOGISTICS & CAC REGISTRATION)
-CREATE TABLE IF NOT EXISTS public.service_requests (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
-  service_type text NOT NULL,
-  form_data jsonb NOT NULL,
-  payment_status text DEFAULT 'pending_quote',
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-ALTER TABLE public.service_requests ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow service_requests access for authenticated users" ON public.service_requests;
-CREATE POLICY "Allow service_requests access for authenticated users" ON public.service_requests
-  FOR ALL TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
-
--- 7. Tasks & Reminders Table (Cloud Backup for Tasks)
-CREATE TABLE IF NOT EXISTS public.tasks (
-  id text PRIMARY KEY,
-  user_id uuid REFERENCES auth.users ON DELETE CASCADE,
-  title text NOT NULL,
-  description text,
-  due_date timestamp with time zone NOT NULL,
-  is_completed boolean NOT NULL DEFAULT false,
-  type text NOT NULL DEFAULT 'manual',
-  related_item_id text,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow tasks access for authenticated users" ON public.tasks;
-CREATE POLICY "Allow tasks access for authenticated users" ON public.tasks
-  FOR ALL TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
-
--- 8. User Settings Table (Cloud Backup for Notification Toggles & App Preferences)
-CREATE TABLE IF NOT EXISTS public.user_settings (
-  user_id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
-  settings jsonb NOT NULL DEFAULT '{}'::jsonb,
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow user_settings access for authenticated users" ON public.user_settings;
-CREATE POLICY "Allow user_settings access for authenticated users" ON public.user_settings
-  FOR ALL TO authenticated
-  USING (true)
-  WITH CHECK (true);

@@ -1269,6 +1269,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
+  whatsapp:
+    dependency: "direct main"
+    description:
+      name: whatsapp
+      sha256: "2e63f35d63779575632c4c3e0be98c6cf67d75287f17c9bb312fe68a9ac2b347"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.1"
   win32:
     dependency: transitive
     description:
