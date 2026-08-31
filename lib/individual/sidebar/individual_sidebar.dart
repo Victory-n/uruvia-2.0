@@ -47,7 +47,7 @@ class _IndividualSidebarState extends State<IndividualSidebar> {
     _loadUserInfo();
   }
 
-  void _loadUserInfo() {
+  Future<void> _loadUserInfo() async {
     final currentUser = Supabase.instance.client.auth.currentUser;
     if (currentUser != null) {
       final meta = currentUser.userMetadata;
@@ -55,15 +55,30 @@ class _IndividualSidebarState extends State<IndividualSidebar> {
       final lastName = meta?['lastname'] ?? meta?['last_name'] ?? "";
       final fullName = "$firstName".trim();
 
-      setState(() {
-        _displayName = fullName.isNotEmpty ? fullName : widget.userName;
-        _displayEmail = currentUser.email ?? widget.userEmail;
-      });
+      if (mounted) {
+        setState(() {
+          _displayName = fullName.isNotEmpty
+              ? fullName
+              : (widget.userName != "Alex" ? widget.userName : "User");
+          _displayEmail = currentUser.email ?? widget.userEmail;
+        });
+      }
+
+      try {
+        final profile = await AuthService.instance.getUserProfile(currentUser.id);
+        if (profile != null && profile.firstname.trim().isNotEmpty && mounted) {
+          setState(() {
+            _displayName = profile.firstname.trim();
+          });
+        }
+      } catch (_) {}
     } else {
-      setState(() {
-        _displayName = widget.userName;
-        _displayEmail = widget.userEmail;
-      });
+      if (mounted) {
+        setState(() {
+          _displayName = widget.userName;
+          _displayEmail = widget.userEmail;
+        });
+      }
     }
   }
 

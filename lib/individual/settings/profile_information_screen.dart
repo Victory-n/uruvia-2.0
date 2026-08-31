@@ -1,92 +1,14 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/models/user_model.dart';
 import 'package:uruvia/services/auth_service.dart';
+import 'package:uruvia/services/currency_service.dart';
 import 'package:uruvia/shared/widgets/custom_text.dart';
 import 'widgets/profile_avatar_widget.dart';
 import 'widgets/profile_input_field.dart';
-
-/// Data payload for isolate validation.
-class ProfileValidationData {
-  final String firstname;
-  final String lastname;
-  final String phoneNumber;
-  final String region;
-  final String currency;
-
-  const ProfileValidationData({
-    required this.firstname,
-    required this.lastname,
-    required this.phoneNumber,
-    required this.region,
-    required this.currency,
-  });
-}
-
-/// Validation result produced by background Isolate.
-class ProfileValidationResult {
-  final bool isValid;
-  final String? errorMessage;
-  final String sanitizedFirstname;
-  final String sanitizedLastname;
-  final String sanitizedPhone;
-
-  const ProfileValidationResult({
-    required this.isValid,
-    this.errorMessage,
-    required this.sanitizedFirstname,
-    required this.sanitizedLastname,
-    required this.sanitizedPhone,
-  });
-}
-
-/// Offloaded background Isolate function to ensure 60/120 FPS UI performance (Rule 1).
-ProfileValidationResult _validateProfileIsolate(ProfileValidationData data) {
-  final cleanFirst = data.firstname.trim();
-  final cleanLast = data.lastname.trim();
-  final cleanPhone = data.phoneNumber.trim().replaceAll(RegExp(r'[\s\-]+'), '');
-
-  if (cleanFirst.isEmpty) {
-    return ProfileValidationResult(
-      isValid: false,
-      errorMessage: 'First name cannot be empty.',
-      sanitizedFirstname: cleanFirst,
-      sanitizedLastname: cleanLast,
-      sanitizedPhone: cleanPhone,
-    );
-  }
-
-  if (cleanLast.isEmpty) {
-    return ProfileValidationResult(
-      isValid: false,
-      errorMessage: 'Last name cannot be empty.',
-      sanitizedFirstname: cleanFirst,
-      sanitizedLastname: cleanLast,
-      sanitizedPhone: cleanPhone,
-    );
-  }
-
-  if (cleanPhone.isNotEmpty && cleanPhone.length < 7) {
-    return ProfileValidationResult(
-      isValid: false,
-      errorMessage: 'Please enter a valid phone number.',
-      sanitizedFirstname: cleanFirst,
-      sanitizedLastname: cleanLast,
-      sanitizedPhone: cleanPhone,
-    );
-  }
-
-  return ProfileValidationResult(
-    isValid: true,
-    sanitizedFirstname: cleanFirst,
-    sanitizedLastname: cleanLast,
-    sanitizedPhone: cleanPhone,
-  );
-}
 
 /// Dedicated Profile Information Screen (Rule 5 - strictly Scaffold).
 class ProfileInformationScreen extends StatefulWidget {
@@ -123,6 +45,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
   final List<String> _currencies = const [
     "NGN",
     "USD",
+    "AUD",
     "GBP",
     "EUR",
     "CAD",
@@ -157,7 +80,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
           _emailController.text = profile?.email ?? currentUser?.email ?? "";
           _phoneController.text = profile?.phoneNumber ?? meta?['phone_number'] ?? "";
           _selectedRegion = profile?.region ?? meta?['region'] ?? "Africa";
-          _selectedCurrency = profile?.currency ?? meta?['currency'] ?? "NGN";
+          _selectedCurrency = profile?.currency ?? meta?['currency'] ?? CurrencyService.instance.activeCurrency;
           _profileImageUrl = profile?.profileImage;
           _isLoading = false;
         });
@@ -285,35 +208,49 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
     if (_isSaving) return;
 
     FocusScope.of(context).unfocus();
-
-    final validationData = ProfileValidationData(
-      firstname: _firstNameController.text,
-      lastname: _lastNameController.text,
-      phoneNumber: _phoneController.text,
-      region: _selectedRegion,
-      currency: _selectedCurrency,
-    );
-
-    // Offload validation to background Isolate (Rule 1)
-    final validationResult = await Isolate.run(
-      () => _validateProfileIsolate(validationData),
-    );
-
-    if (!validationResult.isValid) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(validationResult.errorMessage ?? "Validation failed"),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
     setState(() => _isSaving = true);
 
     try {
+      final cleanFirst = _firstNameController.text.trim();
+      final cleanLast = _lastNameController.text.trim();
+      final cleanPhone = _phoneController.text.trim().replaceAll(RegExp(r'[\s\-]+'), '');
+
+      if (cleanFirst.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("First name cannot be empty."),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      if (cleanLast.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Last name cannot be empty."),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      if (cleanPhone.isNotEmpty && cleanPhone.length < 7) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Please enter a valid phone number."),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
       String? finalAvatarUrl = _profileImageUrl;
 
       // Upload avatar image to Supabase Storage if user selected a new file
@@ -322,13 +259,15 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
       }
 
       await AuthService.instance.updateUserProfile(
-        firstname: validationResult.sanitizedFirstname,
-        lastname: validationResult.sanitizedLastname,
-        phoneNumber: validationResult.sanitizedPhone,
+        firstname: cleanFirst,
+        lastname: cleanLast,
+        phoneNumber: cleanPhone,
         profileImage: finalAvatarUrl,
         region: _selectedRegion,
         currency: _selectedCurrency,
       );
+
+      await CurrencyService.instance.setCurrency(_selectedCurrency, syncBackend: false);
 
       if (!mounted) return;
 

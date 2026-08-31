@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/individual/finances/reports/financial_reports.dart';
 import 'package:uruvia/individual/finances/transaction.dart';
+import 'package:uruvia/services/currency_service.dart';
 import '../sidebar/individual_sidebar.dart';
 import '../../shared/features/budgeting/budgeting_screen.dart';
 import '../../shared/features/calculator/savings_calculator_screen.dart';
@@ -98,11 +99,16 @@ class _IndividualFinancePageState extends State<IndividualFinancePage> {
                     ],
                   ),
                   const SizedBox(height: 8.0),
-                  googleSansText(
-                    text: "₦250,000.00",
-                    colors: ConstantColor.headingTextPrimary,
-                    fontWeight: FontWeight.bold,
-                    size: 28.0,
+                  ValueListenableBuilder<String>(
+                    valueListenable: CurrencyService.instance.activeCurrencyNotifier,
+                    builder: (context, activeCurrency, _) {
+                      return googleSansText(
+                        text: CurrencyService.format(250000.00, currency: activeCurrency),
+                        colors: ConstantColor.headingTextPrimary,
+                        fontWeight: FontWeight.bold,
+                        size: 28.0,
+                      );
+                    },
                   ),
                 ],
               ),

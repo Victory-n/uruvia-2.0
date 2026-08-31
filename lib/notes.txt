@@ -7,3 +7,5 @@
 4. Reminder (Notification Module): When building the notification module later, connect the Intelligent Budget Analytics feature to trigger proactive push/in-app notifications suggesting budget tightening opportunities and goal completion acceleration.
 
 5. Architectural File Structure: Any `.dart` file that contains a `Scaffold` widget must be dedicated strictly to that screen/page. Reusable widgets or widgets without a `Scaffold` must not share the same file with a `Scaffold` widget; they should be placed in their respective `widgets/` folder and separate file.
+
+6. Offline Banner Presence: All UI pages and screens must have the offline banner enabled (via the global `MaterialApp` builder / `OfflineBanner` widget) so that users are always immediately notified whenever the device is in offline mode across any screen in the application.

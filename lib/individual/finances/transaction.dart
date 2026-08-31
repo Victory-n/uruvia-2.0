@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/currency_service.dart';
 import '../../shared/widgets/custom_text.dart';
 
 class IndividualTransactionPage extends StatefulWidget {
@@ -20,7 +21,8 @@ class _IndividualTransactionPageState extends State<IndividualTransactionPage> {
       'title': 'Salary Deposit',
       'category': 'Income',
       'date': 'Today, 10:30 AM',
-      'amount': '+₦350,000.00',
+      'amount': 350000.00,
+      'currency': 'NGN',
       'isIncome': true,
       'icon': Icons.arrow_downward_rounded,
       'color': Colors.green,
@@ -29,7 +31,8 @@ class _IndividualTransactionPageState extends State<IndividualTransactionPage> {
       'title': 'Grocery Store',
       'category': 'Food & Dining',
       'date': 'Yesterday, 4:15 PM',
-      'amount': '-₦18,500.00',
+      'amount': -18500.00,
+      'currency': 'NGN',
       'isIncome': false,
       'icon': Icons.shopping_bag_outlined,
       'color': Colors.orange,
@@ -38,7 +41,8 @@ class _IndividualTransactionPageState extends State<IndividualTransactionPage> {
       'title': 'Electricity Bill',
       'category': 'Utilities',
       'date': '04 Aug 2026',
-      'amount': '-₦12,000.00',
+      'amount': -12000.00,
+      'currency': 'NGN',
       'isIncome': false,
       'icon': Icons.bolt_outlined,
       'color': Colors.redAccent,
@@ -47,7 +51,8 @@ class _IndividualTransactionPageState extends State<IndividualTransactionPage> {
       'title': 'Freelance Payment',
       'category': 'Income',
       'date': '02 Aug 2026',
-      'amount': '+₦75,000.00',
+      'amount': 75000.00,
+      'currency': 'NGN',
       'isIncome': true,
       'icon': Icons.work_outline,
       'color': Colors.green,
@@ -56,7 +61,8 @@ class _IndividualTransactionPageState extends State<IndividualTransactionPage> {
       'title': 'Streaming Subscription',
       'category': 'Entertainment',
       'date': '01 Aug 2026',
-      'amount': '-₦4,500.00',
+      'amount': -4500.00,
+      'currency': 'NGN',
       'isIncome': false,
       'icon': Icons.movie_outlined,
       'color': Colors.purple,
@@ -213,7 +219,11 @@ class _IndividualTransactionPageState extends State<IndividualTransactionPage> {
                         ),
                       ),
                       googleSansText(
-                        text: item['amount'],
+                        text: CurrencyService.format(
+                          item['amount'] as num,
+                          currency: item['currency'] as String?,
+                          showSign: true,
+                        ),
                         colors: isIncome
                             ? Colors.green
                             : ConstantColor.headingTextPrimary,

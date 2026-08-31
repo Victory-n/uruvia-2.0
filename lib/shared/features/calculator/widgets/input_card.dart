@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/currency_service.dart';
 import '../../../widgets/custom_text.dart';
 
 class SavingsInputCard extends StatelessWidget {
@@ -24,6 +25,7 @@ class SavingsInputCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final symbol = CurrencyService.instance.activeSymbol;
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -68,7 +70,7 @@ class SavingsInputCard extends StatelessWidget {
 
           // Monthly Income / Revenue Input
           googleSansText(
-            text: isBusiness ? "Monthly Business Revenue (₦)" : "Monthly Income / Salary (₦)",
+            text: isBusiness ? "Monthly Business Revenue ($symbol)" : "Monthly Income / Salary ($symbol)",
             colors: ConstantColor.headingTextPrimary,
             fontWeight: FontWeight.bold,
             size: 13.0,
@@ -145,7 +147,7 @@ class SavingsInputCard extends StatelessWidget {
 
           // Target Amount Input
           googleSansText(
-            text: "Target Amount (₦)",
+            text: "Target Amount ($symbol)",
             colors: ConstantColor.headingTextPrimary,
             fontWeight: FontWeight.bold,
             size: 13.0,

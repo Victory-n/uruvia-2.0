@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       pathString,
-      version: 4,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -40,120 +40,28 @@ class DatabaseHelper {
       )
     ''');
 
-    // 2. Create cached profiles table
+    // 2. Create cached user profiles table
     await db.execute('''
       CREATE TABLE local_profiles (
         id TEXT PRIMARY KEY,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
         email TEXT,
+        currency TEXT NOT NULL DEFAULT 'NGN',
         updated_at TEXT NOT NULL
       )
     ''');
-
-    // 3. Create cached inventory_items table
-    await db.execute('''
-      CREATE TABLE local_inventory_items (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        sku TEXT NOT NULL,
-        stock INTEGER NOT NULL,
-        threshold INTEGER NOT NULL,
-        image_url TEXT,
-        retail_price REAL,
-        supplier TEXT,
-        low_stock_alert INTEGER NOT NULL DEFAULT 0, -- SQLite doesn't have native BOOLEAN, use 0/1
-        updated_at TEXT NOT NULL
-      )
-    ''');
-
-    // 4. Create tasks, settings, invoices and expenses tables
-    await _createTasksAndSettingsTables(db);
-    await _createFinancialTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await _createTasksAndSettingsTables(db);
-    }
-    if (oldVersion < 3) {
-      await _createFinancialTables(db);
-    }
-    if (oldVersion < 4) {
       try {
-        await db.execute('ALTER TABLE local_expenses ADD COLUMN vendor TEXT;');
-      } catch (_) {}
-      try {
-        await db.execute('ALTER TABLE local_expenses ADD COLUMN category TEXT;');
-      } catch (_) {}
-      try {
-        await db.execute('ALTER TABLE local_invoices ADD COLUMN customer_name TEXT;');
-      } catch (_) {}
-      try {
-        await db.execute('ALTER TABLE local_invoices ADD COLUMN due_date TEXT;');
+        await db.execute("ALTER TABLE local_profiles ADD COLUMN currency TEXT NOT NULL DEFAULT 'NGN';");
       } catch (_) {}
     }
   }
 
-  Future<void> _createFinancialTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS local_invoices (
-        id TEXT PRIMARY KEY,
-        amount REAL NOT NULL,
-        status TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        customer_name TEXT,
-        due_date TEXT
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS local_expenses (
-        id TEXT PRIMARY KEY,
-        amount REAL NOT NULL,
-        status TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        vendor TEXT,
-        category TEXT
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS local_sales (
-        id TEXT PRIMARY KEY,
-        customer_name TEXT NOT NULL,
-        invoice_number TEXT NOT NULL,
-        amount REAL NOT NULL,
-        date_paid TEXT NOT NULL,
-        status TEXT NOT NULL,
-        category TEXT NOT NULL
-      )
-    ''');
-  }
-
-  Future<void> _createTasksAndSettingsTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS local_tasks (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT,
-        due_date TEXT NOT NULL,
-        is_completed INTEGER NOT NULL DEFAULT 0,
-        type TEXT NOT NULL,
-        related_item_id TEXT,
-        created_at TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS local_settings (
-        key TEXT PRIMARY KEY,
-        value INTEGER NOT NULL
-      )
-    ''');
-  }
-
-  // Clear cache helper
+  // Clear cache helper for a specific table
   Future<void> clearTable(String tableName) async {
     final db = await database;
     await db.delete(tableName);
@@ -165,12 +73,6 @@ class DatabaseHelper {
     final tables = [
       'offline_actions',
       'local_profiles',
-      'local_inventory_items',
-      'local_invoices',
-      'local_expenses',
-      'local_sales',
-      'local_tasks',
-      'local_settings',
     ];
     for (final table in tables) {
       await db.delete(table);
@@ -188,41 +90,24 @@ class DatabaseHelper {
   }
 
   // Query cached table rows
-  Future<List<Map<String, dynamic>>> queryCache(String tableName, {String? where, List<dynamic>? whereArgs, String? orderBy}) async {
+  Future<List<Map<String, dynamic>>> queryCache(
+    String tableName, {
+    String? where,
+    List<dynamic>? whereArgs,
+    String? orderBy,
+  }) async {
     final db = await database;
-    return await db.query(tableName, where: where, whereArgs: whereArgs, orderBy: orderBy);
+    return await db.query(
+      tableName,
+      where: where,
+      whereArgs: whereArgs,
+      orderBy: orderBy,
+    );
   }
 
   // Delete cached row
   Future<int> deleteCacheRow(String tableName, String id) async {
     final db = await database;
     return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
-  }
-
-  // Get a boolean setting from local cache
-  Future<bool> getSetting(String key, {bool defaultValue = true}) async {
-    final db = await database;
-    final List<Map<String, dynamic>> result = await db.query(
-      'local_settings',
-      where: 'key = ?',
-      whereArgs: [key],
-    );
-    if (result.isEmpty) {
-      return defaultValue;
-    }
-    return result.first['value'] == 1;
-  }
-
-  // Set a boolean setting in local cache
-  Future<void> setSetting(String key, bool value) async {
-    final db = await database;
-    await db.insert(
-      'local_settings',
-      {
-        'key': key,
-        'value': value ? 1 : 0,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
   }
 }

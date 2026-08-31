@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/individual/dashboard.dart';
 import 'package:uruvia/services/app_initializer.dart';
@@ -69,7 +70,10 @@ class _SplashScreenState extends State<SplashScreen>
     // Route to appropriate screen based on init result
     switch (result) {
       case InitResult.authenticated:
-        _navigateToTarget(const IndividualDashboard());
+        final user = Supabase.instance.client.auth.currentUser;
+        final meta = user?.userMetadata;
+        final name = (meta?['firstname'] ?? meta?['first_name'] ?? '').toString().trim();
+        _navigateToTarget(IndividualDashboard(userName: name.isNotEmpty ? name : "User"));
         break;
       case InitResult.unauthenticated:
       case InitResult.error:

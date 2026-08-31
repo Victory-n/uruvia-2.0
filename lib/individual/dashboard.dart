@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/auth_service.dart';
+import 'package:uruvia/services/currency_service.dart';
 import 'sidebar/individual_sidebar.dart';
 import '../shared/features/wallet/setup_virtual_account_modal.dart';
 import '../shared/features/wallet/virtual_card_widget.dart';
@@ -19,9 +22,52 @@ typedef Dashboard = IndividualDashboard;
 
 class _IndividualDashboardState extends State<IndividualDashboard> {
   bool _isVirtualAccountSetup = false;
+  String _displayName = "Alex";
+
+  @override
+  void initState() {
+    super.initState();
+    _initUserName();
+    _loadUserInfo();
+  }
+
+  void _initUserName() {
+    if (widget.userName.isNotEmpty && widget.userName != "Alex") {
+      _displayName = widget.userName;
+    }
+  }
+
+  Future<void> _loadUserInfo() async {
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser != null) {
+      final meta = currentUser.userMetadata;
+      final firstName = meta?['firstname'] ?? meta?['first_name'] ?? "";
+      final fullName = "$firstName".trim();
+
+      if (fullName.isNotEmpty && mounted) {
+        setState(() {
+          _displayName = fullName;
+        });
+      }
+
+      try {
+        final profile = await AuthService.instance.getUserProfile(currentUser.id);
+        if (profile != null && profile.firstname.trim().isNotEmpty && mounted) {
+          setState(() {
+            _displayName = profile.firstname.trim();
+          });
+        }
+      } catch (_) {}
+    } else if (widget.userName.isNotEmpty && widget.userName != "Alex" && mounted) {
+      setState(() {
+        _displayName = widget.userName;
+      });
+    }
+  }
 
   Future<void> _handleRefresh() async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await _loadUserInfo();
+    await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
       setState(() {});
     }
@@ -42,7 +88,7 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => IndividualWalletPage(userName: widget.userName),
+        builder: (context) => IndividualWalletPage(userName: _displayName),
       ),
     );
   }
@@ -53,7 +99,7 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
       backgroundColor: ConstantColor.lightBackground,
       drawer: IndividualSidebar(
         currentRoute: IndividualSidebarRoute.dashboard,
-        userName: widget.userName,
+        userName: _displayName,
       ),
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -119,7 +165,7 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   googleSansText(
-                    text: "Welcome back, ${widget.userName}!",
+                    text: "Welcome back, $_displayName!",
                     colors: Colors.white,
                     fontWeight: FontWeight.bold,
                     size: 20.0,
@@ -145,48 +191,57 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
               size: 16.0,
             ),
             const SizedBox(height: 12.0),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: "Total Balance",
-                    value: "₦250,000.00",
-                    icon: Icons.account_balance_wallet_outlined,
-                    color: ConstantColor.blueBackground,
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: "Monthly Expenses",
-                    value: "₦45,200.00",
-                    icon: Icons.trending_down_rounded,
-                    color: Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12.0),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: "Monthly Income",
-                    value: "₦180,000.00",
-                    icon: Icons.trending_up_rounded,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: "Savings Goal",
-                    value: "₦500,000.00",
-                    icon: Icons.savings_outlined,
-                    color: Colors.purple,
-                  ),
-                ),
-              ],
+            ValueListenableBuilder<String>(
+              valueListenable: CurrencyService.instance.activeCurrencyNotifier,
+              builder: (context, activeCurrency, _) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryCard(
+                            title: "Total Balance",
+                            value: CurrencyService.format(250000.00, currency: activeCurrency),
+                            icon: Icons.account_balance_wallet_outlined,
+                            color: ConstantColor.blueBackground,
+                          ),
+                        ),
+                        const SizedBox(width: 12.0),
+                        Expanded(
+                          child: _buildSummaryCard(
+                            title: "Monthly Expenses",
+                            value: CurrencyService.format(45200.00, currency: activeCurrency),
+                            icon: Icons.trending_down_rounded,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12.0),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryCard(
+                            title: "Monthly Income",
+                            value: CurrencyService.format(180000.00, currency: activeCurrency),
+                            icon: Icons.trending_up_rounded,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 12.0),
+                        Expanded(
+                          child: _buildSummaryCard(
+                            title: "Savings Goal",
+                            value: CurrencyService.format(500000.00, currency: activeCurrency),
+                            icon: Icons.savings_outlined,
+                            color: Colors.purple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 28.0),
 
@@ -324,7 +379,7 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
   Widget _buildVirtualAccountSection() {
     if (_isVirtualAccountSetup) {
       return VirtualCardWidget(
-        cardHolderName: widget.userName,
+        cardHolderName: _displayName,
         accountNumber: "8123456789",
         bankName: "Uruvia MFB",
         onTap: _navigateToWalletPage,

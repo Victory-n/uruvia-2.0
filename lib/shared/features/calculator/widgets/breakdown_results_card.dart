@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/currency_service.dart';
 import '../../../widgets/custom_text.dart';
 import '../logic/calculator_isolate.dart';
 
@@ -16,8 +16,6 @@ class BreakdownResultsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(symbol: '₦', decimalDigits: 2);
-
     final double daily = result?.dailyTarget ?? 0.0;
     final double weekly = result?.weeklyTarget ?? 0.0;
     final double biWeekly = result?.biWeeklyTarget ?? 0.0;
@@ -89,7 +87,7 @@ class BreakdownResultsCard extends StatelessWidget {
               Expanded(
                 child: _buildRateTile(
                   title: "Daily Target",
-                  amount: currencyFormatter.format(daily),
+                  amount: CurrencyService.format(daily),
                   icon: Icons.today_outlined,
                   color: ConstantColor.blueBackground,
                 ),
@@ -98,7 +96,7 @@ class BreakdownResultsCard extends StatelessWidget {
               Expanded(
                 child: _buildRateTile(
                   title: "Weekly Target",
-                  amount: currencyFormatter.format(weekly),
+                  amount: CurrencyService.format(weekly),
                   icon: Icons.calendar_view_week_outlined,
                   color: Colors.purple,
                 ),
@@ -111,7 +109,7 @@ class BreakdownResultsCard extends StatelessWidget {
               Expanded(
                 child: _buildRateTile(
                   title: "Bi-Weekly Target",
-                  amount: currencyFormatter.format(biWeekly),
+                  amount: CurrencyService.format(biWeekly),
                   icon: Icons.date_range_outlined,
                   color: Colors.teal,
                 ),
@@ -120,7 +118,7 @@ class BreakdownResultsCard extends StatelessWidget {
               Expanded(
                 child: _buildRateTile(
                   title: "Monthly Target",
-                  amount: currencyFormatter.format(monthly),
+                  amount: CurrencyService.format(monthly),
                   icon: Icons.calendar_month_outlined,
                   color: Colors.deepOrange,
                 ),

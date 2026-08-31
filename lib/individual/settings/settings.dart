@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'profile_information_screen.dart';
 import '../sidebar/individual_sidebar.dart';
@@ -25,6 +26,20 @@ class _IndividualSettingsPageState extends State<IndividualSettingsPage> {
   bool _dimplesMascotEnabled = true;
   bool _homeWidgetSyncEnabled = true;
   bool _comedicNudgesEnabled = true;
+  String _displayEmail = "user@uruvia.app";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserEmail();
+  }
+
+  void _loadUserEmail() {
+    final user = Supabase.instance.client.auth.currentUser;
+    setState(() {
+      _displayEmail = user?.email ?? widget.userEmail;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +47,7 @@ class _IndividualSettingsPageState extends State<IndividualSettingsPage> {
       backgroundColor: ConstantColor.lightBackground,
       drawer: IndividualSidebar(
         currentRoute: IndividualSidebarRoute.settings,
-        userEmail: widget.userEmail,
+        userEmail: _displayEmail,
       ),
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -80,7 +95,7 @@ class _IndividualSettingsPageState extends State<IndividualSettingsPage> {
                     size: 14.5,
                   ),
                   subtitle: googleSansText(
-                    text: widget.userEmail,
+                    text: _displayEmail,
                     colors: ConstantColor.paragraphTextSecondary,
                     fontWeight: FontWeight.normal,
                     size: 12.0,

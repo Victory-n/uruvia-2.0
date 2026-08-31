@@ -6,6 +6,7 @@ import '../constants/supabase_config.dart';
 import '../offline/connectivity_service.dart';
 import '../offline/database_helper.dart';
 import '../offline/sync_service.dart';
+import 'currency_service.dart';
 import 'notification_service.dart';
 
 /// Defines the outcome of session and data bootstrapping.
@@ -105,6 +106,7 @@ class AppInitializer {
       }
 
       onProgress('Preparing dashboard...');
+      await CurrencyService.instance.init();
       await Future.delayed(const Duration(milliseconds: 400));
 
       return InitResult.authenticated;

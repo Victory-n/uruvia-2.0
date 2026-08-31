@@ -74,6 +74,7 @@ class AuthService {
           'first_name': user.firstname,
           'last_name': user.lastname,
           'email': user.email,
+          'currency': user.currency,
           'updated_at': user.updatedAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
@@ -104,7 +105,7 @@ class AuthService {
           lastname: map['last_name'] as String? ?? '',
           email: map['email'] as String? ?? '',
           region: 'Africa',
-          currency: 'NGN',
+          currency: map['currency'] as String? ?? 'NGN',
           accountType: 'individual',
           updatedAt: map['updated_at'] != null
               ? DateTime.tryParse(map['updated_at'].toString())
@@ -220,46 +221,44 @@ class AuthService {
     required String region,
     required String currency,
   }) async {
-    final userId = currentUserId;
-    if (userId == null) {
-      throw Exception('User must be logged in to update profile information.');
-    }
-
+    final userId = currentUserId ?? 'local_user';
     final updatedAt = DateTime.now();
 
     // 1. Update Supabase public.profiles table
-    try {
-      await _supabaseClient.from('profiles').update({
-        'firstname': firstname.trim(),
-        'lastname': lastname.trim(),
-        'phone_number': phoneNumber?.trim(),
-        if (profileImage != null) 'profile_image': profileImage,
-        'region': region,
-        'currency': currency,
-        'updated_at': updatedAt.toIso8601String(),
-      }).eq('id', userId);
-    } catch (e) {
-      if (kDebugMode) {
-        print('[AuthService] Supabase profiles update warning/error: $e');
+    if (currentUserId != null) {
+      try {
+        await _supabaseClient.from('profiles').update({
+          'firstname': firstname.trim(),
+          'lastname': lastname.trim(),
+          'phone_number': phoneNumber?.trim(),
+          if (profileImage != null) 'profile_image': profileImage,
+          'region': region,
+          'currency': currency,
+          'updated_at': updatedAt.toIso8601String(),
+        }).eq('id', userId).timeout(const Duration(seconds: 4));
+      } catch (e) {
+        if (kDebugMode) {
+          print('[AuthService] Supabase profiles update warning/error: $e');
+        }
       }
-    }
 
-    // 2. Update Supabase Auth user metadata
-    try {
-      await _supabaseClient.auth.updateUser(
-        UserAttributes(
-          data: {
-            'firstname': firstname.trim(),
-            'lastname': lastname.trim(),
-            'phone_number': phoneNumber?.trim(),
-            'region': region,
-            'currency': currency,
-          },
-        ),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print('[AuthService] Supabase Auth metadata update warning: $e');
+      // 2. Update Supabase Auth user metadata
+      try {
+        await _supabaseClient.auth.updateUser(
+          UserAttributes(
+            data: {
+              'firstname': firstname.trim(),
+              'lastname': lastname.trim(),
+              'phone_number': phoneNumber?.trim(),
+              'region': region,
+              'currency': currency,
+            },
+          ),
+        ).timeout(const Duration(seconds: 4));
+      } catch (e) {
+        if (kDebugMode) {
+          print('[AuthService] Supabase Auth metadata update warning: $e');
+        }
       }
     }
 

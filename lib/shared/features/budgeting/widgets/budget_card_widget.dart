@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/currency_service.dart';
 import '../../../widgets/custom_text.dart';
 import '../models/budget_item.dart';
 
@@ -33,65 +34,64 @@ class BudgetCardWidget extends StatelessWidget {
   String _getStatusText() {
     switch (item.status) {
       case BudgetStatus.stopped:
-        return 'HARD STOP ACTIVE';
+        return "HARD STOPPED";
       case BudgetStatus.depleted:
-        return 'DEPLETED';
+        return "DEPLETED";
       case BudgetStatus.warning:
-        return 'NEAR LIMIT';
+        return "NEAR LIMIT";
       case BudgetStatus.normal:
-        return 'ON TRACK';
+        return "ON TRACK";
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor();
-    final utilization = item.utilizationRatio;
-    final pctString = item.utilizationPercentage.toStringAsFixed(0);
+    final double utilization = item.utilizationRatio.clamp(0.0, 1.0);
+    final String pctString = (item.utilizationRatio * 100).toStringAsFixed(0);
+    final symbol = CurrencyService.instance.activeSymbol;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12.0),
+      margin: const EdgeInsets.only(bottom: 14.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: item.status == BudgetStatus.stopped
-              ? Colors.red.shade300
-              : const Color(0xFFEEEEEE),
-          width: item.status == BudgetStatus.stopped ? 1.5 : 1.0,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
+        border: item.status == BudgetStatus.stopped
+            ? Border.all(color: Colors.red.shade400, width: 1.5)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16.0),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16.0),
           onTap: onTap,
+          borderRadius: BorderRadius.circular(16.0),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Category Header Row
+                // Header: Icon, Category Name, Spent / Allocated, Status Badge
                 Row(
                   children: [
+                    // Category Icon
                     Container(
                       padding: const EdgeInsets.all(10.0),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
+                        color: item.color.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: Icon(
                         item.icon,
-                        color: statusColor,
-                        size: 20.0,
+                        color: item.color,
+                        size: 22.0,
                       ),
                     ),
                     const SizedBox(width: 12.0),
@@ -107,7 +107,7 @@ class BudgetCardWidget extends StatelessWidget {
                           ),
                           const SizedBox(height: 2.0),
                           googleSansText(
-                            text: "Spent: ₦${item.spentAmount.toStringAsFixed(0)} / ₦${item.allocatedAmount.toStringAsFixed(0)}",
+                            text: "Spent: $symbol${item.spentAmount.toStringAsFixed(0)} / $symbol${item.allocatedAmount.toStringAsFixed(0)}",
                             colors: ConstantColor.paragraphTextSecondary,
                             fontWeight: FontWeight.w500,
                             size: 12.0,
@@ -171,7 +171,7 @@ class BudgetCardWidget extends StatelessWidget {
                           size: 12.0,
                         ),
                         googleSansText(
-                          text: "₦${item.remainingAmount.toStringAsFixed(0)} ($pctString% used)",
+                          text: "$symbol${item.remainingAmount.toStringAsFixed(0)} ($pctString% used)",
                           colors: statusColor,
                           fontWeight: FontWeight.bold,
                           size: 12.0,

@@ -62,29 +62,7 @@ class NotificationService {
 
   // Check if notification category is enabled in settings
   Future<bool> _isNotificationCategoryEnabled(String category) async {
-    final dbHelper = DatabaseHelper.instance;
-    switch (category.toLowerCase()) {
-      case 'invoice':
-      case 'new_invoice':
-        return await dbHelper.getSetting(
-          'setting_notification_new_invoices',
-          defaultValue: true,
-        );
-      case 'low_stock':
-      case 'stock':
-        return await dbHelper.getSetting(
-          'setting_notification_low_stock',
-          defaultValue: true,
-        );
-      case 'reminder':
-      case 'task':
-        return await dbHelper.getSetting(
-          'setting_notification_reminders',
-          defaultValue: true,
-        );
-      default:
-        return true;
-    }
+    return true;
   }
 
   // Request alert permissions from user

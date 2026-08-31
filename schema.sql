@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   phone_number TEXT,
   profile_image TEXT,
   region TEXT CHECK (region IN ('Africa', 'Europe', 'Asia', 'America', 'Australia')),
-  currency TEXT CHECK (currency IN ('NGN', 'USD', 'EUR', 'AUD')),
+  currency TEXT CHECK (currency IN ('NGN', 'USD', 'AUD', 'GBP', 'EUR', 'CAD', 'GHS', 'KES')),
   account_type TEXT CHECK (account_type IN ('individual', 'business')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

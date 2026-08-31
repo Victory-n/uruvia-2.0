@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/auth_service.dart';
+import 'package:uruvia/services/currency_service.dart';
 import 'package:uruvia/shared/features/wallet/virtual_card_widget.dart';
 import '../../widgets/custom_text.dart';
 import 'models/wallet_account_type.dart';
@@ -30,19 +33,23 @@ class _WalletPageState extends State<WalletPage> {
   bool _showCVV = false;
   bool _isCardFrozen = false;
   int _selectedFilterIndex = 0;
+  String _displayName = "Alex User";
 
   late final List<Map<String, dynamic>> _allTransactions;
 
   @override
   void initState() {
     super.initState();
+    _initUserName();
+    _loadUserInfo();
 
     _allTransactions = widget.accountType.isBusiness
         ? const [
             {
               "title": "Client Payout - Web Project",
               "subtitle": "Apex Tech Solutions Invoice #104",
-              "amount": "+₦350,000.00",
+              "amount": 350000.00,
+              "currency": "NGN",
               "date": "Today, 11:20 AM",
               "type": "inflow",
               "icon": Icons.laptop_mac_rounded,
@@ -51,7 +58,8 @@ class _WalletPageState extends State<WalletPage> {
             {
               "title": "Adobe Creative Cloud",
               "subtitle": "Software Suite Subscription",
-              "amount": "-₦28,500.00",
+              "amount": -28500.00,
+              "currency": "NGN",
               "date": "Yesterday, 04:45 PM",
               "type": "outflow",
               "icon": Icons.credit_card_rounded,
@@ -60,7 +68,8 @@ class _WalletPageState extends State<WalletPage> {
             {
               "title": "Video Gear Rental",
               "subtitle": "Camera & Lens Rental Expense",
-              "amount": "-₦45,000.00",
+              "amount": -45000.00,
+              "currency": "NGN",
               "date": "04 Aug 2026",
               "type": "outflow",
               "icon": Icons.videocam_outlined,
@@ -69,7 +78,8 @@ class _WalletPageState extends State<WalletPage> {
             {
               "title": "Photography Milestone Payout",
               "subtitle": "Brand Shoot Project Deposit",
-              "amount": "+₦120,000.00",
+              "amount": 120000.00,
+              "currency": "NGN",
               "date": "02 Aug 2026",
               "type": "inflow",
               "icon": Icons.camera_alt_outlined,
@@ -80,7 +90,8 @@ class _WalletPageState extends State<WalletPage> {
             {
               "title": "Salary Deposit",
               "subtitle": "Monthly Salary Transfer",
-              "amount": "+₦180,000.00",
+              "amount": 180000.00,
+              "currency": "NGN",
               "date": "Today, 09:30 AM",
               "type": "inflow",
               "icon": Icons.arrow_downward_rounded,
@@ -89,7 +100,8 @@ class _WalletPageState extends State<WalletPage> {
             {
               "title": "Netflix Subscription",
               "subtitle": "Virtual Card Payment",
-              "amount": "-₦4,500.00",
+              "amount": -4500.00,
+              "currency": "NGN",
               "date": "Yesterday, 08:15 PM",
               "type": "outflow",
               "icon": Icons.credit_card_rounded,
@@ -98,7 +110,8 @@ class _WalletPageState extends State<WalletPage> {
             {
               "title": "Electricity Bill Payment",
               "subtitle": "Utility Expense",
-              "amount": "-₦12,000.00",
+              "amount": -12000.00,
+              "currency": "NGN",
               "date": "05 Aug 2026",
               "type": "outflow",
               "icon": Icons.bolt_rounded,
@@ -107,13 +120,48 @@ class _WalletPageState extends State<WalletPage> {
             {
               "title": "Fund Transfer",
               "subtitle": "From GTBank Account",
-              "amount": "+₦50,000.00",
+              "amount": 50000.00,
+              "currency": "NGN",
               "date": "03 Aug 2026",
               "type": "inflow",
               "icon": Icons.add_circle_outline_rounded,
               "color": Colors.green,
             },
           ];
+  }
+
+  void _initUserName() {
+    if (widget.userName.isNotEmpty && widget.userName != "Alex User") {
+      _displayName = widget.userName;
+    }
+  }
+
+  Future<void> _loadUserInfo() async {
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser != null) {
+      final meta = currentUser.userMetadata;
+      final firstName = meta?['firstname'] ?? meta?['first_name'] ?? "";
+      final lastName = meta?['lastname'] ?? meta?['last_name'] ?? "";
+      final fullName = "$firstName $lastName".trim();
+
+      if (fullName.isNotEmpty && mounted) {
+        setState(() {
+          _displayName = fullName;
+        });
+      }
+
+      try {
+        final profile = await AuthService.instance.getUserProfile(currentUser.id);
+        if (profile != null) {
+          final profileFullName = "${profile.firstname} ${profile.lastname}".trim();
+          if (profileFullName.isNotEmpty && mounted) {
+            setState(() {
+              _displayName = profileFullName;
+            });
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   void _copyToClipboard(String text, String label) {
@@ -193,7 +241,7 @@ class _WalletPageState extends State<WalletPage> {
               children: [
                 VirtualCardWidget(
                   accountType: widget.accountType,
-                  cardHolderName: widget.userName,
+                  cardHolderName: _displayName,
                   accountNumber: widget.accountNumber,
                   bankName: widget.bankName,
                   showAccountDetails: false,
@@ -311,11 +359,19 @@ class _WalletPageState extends State<WalletPage> {
                             fontWeight: FontWeight.w500,
                           ),
                           const SizedBox(height: 4.0),
-                          googleSansText(
-                            text: isBusiness ? "₦485,000.00" : "₦250,000.00",
-                            colors: ConstantColor.headingTextPrimary,
-                            size: 24.0,
-                            fontWeight: FontWeight.bold,
+                          ValueListenableBuilder<String>(
+                            valueListenable: CurrencyService.instance.activeCurrencyNotifier,
+                            builder: (context, activeCurrency, _) {
+                              return googleSansText(
+                                text: CurrencyService.format(
+                                  isBusiness ? 485000.00 : 250000.00,
+                                  currency: activeCurrency,
+                                ),
+                                colors: ConstantColor.headingTextPrimary,
+                                size: 24.0,
+                                fontWeight: FontWeight.bold,
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -370,9 +426,9 @@ class _WalletPageState extends State<WalletPage> {
                   const SizedBox(height: 12.0),
                   _buildCopyableRow(
                     label: isBusiness ? "Business Name" : "Account Name",
-                    value: widget.userName,
+                    value: isBusiness ? widget.userName : _displayName,
                     onCopy: () =>
-                        _copyToClipboard(widget.userName, "Account Name"),
+                        _copyToClipboard(isBusiness ? widget.userName : _displayName, isBusiness ? "Business Name" : "Account Name"),
                   ),
                 ],
               ),
@@ -549,7 +605,11 @@ class _WalletPageState extends State<WalletPage> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           googleSansText(
-                            text: item['amount'] as String,
+                            text: CurrencyService.format(
+                              item['amount'] as num,
+                              currency: item['currency'] as String?,
+                              showSign: true,
+                            ),
                             colors: item['type'] == 'inflow'
                                 ? Colors.green
                                 : ConstantColor.headingTextPrimary,
