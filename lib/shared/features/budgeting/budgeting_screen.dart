@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/shared/features/budgeting/widgets/budget_card_widget.dart';
 import 'package:uruvia/shared/features/budgeting/widgets/budget_suggestions_card.dart';
-import 'package:uruvia/shared/features/budgeting/widgets/pro_budget_optimizer_card.dart';
 import '../../widgets/custom_text.dart';
 import '../calculator/savings_calculator_screen.dart';
 import 'forms/create_budget_modal.dart';
@@ -13,12 +12,10 @@ import 'models/budget_plan.dart';
 
 class BudgetingScreen extends StatefulWidget {
   final bool isBusiness;
-  final bool isPro;
 
   const BudgetingScreen({
     super.key,
     this.isBusiness = false,
-    this.isPro = false,
   });
 
   @override
@@ -30,12 +27,10 @@ class _BudgetingScreenState extends State<BudgetingScreen> {
   BudgetAnalysisResult? _analysis;
   bool _isLoadingIsolate = true;
   String _selectedFilter = 'All';
-  late bool _isProUser;
 
   @override
   void initState() {
     super.initState();
-    _isProUser = widget.isPro;
     final now = DateTime.now();
 
     // Default mock budget plan for initial demonstration
@@ -178,18 +173,6 @@ class _BudgetingScreenState extends State<BudgetingScreen> {
           size: 18.0,
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              _isProUser ? Icons.workspace_premium_rounded : Icons.workspace_premium_outlined,
-              color: _isProUser ? Colors.amber : ConstantColor.blueBackground,
-            ),
-            tooltip: _isProUser ? "Pro Mode Active (Tap to toggle Free preview)" : "Free Mode (Tap to toggle Pro)",
-            onPressed: () {
-              setState(() {
-                _isProUser = !_isProUser;
-              });
-            },
-          ),
           IconButton(
             icon: const Icon(
               Icons.auto_fix_high_rounded,
@@ -371,35 +354,7 @@ class _BudgetingScreenState extends State<BudgetingScreen> {
                   },
                 ),
 
-              // 3. Pro Intelligent Budget Optimizer Component
-              ProBudgetOptimizerCard(
-                isPro: _isProUser,
-                items: _currentPlan.items,
-                onUpgradeTap: () {
-                  setState(() {
-                    _isProUser = true;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Switched to Pro Mode! Unlocked Pro Intelligent Optimizer."),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                onApplyOptimization: (adjustedCaps) {
-                  final updatedItems = _currentPlan.items.map((item) {
-                    final newCap = adjustedCaps[item.id] ?? item.allocatedAmount;
-                    return item.copyWith(allocatedAmount: newCap);
-                  }).toList();
-
-                  setState(() {
-                    _currentPlan = _currentPlan.copyWith(items: updatedItems);
-                  });
-                  _runIsolateAnalysis();
-                },
-              ),
-
-              // 3. Category Header & Filter Tabs
+              // Category Header & Filter Tabs
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:route_transitions/route_transitions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
 import 'package:uruvia/services/auth_service.dart';
 import 'package:uruvia/services/currency_service.dart';
+import 'package:uruvia/shared/features/budgeting/budgeting_screen.dart';
 import 'sidebar/individual_sidebar.dart';
 import '../shared/features/wallet/setup_virtual_account_modal.dart';
 import '../shared/features/wallet/virtual_card_widget.dart';
@@ -51,14 +54,18 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
       }
 
       try {
-        final profile = await AuthService.instance.getUserProfile(currentUser.id);
+        final profile = await AuthService.instance.getUserProfile(
+          currentUser.id,
+        );
         if (profile != null && profile.firstname.trim().isNotEmpty && mounted) {
           setState(() {
             _displayName = profile.firstname.trim();
           });
         }
       } catch (_) {}
-    } else if (widget.userName.isNotEmpty && widget.userName != "Alex" && mounted) {
+    } else if (widget.userName.isNotEmpty &&
+        widget.userName != "Alex" &&
+        mounted) {
       setState(() {
         _displayName = widget.userName;
       });
@@ -116,7 +123,7 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
           ),
         ),
         title: googleSansText(
-          text: "Individual Dashboard",
+          text: "Dashboard",
           colors: ConstantColor.headingTextPrimary,
           fontWeight: FontWeight.bold,
           size: 18.0,
@@ -124,7 +131,7 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
         actions: [
           IconButton(
             icon: const Icon(
-              Icons.notifications_none_rounded,
+              CupertinoIcons.cloud_upload_fill,
               color: ConstantColor.headingTextPrimary,
             ),
             onPressed: () {},
@@ -142,151 +149,154 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Welcome Header Card (Pure UI)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20.0),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [ConstantColor.blueBackground, Color(0xFF003C8F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: ConstantColor.blueBackground.withOpacity(0.25),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
+              // Welcome Header Card (Pure UI)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20.0),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [ConstantColor.blueBackground, Color(0xFF003C8F)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  googleSansText(
-                    text: "Welcome back, $_displayName!",
-                    colors: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    size: 20.0,
-                  ),
-                  const SizedBox(height: 6.0),
-                  googleSansText(
-                    text:
-                        "Here is your personal financial overview & account activity.",
-                    colors: Colors.white.withOpacity(0.85),
-                    fontWeight: FontWeight.normal,
-                    size: 13.5,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20.0),
-
-            // Overview Cards
-            googleSansText(
-              text: "Overview",
-              colors: ConstantColor.headingTextPrimary,
-              fontWeight: FontWeight.bold,
-              size: 16.0,
-            ),
-            const SizedBox(height: 12.0),
-            ValueListenableBuilder<String>(
-              valueListenable: CurrencyService.instance.activeCurrencyNotifier,
-              builder: (context, activeCurrency, _) {
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSummaryCard(
-                            title: "Total Balance",
-                            value: CurrencyService.format(250000.00, currency: activeCurrency),
-                            icon: Icons.account_balance_wallet_outlined,
-                            color: ConstantColor.blueBackground,
-                          ),
-                        ),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: _buildSummaryCard(
-                            title: "Monthly Expenses",
-                            value: CurrencyService.format(45200.00, currency: activeCurrency),
-                            icon: Icons.trending_down_rounded,
-                            color: Colors.orange,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12.0),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSummaryCard(
-                            title: "Monthly Income",
-                            value: CurrencyService.format(180000.00, currency: activeCurrency),
-                            icon: Icons.trending_up_rounded,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: _buildSummaryCard(
-                            title: "Savings Goal",
-                            value: CurrencyService.format(500000.00, currency: activeCurrency),
-                            icon: Icons.savings_outlined,
-                            color: Colors.purple,
-                          ),
-                        ),
-                      ],
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: ConstantColor.blueBackground.withOpacity(0.25),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
                     ),
                   ],
-                );
-              },
-            ),
-            const SizedBox(height: 28.0),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    googleSansText(
+                      text: "Welcome back, $_displayName!",
+                      colors: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      size: 20.0,
+                    ),
+                    const SizedBox(height: 6.0),
+                    googleSansText(
+                      text:
+                          "Here is your personal financial overview & account activity.",
+                      colors: Colors.white.withOpacity(0.85),
+                      fontWeight: FontWeight.normal,
+                      size: 13.5,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20.0),
 
-            // Virtual Account / Card Section
-            _buildVirtualAccountSection(),
-            const SizedBox(height: 24.0),
+              // Overview Cards
+              // googleSansText(
+              //   text: "Overview",
+              //   colors: ConstantColor.headingTextPrimary,
+              //   fontWeight: FontWeight.bold,
+              //   size: 16.0,
+              // ),
+              // const SizedBox(height: 12.0),
+              // ValueListenableBuilder<String>(
+              //   valueListenable: CurrencyService.instance.activeCurrencyNotifier,
+              //   builder: (context, activeCurrency, _) {
+              //     return Column(
+              //       children: [
+              //         Row(
+              //           children: [
+              //             Expanded(
+              //               child: _buildSummaryCard(
+              //                 title: "Total Balance",
+              //                 value: CurrencyService.format(250000.00, currency: activeCurrency),
+              //                 icon: Icons.account_balance_wallet_outlined,
+              //                 color: ConstantColor.blueBackground,
+              //               ),
+              //             ),
+              //             const SizedBox(width: 12.0),
+              //             Expanded(
+              //               child: _buildSummaryCard(
+              //                 title: "Monthly Expenses",
+              //                 value: CurrencyService.format(45200.00, currency: activeCurrency),
+              //                 icon: Icons.trending_down_rounded,
+              //                 color: Colors.orange,
+              //               ),
+              //             ),
+              //           ],
+              //         ),
+              //         const SizedBox(height: 12.0),
+              //         Row(
+              //           children: [
+              //             Expanded(
+              //               child: _buildSummaryCard(
+              //                 title: "Monthly Income",
+              //                 value: CurrencyService.format(180000.00, currency: activeCurrency),
+              //                 icon: Icons.trending_up_rounded,
+              //                 color: Colors.green,
+              //               ),
+              //             ),
+              //             const SizedBox(width: 12.0),
+              //             Expanded(
+              //               child: _buildSummaryCard(
+              //                 title: "Savings Goal",
+              //                 value: CurrencyService.format(500000.00, currency: activeCurrency),
+              //                 icon: Icons.savings_outlined,
+              //                 color: Colors.purple,
+              //               ),
+              //             ),
+              //           ],
+              //         ),
+              //       ],
+              //     );
+              //   },
+              // ),
+              // const SizedBox(height: 28.0),
 
-            // Quick Actions
-            googleSansText(
-              text: "Quick Actions",
-              colors: ConstantColor.headingTextPrimary,
-              fontWeight: FontWeight.bold,
-              size: 16.0,
-            ),
-            const SizedBox(height: 12.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildActionButton(
-                  icon: Icons.add_circle_outline,
-                  label: "Add Income",
-                  onTap: () {},
-                ),
-                _buildActionButton(
-                  icon: Icons.remove_circle_outline,
-                  label: "Add Expense",
-                  onTap: () {},
-                ),
-                _buildActionButton(
-                  icon: Icons.swap_horiz_rounded,
-                  label: "Transfer",
-                  onTap: () {},
-                ),
-                _buildActionButton(
-                  icon: Icons.analytics_outlined,
-                  label: "Reports",
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ],
+              // Virtual Account / Card Section
+              _buildVirtualAccountSection(),
+              const SizedBox(height: 24.0),
+
+              // Quick Actions
+              googleSansText(
+                text: "Quick Actions",
+                colors: ConstantColor.headingTextPrimary,
+                fontWeight: FontWeight.bold,
+                size: 16.0,
+              ),
+              const SizedBox(height: 12.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildActionButton(
+                    icon: Icons.add_circle_outline,
+                    label: "Add Budget",
+                    onTap: () => slideRightWidget(
+                      newPage: BudgetingScreen(),
+                      context: context,
+                    ),
+                  ),
+                  _buildActionButton(
+                    icon: Icons.savings_outlined,
+                    label: "Add Savings",
+                    onTap: () {},
+                  ),
+                  // _buildActionButton(
+                  //   icon: Icons.calculate,
+                  //   label: "Savings Calculator",
+                  //   onTap: () {},
+                  // ),
+                  _buildActionButton(
+                    icon: Icons.analytics_outlined,
+                    label: "Reports",
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildSummaryCard({
