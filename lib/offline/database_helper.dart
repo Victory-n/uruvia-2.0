@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       pathString,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -51,12 +51,106 @@ class DatabaseHelper {
         updated_at TEXT NOT NULL
       )
     ''');
+
+    // 3. Create cached inventory items table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_inventory_items (
+        id TEXT PRIMARY KEY,
+        item_name TEXT,
+        category TEXT,
+        quantity INTEGER,
+        cost_price REAL,
+        selling_price REAL,
+        low_stock_alert INTEGER,
+        created_at TEXT,
+        updated_at TEXT
+      )
+    ''');
+
+    // 4. Create cached budget plans table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_budget_plans (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        title TEXT NOT NULL,
+        total_income REAL NOT NULL DEFAULT 0,
+        cycle TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        is_business INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT,
+        updated_at TEXT
+      )
+    ''');
+
+    // 5. Create cached budget category items table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_budget_items (
+        id TEXT PRIMARY KEY,
+        plan_id TEXT NOT NULL,
+        category_name TEXT NOT NULL,
+        icon_code_point INTEGER NOT NULL,
+        allocated_amount REAL NOT NULL DEFAULT 0,
+        spent_amount REAL NOT NULL DEFAULT 0,
+        soft_stop_threshold REAL NOT NULL DEFAULT 0.8,
+        is_hard_stop_enabled INTEGER NOT NULL DEFAULT 0,
+        color_value INTEGER NOT NULL,
+        created_at TEXT,
+        updated_at TEXT
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       try {
         await db.execute("ALTER TABLE local_profiles ADD COLUMN currency TEXT NOT NULL DEFAULT 'NGN';");
+      } catch (_) {}
+    }
+    if (oldVersion < 3) {
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS local_inventory_items (
+            id TEXT PRIMARY KEY,
+            item_name TEXT,
+            category TEXT,
+            quantity INTEGER,
+            cost_price REAL,
+            selling_price REAL,
+            low_stock_alert INTEGER,
+            created_at TEXT,
+            updated_at TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS local_budget_plans (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            title TEXT NOT NULL,
+            total_income REAL NOT NULL DEFAULT 0,
+            cycle TEXT NOT NULL,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            is_business INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT,
+            updated_at TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS local_budget_items (
+            id TEXT PRIMARY KEY,
+            plan_id TEXT NOT NULL,
+            category_name TEXT NOT NULL,
+            icon_code_point INTEGER NOT NULL,
+            allocated_amount REAL NOT NULL DEFAULT 0,
+            spent_amount REAL NOT NULL DEFAULT 0,
+            soft_stop_threshold REAL NOT NULL DEFAULT 0.8,
+            is_hard_stop_enabled INTEGER NOT NULL DEFAULT 0,
+            color_value INTEGER NOT NULL,
+            created_at TEXT,
+            updated_at TEXT
+          )
+        ''');
       } catch (_) {}
     }
   }
@@ -73,6 +167,9 @@ class DatabaseHelper {
     final tables = [
       'offline_actions',
       'local_profiles',
+      'local_inventory_items',
+      'local_budget_plans',
+      'local_budget_items',
     ];
     for (final table in tables) {
       await db.delete(table);

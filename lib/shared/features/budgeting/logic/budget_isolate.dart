@@ -8,6 +8,7 @@ class BudgetAnalysisResult {
   final double totalAllocated;
   final double totalSpent;
   final double totalRemaining;
+  final double unallocatedIncome;
   final double overallUtilization;
   final double dailySafeSpend;
   final int remainingDays;
@@ -19,6 +20,7 @@ class BudgetAnalysisResult {
     required this.totalAllocated,
     required this.totalSpent,
     required this.totalRemaining,
+    required this.unallocatedIncome,
     required this.overallUtilization,
     required this.dailySafeSpend,
     required this.remainingDays,
@@ -28,9 +30,59 @@ class BudgetAnalysisResult {
 }
 
 class BudgetIsolateService {
-  /// Offload budget calculations & smart suggestions processing to a background Isolate
+  /// Offload budget calculations & smart suggestions processing to a background Isolate (notes.txt rule #1)
   static Future<BudgetAnalysisResult> analyze(BudgetPlan plan) async {
     return Isolate.run(() => _calculateAnalysis(plan));
+  }
+
+  /// Offload list filtering over budget categories to background Isolate (notes.txt rule #1)
+  static Future<List<BudgetItem>> filterItems({
+    required List<BudgetItem> items,
+    required String filter,
+  }) async {
+    return Isolate.run(() {
+      if (filter == 'Warning/Depleted') {
+        return items.where((item) {
+          return item.status == BudgetStatus.warning ||
+              item.status == BudgetStatus.depleted ||
+              item.status == BudgetStatus.stopped;
+        }).toList();
+      }
+      return List<BudgetItem>.from(items);
+    });
+  }
+
+  /// Offload category mutations/recalculation to background Isolate (notes.txt rule #1)
+  static Future<List<BudgetItem>> addItemOrUpdate({
+    required List<BudgetItem> items,
+    required BudgetItem newItem,
+  }) async {
+    return Isolate.run(() {
+      final list = List<BudgetItem>.from(items);
+      final index = list.indexWhere((i) => i.id == newItem.id);
+      if (index >= 0) {
+        list[index] = newItem;
+      } else {
+        list.add(newItem);
+      }
+      return list;
+    });
+  }
+
+  /// Offload toggling hard stops in list to background Isolate (notes.txt rule #1)
+  static Future<List<BudgetItem>> toggleHardStopInItems({
+    required List<BudgetItem> items,
+    required String itemId,
+    required bool isHardStop,
+  }) async {
+    return Isolate.run(() {
+      final list = List<BudgetItem>.from(items);
+      final index = list.indexWhere((i) => i.id == itemId);
+      if (index >= 0) {
+        list[index] = list[index].copyWith(isHardStopEnabled: isHardStop);
+      }
+      return list;
+    });
   }
 
   /// Internal worker function running inside the Isolate
@@ -39,6 +91,7 @@ class BudgetIsolateService {
     final totalAllocated = plan.totalAllocated;
     final totalSpent = plan.totalSpent;
     final totalRemaining = plan.totalRemaining;
+    final unallocated = totalIncome - totalAllocated > 0 ? totalIncome - totalAllocated : 0.0;
     final overallUtilization = plan.overallUtilizationRatio * 100;
     final remainingDays = plan.remainingDays;
     final dailySafeSpend = plan.dailySafeSpend;
@@ -79,20 +132,19 @@ class BudgetIsolateService {
           'type': 'surplus_sweep',
           'category': item.categoryName,
           'title': 'Unspent Budget Sweep',
-          'description': 'You have ₦${item.remainingAmount.toStringAsFixed(0)} unspent in ${item.categoryName}. Sweep into active Savings Goal?',
+          'description': 'You have unspent funds in ${item.categoryName}. Sweep into active Savings Goal?',
           'actionText': 'Sweep Savings',
         });
       }
     }
 
     // Unallocated income tip
-    final unallocated = totalIncome - totalAllocated;
     if (unallocated > 0) {
       suggestions.add({
         'type': 'unallocated',
         'category': 'General',
         'title': 'Unallocated Income Available',
-        'description': 'You have ₦${unallocated.toStringAsFixed(0)} remaining unbudgeted. Apply 50/30/20 rule?',
+        'description': 'You have remaining unbudgeted income. Apply 50/30/20 rule?',
         'actionText': 'Auto-Allocate',
       });
     }
@@ -102,6 +154,7 @@ class BudgetIsolateService {
       totalAllocated: totalAllocated,
       totalSpent: totalSpent,
       totalRemaining: totalRemaining,
+      unallocatedIncome: unallocated,
       overallUtilization: overallUtilization,
       dailySafeSpend: dailySafeSpend,
       remainingDays: remainingDays,

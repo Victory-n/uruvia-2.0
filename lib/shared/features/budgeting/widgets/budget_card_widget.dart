@@ -58,7 +58,7 @@ class BudgetCardWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -85,7 +85,7 @@ class BudgetCardWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10.0),
                       decoration: BoxDecoration(
-                        color: item.color.withOpacity(0.12),
+                        color: item.color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: Icon(
@@ -119,7 +119,7 @@ class BudgetCardWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: googleSansText(
@@ -191,7 +191,7 @@ class BudgetCardWidget extends StatelessWidget {
                           scale: 0.7,
                           child: Switch(
                             value: item.isHardStopEnabled,
-                            activeColor: Colors.redAccent,
+                            activeThumbColor: Colors.redAccent,
                             onChanged: onHardStopToggled,
                           ),
                         ),

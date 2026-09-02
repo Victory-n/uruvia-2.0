@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/currency_service.dart';
 import '../../../widgets/custom_text.dart';
 import '../logic/budget_isolate.dart';
 import '../models/budget_item.dart';
@@ -18,12 +19,8 @@ class CreateBudgetWizardScreen extends StatefulWidget {
 class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
   int _currentStep = 0;
   BudgetCycle _selectedCycle = BudgetCycle.monthly;
-  final TextEditingController _incomeController = TextEditingController(
-    text: "350000",
-  );
-  final TextEditingController _titleController = TextEditingController(
-    text: "My Monthly Budget",
-  );
+  final TextEditingController _incomeController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
 
   bool _is503020Selected = true;
   List<BudgetItem> _wizardItems = [];
@@ -52,32 +49,7 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
     } else {
       if (mounted) {
         setState(() {
-          _wizardItems = [
-            const BudgetItem(
-              id: 'wiz_feeding',
-              categoryName: 'Feeding & Groceries',
-              icon: Icons.restaurant_outlined,
-              allocatedAmount: 60000,
-              spentAmount: 0.0,
-              color: Colors.green,
-            ),
-            const BudgetItem(
-              id: 'wiz_transport',
-              categoryName: 'Transportation',
-              icon: Icons.directions_bus_outlined,
-              allocatedAmount: 40000,
-              spentAmount: 0.0,
-              color: Colors.blue,
-            ),
-            const BudgetItem(
-              id: 'wiz_choplife',
-              categoryName: 'Choplife & Outings',
-              icon: Icons.sports_esports_outlined,
-              allocatedAmount: 30000,
-              spentAmount: 0.0,
-              color: Colors.purple,
-            ),
-          ];
+          _wizardItems = [];
           _isGeneratingPreset = false;
         });
       }
@@ -310,6 +282,8 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
   }
 
   Widget _buildStep2Strategy() {
+    final symbol = CurrencyService.instance.activeSymbol;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -332,7 +306,7 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
           controller: _incomeController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            labelText: "Total Expected Income (₦)",
+            labelText: "Total Expected Income ($symbol)",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
             ),
@@ -348,65 +322,110 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
         ),
         const SizedBox(height: 12.0),
 
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14.0),
-            border: Border.all(
-              color: _is503020Selected
-                  ? ConstantColor.blueBackground
-                  : const Color(0xFFEEEEEE),
-              width: _is503020Selected ? 2.0 : 1.0,
+        // 50/30/20 Rule Card
+        InkWell(
+          onTap: () => setState(() => _is503020Selected = true),
+          borderRadius: BorderRadius.circular(14.0),
+          child: Container(
+            padding: const EdgeInsets.all(14.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.0),
+              border: Border.all(
+                color: _is503020Selected
+                    ? ConstantColor.blueBackground
+                    : const Color(0xFFEEEEEE),
+                width: _is503020Selected ? 2.0 : 1.0,
+              ),
             ),
-          ),
-          child: RadioListTile<bool>(
-            value: true,
-            groupValue: _is503020Selected,
-            activeColor: ConstantColor.blueBackground,
-            onChanged: (val) => setState(() => _is503020Selected = val!),
-            title: googleSansText(
-              text: "50/30/20 Smart Rule (Recommended)",
-              colors: ConstantColor.headingTextPrimary,
-              fontWeight: FontWeight.bold,
-              size: 14.5,
-            ),
-            subtitle: googleSansText(
-              text:
-                  "50% Needs (Feeding, Transport), 30% Wants (Choplife), 20% Savings Reserve.",
-              colors: ConstantColor.paragraphTextSecondary,
-              size: 12.0,
-              fontWeight: FontWeight.w600,
+            child: Row(
+              children: [
+                Icon(
+                  _is503020Selected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_off_rounded,
+                  color: _is503020Selected
+                      ? ConstantColor.blueBackground
+                      : Colors.grey,
+                  size: 22.0,
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      googleSansText(
+                        text: "50/30/20 Smart Rule (Recommended)",
+                        colors: ConstantColor.headingTextPrimary,
+                        fontWeight: FontWeight.bold,
+                        size: 14.5,
+                      ),
+                      const SizedBox(height: 4.0),
+                      googleSansText(
+                        text:
+                            "50% Needs (Feeding, Transport), 30% Wants (Choplife), 20% Savings Reserve.",
+                        colors: ConstantColor.paragraphTextSecondary,
+                        size: 12.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
         const SizedBox(height: 12.0),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14.0),
-            border: Border.all(
-              color: !_is503020Selected
-                  ? ConstantColor.blueBackground
-                  : const Color(0xFFEEEEEE),
-              width: !_is503020Selected ? 2.0 : 1.0,
+
+        // Custom Categories Card
+        InkWell(
+          onTap: () => setState(() => _is503020Selected = false),
+          borderRadius: BorderRadius.circular(14.0),
+          child: Container(
+            padding: const EdgeInsets.all(14.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.0),
+              border: Border.all(
+                color: !_is503020Selected
+                    ? ConstantColor.blueBackground
+                    : const Color(0xFFEEEEEE),
+                width: !_is503020Selected ? 2.0 : 1.0,
+              ),
             ),
-          ),
-          child: RadioListTile<bool>(
-            value: false,
-            groupValue: _is503020Selected,
-            activeColor: ConstantColor.blueBackground,
-            onChanged: (val) => setState(() => _is503020Selected = val!),
-            title: googleSansText(
-              text: "Custom Categories",
-              colors: ConstantColor.headingTextPrimary,
-              fontWeight: FontWeight.bold,
-              size: 14.5,
-            ),
-            subtitle: googleSansText(
-              text: "Manually build your own custom category caps.",
-              colors: ConstantColor.paragraphTextSecondary,
-              size: 12.0,
-              fontWeight: FontWeight.w600,
+            child: Row(
+              children: [
+                Icon(
+                  !_is503020Selected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_off_rounded,
+                  color: !_is503020Selected
+                      ? ConstantColor.blueBackground
+                      : Colors.grey,
+                  size: 22.0,
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      googleSansText(
+                        text: "Custom Categories",
+                        colors: ConstantColor.headingTextPrimary,
+                        fontWeight: FontWeight.bold,
+                        size: 14.5,
+                      ),
+                      const SizedBox(height: 4.0),
+                      googleSansText(
+                        text: "Manually build your own custom category caps.",
+                        colors: ConstantColor.paragraphTextSecondary,
+                        size: 12.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -415,6 +434,7 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
   }
 
   Widget _buildStep3Review() {
+    final symbol = CurrencyService.instance.activeSymbol;
     final double income =
         double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0.0;
     final double totalAllocated = _wizardItems.fold(
@@ -460,7 +480,7 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                   googleSansText(
-                    text: "₦${income.toStringAsFixed(0)}",
+                    text: "$symbol${income.toStringAsFixed(0)}",
                     colors: ConstantColor.headingTextPrimary,
                     fontWeight: FontWeight.bold,
                     size: 16.0,
@@ -477,7 +497,7 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                   googleSansText(
-                    text: "₦${totalAllocated.toStringAsFixed(0)}",
+                    text: "$symbol${totalAllocated.toStringAsFixed(0)}",
                     colors: ConstantColor.blueBackground,
                     fontWeight: FontWeight.bold,
                     size: 16.0,
@@ -491,6 +511,24 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
 
         if (_isGeneratingPreset)
           const Center(child: CircularProgressIndicator())
+        else if (_wizardItems.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.0),
+              border: Border.all(color: const Color(0xFFEEEEEE)),
+            ),
+            child: Center(
+              child: googleSansText(
+                text: "Custom plan initialized. You can add your custom category caps immediately after finalizing.",
+                colors: ConstantColor.paragraphTextSecondary,
+                size: 13.0,
+                textAlign: TextAlign.center,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          )
         else
           ..._wizardItems.map((item) {
             return Container(
@@ -514,7 +552,7 @@ class _CreateBudgetWizardScreenState extends State<CreateBudgetWizardScreen> {
                     ),
                   ),
                   googleSansText(
-                    text: "₦${item.allocatedAmount.toStringAsFixed(0)}",
+                    text: "$symbol${item.allocatedAmount.toStringAsFixed(0)}",
                     colors: ConstantColor.blueBackground,
                     fontWeight: FontWeight.bold,
                     size: 14.0,

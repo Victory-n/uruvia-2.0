@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:route_transitions/route_transitions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/individual/finances/events/events.dart';
 import 'package:uruvia/services/auth_service.dart';
 import 'package:uruvia/services/currency_service.dart';
 import 'package:uruvia/shared/features/budgeting/budgeting_screen.dart';
+import 'package:uruvia/shared/features/calculator/savings_calculator_screen.dart';
 import 'sidebar/individual_sidebar.dart';
 import '../shared/features/wallet/setup_virtual_account_modal.dart';
 import '../shared/features/wallet/virtual_card_widget.dart';
@@ -271,14 +273,17 @@ class _IndividualDashboardState extends State<IndividualDashboard> {
                     icon: Icons.add_circle_outline,
                     label: "Add Budget",
                     onTap: () => slideRightWidget(
-                      newPage: BudgetingScreen(),
+                      newPage: const BudgetingScreen(),
                       context: context,
                     ),
                   ),
                   _buildActionButton(
                     icon: Icons.savings_outlined,
                     label: "Add Savings",
-                    onTap: () {},
+                    onTap: () => slideRightWidget(
+                      newPage: const IndividualEventsPage(),
+                      context: context,
+                    ),
                   ),
                   // _buildActionButton(
                   //   icon: Icons.calculate,

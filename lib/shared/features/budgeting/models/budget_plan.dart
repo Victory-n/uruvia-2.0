@@ -113,4 +113,68 @@ class BudgetPlan {
       isBusiness: isBusiness ?? this.isBusiness,
     );
   }
+
+  Map<String, dynamic> toMap({String? userId}) {
+    final map = <String, dynamic>{
+      'id': id,
+      'title': title,
+      'total_income': totalIncome,
+      'cycle': cycle.name,
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+      'is_business': isBusiness ? 1 : 0,
+    };
+    if (userId != null) {
+      map['user_id'] = userId;
+    }
+    return map;
+  }
+
+  factory BudgetPlan.fromMap(Map<String, dynamic> map, {List<BudgetItem>? items}) {
+    final bool isBiz = map['is_business'] is bool
+        ? map['is_business'] as bool
+        : (map['is_business'] == 1 || map['is_business'] == true);
+
+    final String cycleStr = (map['cycle'] ?? 'monthly').toString();
+    final BudgetCycle parsedCycle = BudgetCycle.values.firstWhere(
+      (c) => c.name.toLowerCase() == cycleStr.toLowerCase(),
+      orElse: () => BudgetCycle.monthly,
+    );
+
+    final DateTime start = map['start_date'] != null
+        ? DateTime.tryParse(map['start_date'].toString()) ?? DateTime.now()
+        : DateTime.now();
+
+    final DateTime end = map['end_date'] != null
+        ? DateTime.tryParse(map['end_date'].toString()) ?? DateTime.now().add(const Duration(days: 30))
+        : DateTime.now().add(const Duration(days: 30));
+
+    List<BudgetItem> parsedItems = items ?? [];
+    if (parsedItems.isEmpty && map['items'] is List) {
+      parsedItems = (map['items'] as List)
+          .map((i) => BudgetItem.fromMap(Map<String, dynamic>.from(i as Map)))
+          .toList();
+    }
+
+    return BudgetPlan(
+      id: (map['id'] ?? '').toString(),
+      title: (map['title'] ?? 'Budget Plan').toString(),
+      totalIncome: (map['total_income'] ?? map['totalIncome'] ?? 0.0) is num
+          ? (map['total_income'] ?? map['totalIncome'] ?? 0.0).toDouble()
+          : double.tryParse((map['total_income'] ?? map['totalIncome'] ?? 0).toString()) ?? 0.0,
+      cycle: parsedCycle,
+      startDate: start,
+      endDate: end,
+      items: parsedItems,
+      isBusiness: isBiz,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = toMap();
+    map['items'] = items.map((i) => i.toJson()).toList();
+    return map;
+  }
+
+  factory BudgetPlan.fromJson(Map<String, dynamic> json) => BudgetPlan.fromMap(json);
 }

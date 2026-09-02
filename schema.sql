@@ -115,3 +115,108 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- 3. Budget Plans Table
+CREATE TABLE IF NOT EXISTS public.budget_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  total_income NUMERIC NOT NULL DEFAULT 0,
+  cycle TEXT NOT NULL CHECK (cycle IN ('weekly', 'biWeekly', 'monthly', 'custom')),
+  start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ NOT NULL,
+  is_business BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.budget_plans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own budget plans" ON public.budget_plans;
+CREATE POLICY "Users can view own budget plans" ON public.budget_plans
+  FOR SELECT TO authenticated
+  USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own budget plans" ON public.budget_plans;
+CREATE POLICY "Users can insert own budget plans" ON public.budget_plans
+  FOR INSERT TO authenticated
+  WITH CHECK ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can update own budget plans" ON public.budget_plans;
+CREATE POLICY "Users can update own budget plans" ON public.budget_plans
+  FOR UPDATE TO authenticated
+  USING ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own budget plans" ON public.budget_plans;
+CREATE POLICY "Users can delete own budget plans" ON public.budget_plans
+  FOR DELETE TO authenticated
+  USING ((select auth.uid()) = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_budget_plans_user_id ON public.budget_plans(user_id);
+
+DROP TRIGGER IF EXISTS set_budget_plans_updated_at ON public.budget_plans;
+CREATE TRIGGER set_budget_plans_updated_at
+  BEFORE UPDATE ON public.budget_plans
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+-- 4. Budget Category Items Table
+CREATE TABLE IF NOT EXISTS public.budget_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  plan_id UUID NOT NULL REFERENCES public.budget_plans(id) ON DELETE CASCADE,
+  category_name TEXT NOT NULL,
+  icon_code_point INTEGER NOT NULL DEFAULT 58742,
+  allocated_amount NUMERIC NOT NULL DEFAULT 0,
+  spent_amount NUMERIC NOT NULL DEFAULT 0,
+  soft_stop_threshold NUMERIC NOT NULL DEFAULT 0.8,
+  is_hard_stop_enabled BOOLEAN NOT NULL DEFAULT false,
+  color_value BIGINT NOT NULL DEFAULT 4280391411,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.budget_items ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own budget items" ON public.budget_items;
+CREATE POLICY "Users can view own budget items" ON public.budget_items
+  FOR SELECT TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM public.budget_plans bp
+    WHERE bp.id = plan_id AND bp.user_id = (select auth.uid())
+  ));
+
+DROP POLICY IF EXISTS "Users can insert own budget items" ON public.budget_items;
+CREATE POLICY "Users can insert own budget items" ON public.budget_items
+  FOR INSERT TO authenticated
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM public.budget_plans bp
+    WHERE bp.id = plan_id AND bp.user_id = (select auth.uid())
+  ));
+
+DROP POLICY IF EXISTS "Users can update own budget items" ON public.budget_items;
+CREATE POLICY "Users can update own budget items" ON public.budget_items
+  FOR UPDATE TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM public.budget_plans bp
+    WHERE bp.id = plan_id AND bp.user_id = (select auth.uid())
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM public.budget_plans bp
+    WHERE bp.id = plan_id AND bp.user_id = (select auth.uid())
+  ));
+
+DROP POLICY IF EXISTS "Users can delete own budget items" ON public.budget_items;
+CREATE POLICY "Users can delete own budget items" ON public.budget_items
+  FOR DELETE TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM public.budget_plans bp
+    WHERE bp.id = plan_id AND bp.user_id = (select auth.uid())
+  ));
+
+CREATE INDEX IF NOT EXISTS idx_budget_items_plan_id ON public.budget_items(plan_id);
+
+DROP TRIGGER IF EXISTS set_budget_items_updated_at ON public.budget_items;
+CREATE TRIGGER set_budget_items_updated_at
+  BEFORE UPDATE ON public.budget_items
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+

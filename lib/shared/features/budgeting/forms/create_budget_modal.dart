@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/services/currency_service.dart';
 import '../../../widgets/custom_text.dart';
 import '../models/budget_item.dart';
 
@@ -112,6 +113,7 @@ class _CreateBudgetModalState extends State<CreateBudgetModal> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final symbol = CurrencyService.instance.activeSymbol;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0 + bottomInset),
@@ -159,7 +161,7 @@ class _CreateBudgetModalState extends State<CreateBudgetModal> {
             controller: _amountController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              labelText: "Allocated Budget Amount (₦)",
+              labelText: "Allocated Budget Amount ($symbol)",
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
@@ -186,7 +188,7 @@ class _CreateBudgetModalState extends State<CreateBudgetModal> {
                   padding: const EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
                     color: isSel
-                        ? ConstantColor.blueBackground.withOpacity(0.12)
+                        ? ConstantColor.blueBackground.withValues(alpha: 0.12)
                         : const Color(0xFFF5F5F5),
                     borderRadius: BorderRadius.circular(10.0),
                     border: Border.all(
@@ -284,7 +286,7 @@ class _CreateBudgetModalState extends State<CreateBudgetModal> {
                 ),
                 Switch(
                   value: _isHardStop,
-                  activeColor: Colors.redAccent,
+                  activeThumbColor: Colors.redAccent,
                   onChanged: (val) => setState(() => _isHardStop = val),
                 ),
               ],

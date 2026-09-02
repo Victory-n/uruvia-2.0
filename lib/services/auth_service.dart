@@ -227,7 +227,8 @@ class AuthService {
     // 1. Update Supabase public.profiles table
     if (currentUserId != null) {
       try {
-        await _supabaseClient.from('profiles').update({
+        await _supabaseClient.from('profiles').upsert({
+          'id': userId,
           'firstname': firstname.trim(),
           'lastname': lastname.trim(),
           'phone_number': phoneNumber?.trim(),
@@ -235,7 +236,7 @@ class AuthService {
           'region': region,
           'currency': currency,
           'updated_at': updatedAt.toIso8601String(),
-        }).eq('id', userId).timeout(const Duration(seconds: 4));
+        }).timeout(const Duration(seconds: 4));
       } catch (e) {
         if (kDebugMode) {
           print('[AuthService] Supabase profiles update warning/error: $e');

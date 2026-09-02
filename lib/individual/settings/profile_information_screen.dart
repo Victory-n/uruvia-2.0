@@ -27,7 +27,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
   final TextEditingController _phoneController = TextEditingController();
 
   String _selectedRegion = "Africa";
-  String _selectedCurrency = "NGN";
+  String _selectedCurrency = CurrencyService.instance.activeCurrency;
   String? _profileImageUrl;
   File? _pickedImageFile;
   bool _isLoading = true;
@@ -73,6 +73,15 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
       final currentUser = Supabase.instance.client.auth.currentUser;
       final meta = currentUser?.userMetadata;
 
+      final activeCur = CurrencyService.instance.activeCurrency;
+      final effectiveCurrency = _currencies.contains(activeCur)
+          ? activeCur
+          : (profile != null && _currencies.contains(profile.currency))
+              ? profile.currency
+              : (meta != null && meta['currency'] != null && _currencies.contains(meta['currency']))
+                  ? meta['currency'].toString()
+                  : "NGN";
+
       if (mounted) {
         setState(() {
           _firstNameController.text = profile?.firstname ?? meta?['firstname'] ?? meta?['first_name'] ?? "";
@@ -80,7 +89,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
           _emailController.text = profile?.email ?? currentUser?.email ?? "";
           _phoneController.text = profile?.phoneNumber ?? meta?['phone_number'] ?? "";
           _selectedRegion = profile?.region ?? meta?['region'] ?? "Africa";
-          _selectedCurrency = profile?.currency ?? meta?['currency'] ?? CurrencyService.instance.activeCurrency;
+          _selectedCurrency = effectiveCurrency;
           _profileImageUrl = profile?.profileImage;
           _isLoading = false;
         });
@@ -138,7 +147,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2.0),
                 ),
               ),
@@ -154,7 +163,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(10.0),
                   decoration: BoxDecoration(
-                    color: ConstantColor.blueBackground.withOpacity(0.1),
+                    color: ConstantColor.blueBackground.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -178,7 +187,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(10.0),
                   decoration: BoxDecoration(
-                    color: ConstantColor.blueBackground.withOpacity(0.1),
+                    color: ConstantColor.blueBackground.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -267,7 +276,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
         currency: _selectedCurrency,
       );
 
-      await CurrencyService.instance.setCurrency(_selectedCurrency, syncBackend: false);
+      await CurrencyService.instance.setCurrency(_selectedCurrency, syncBackend: true);
 
       if (!mounted) return;
 
@@ -378,7 +387,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                         borderRadius: BorderRadius.circular(16.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: Colors.black.withValues(alpha: 0.03),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -427,7 +436,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                         borderRadius: BorderRadius.circular(16.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: Colors.black.withValues(alpha: 0.03),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -484,7 +493,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                         borderRadius: BorderRadius.circular(16.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: Colors.black.withValues(alpha: 0.03),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -501,7 +510,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                           ),
                           const SizedBox(height: 6.0),
                           DropdownButtonFormField<String>(
-                            value: _regions.contains(_selectedRegion) ? _selectedRegion : _regions.first,
+                            initialValue: _regions.contains(_selectedRegion) ? _selectedRegion : _regions.first,
                             style: const TextStyle(
                               fontFamily: "googleSans",
                               fontSize: 14.5,
@@ -523,7 +532,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                                 borderSide: BorderSide(
-                                  color: Colors.grey.withOpacity(0.2),
+                                  color: Colors.grey.withValues(alpha: 0.2),
                                   width: 1.0,
                                 ),
                               ),
@@ -556,7 +565,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                           ),
                           const SizedBox(height: 6.0),
                           DropdownButtonFormField<String>(
-                            value: _currencies.contains(_selectedCurrency) ? _selectedCurrency : _currencies.first,
+                            initialValue: _currencies.contains(_selectedCurrency) ? _selectedCurrency : _currencies.first,
                             style: const TextStyle(
                               fontFamily: "googleSans",
                               fontSize: 14.5,
@@ -578,7 +587,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                                 borderSide: BorderSide(
-                                  color: Colors.grey.withOpacity(0.2),
+                                  color: Colors.grey.withValues(alpha: 0.2),
                                   width: 1.0,
                                 ),
                               ),
@@ -599,6 +608,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                             onChanged: (val) {
                               if (val != null) {
                                 setState(() => _selectedCurrency = val);
+                                CurrencyService.instance.setCurrency(val, syncBackend: false);
                               }
                             },
                           ),
@@ -616,7 +626,7 @@ class _ProfileInformationScreenState extends State<ProfileInformationScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ConstantColor.blueBackground,
                           elevation: 2,
-                          shadowColor: ConstantColor.blueBackground.withOpacity(0.3),
+                          shadowColor: ConstantColor.blueBackground.withValues(alpha: 0.3),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14.0),
                           ),

@@ -75,4 +75,68 @@ class BudgetItem {
       color: color ?? this.color,
     );
   }
+
+  Map<String, dynamic> toMap({String? planId}) {
+    final map = <String, dynamic>{
+      'id': id,
+      'category_name': categoryName,
+      'icon_code_point': icon.codePoint,
+      'allocated_amount': allocatedAmount,
+      'spent_amount': spentAmount,
+      'soft_stop_threshold': softStopThreshold,
+      'is_hard_stop_enabled': isHardStopEnabled ? 1 : 0,
+      'color_value': color.toARGB32(),
+    };
+    if (planId != null) {
+      map['plan_id'] = planId;
+    }
+    return map;
+  }
+
+  static IconData getIconFromCodePoint(int codePoint) {
+    if (codePoint == Icons.restaurant_outlined.codePoint) return Icons.restaurant_outlined;
+    if (codePoint == Icons.directions_bus_outlined.codePoint) return Icons.directions_bus_outlined;
+    if (codePoint == Icons.sports_esports_outlined.codePoint) return Icons.sports_esports_outlined;
+    if (codePoint == Icons.medical_services_outlined.codePoint) return Icons.medical_services_outlined;
+    if (codePoint == Icons.shopping_bag_outlined.codePoint) return Icons.shopping_bag_outlined;
+    if (codePoint == Icons.home_work_outlined.codePoint) return Icons.home_work_outlined;
+    if (codePoint == Icons.school_outlined.codePoint) return Icons.school_outlined;
+    if (codePoint == Icons.flight_takeoff_outlined.codePoint) return Icons.flight_takeoff_outlined;
+    if (codePoint == Icons.savings_outlined.codePoint) return Icons.savings_outlined;
+    return Icons.category_outlined;
+  }
+
+  factory BudgetItem.fromMap(Map<String, dynamic> map) {
+    final bool isHardStop = map['is_hard_stop_enabled'] is bool
+        ? map['is_hard_stop_enabled'] as bool
+        : (map['is_hard_stop_enabled'] == 1 || map['is_hard_stop_enabled'] == true);
+
+    final int codePoint = map['icon_code_point'] is int
+        ? map['icon_code_point'] as int
+        : (int.tryParse(map['icon_code_point']?.toString() ?? '') ?? 58742);
+
+    final int colorVal = map['color_value'] is int
+        ? map['color_value'] as int
+        : (int.tryParse(map['color_value']?.toString() ?? '') ?? 4280391411);
+
+    return BudgetItem(
+      id: (map['id'] ?? '').toString(),
+      categoryName: (map['category_name'] ?? map['categoryName'] ?? 'Category').toString(),
+      icon: getIconFromCodePoint(codePoint),
+      allocatedAmount: (map['allocated_amount'] ?? map['allocatedAmount'] ?? 0.0) is num
+          ? (map['allocated_amount'] ?? map['allocatedAmount'] ?? 0.0).toDouble()
+          : double.tryParse((map['allocated_amount'] ?? map['allocatedAmount'] ?? 0).toString()) ?? 0.0,
+      spentAmount: (map['spent_amount'] ?? map['spentAmount'] ?? 0.0) is num
+          ? (map['spent_amount'] ?? map['spentAmount'] ?? 0.0).toDouble()
+          : double.tryParse((map['spent_amount'] ?? map['spentAmount'] ?? 0).toString()) ?? 0.0,
+      softStopThreshold: (map['soft_stop_threshold'] ?? map['softStopThreshold'] ?? 0.8) is num
+          ? (map['soft_stop_threshold'] ?? map['softStopThreshold'] ?? 0.8).toDouble()
+          : double.tryParse((map['soft_stop_threshold'] ?? map['softStopThreshold'] ?? 0.8).toString()) ?? 0.8,
+      isHardStopEnabled: isHardStop,
+      color: Color(colorVal),
+    );
+  }
+
+  Map<String, dynamic> toJson() => toMap();
+  factory BudgetItem.fromJson(Map<String, dynamic> json) => BudgetItem.fromMap(json);
 }

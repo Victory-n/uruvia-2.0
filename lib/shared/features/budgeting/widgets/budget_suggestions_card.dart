@@ -30,15 +30,15 @@ class BudgetSuggestionsCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            ConstantColor.blueBackground.withOpacity(0.08),
-            Colors.blue.shade50.withOpacity(0.5),
+            ConstantColor.blueBackground.withValues(alpha: 0.08),
+            Colors.blue.shade50.withValues(alpha: 0.5),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: ConstantColor.blueBackground.withOpacity(0.2),
+          color: ConstantColor.blueBackground.withValues(alpha: 0.2),
           width: 1.0,
         ),
       ),
@@ -50,7 +50,7 @@ class BudgetSuggestionsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
-                  color: ConstantColor.blueBackground.withOpacity(0.15),
+                  color: ConstantColor.blueBackground.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -70,7 +70,7 @@ class BudgetSuggestionsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
                 decoration: BoxDecoration(
-                  color: ConstantColor.blueBackground.withOpacity(0.1),
+                  color: ConstantColor.blueBackground.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6.0),
                 ),
                 child: googleSansText(
