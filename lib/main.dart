@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uruvia/constants/colors.dart';
+import 'package:uruvia/constants/app_theme.dart';
 import 'package:uruvia/offline/connectivity_service.dart';
 import 'package:uruvia/services/app_initializer.dart';
 import 'package:uruvia/services/navigation_service.dart';
@@ -22,11 +22,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: NavigationService.navigatorKey,
       title: 'Uruvia',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: ConstantColor.lightBackground,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
       builder: (context, child) {
         return ValueListenableBuilder<bool>(
           valueListenable: ConnectivityService.instance.isConnected,
