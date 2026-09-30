@@ -58,6 +58,9 @@ dependencies:
   flip_card_plus: ^1.0.5
   home_widget: ^0.9.3
   flutter_native_splash: ^2.4.8
+  fl_chart: ^1.2.0
+  shared_preferences: ^2.5.5
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:

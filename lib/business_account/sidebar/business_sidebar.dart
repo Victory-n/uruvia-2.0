@@ -1,0 +1,243 @@
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../shared/widgets/app_text.dart';
+import 'package:uruvia/theme/business/business_theme.dart';
+import '../screens/business_dashboard_screen.dart';
+import '../screens/wallet/business_wallet_screen.dart';
+
+class BusinessSidebar extends StatelessWidget {
+  final String activeRoute;
+  const BusinessSidebar({super.key, this.activeRoute = 'Dashboard'});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          width: 260,
+          margin: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: BusinessTheme.backgroundLight,
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(24),
+              bottomRight: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(4, 0),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, top: 20, bottom: 8),
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 18,
+                      color: BusinessTheme.textMuted,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.house,
+                  label: 'Dashboard',
+                  isSelected: activeRoute == 'Dashboard',
+                  onTap: () {
+                    Navigator.pop(context); // Close the drawer
+                    if (activeRoute != 'Dashboard') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BusinessDashboardScreen(),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.wallet,
+                  label: 'Wallet',
+                  isSelected: activeRoute == 'Wallet',
+                  onTap: () {
+                    Navigator.pop(context); // Close the drawer
+                    if (activeRoute != 'Wallet') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BusinessWalletScreen(),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                _buildDivider(),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.chartPie,
+                  label: 'Analytics',
+                  isSelected: false,
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.users,
+                  label: 'Customers',
+                  isSelected: false,
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.cartShopping,
+                  label: 'Orders',
+                  isSelected: false,
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.star,
+                  label: 'Products',
+                  isSelected: false,
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.fileInvoiceDollar,
+                  label: 'Invoice',
+                  isSelected: false,
+                ),
+                _buildDivider(),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.store,
+                  label: 'Outlet',
+                  isSelected: false,
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.userTie,
+                  label: 'Employee',
+                  isSelected: false,
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.truck,
+                  label: 'Shipment',
+                  isSelected: false,
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.bullhorn,
+                  label: 'Marketing',
+                  isSelected: false,
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  child: InkWell(
+                    onTap: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: BusinessTheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: BusinessTheme.textMuted.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          FaIcon(
+                            FontAwesomeIcons.arrowRightArrowLeft,
+                            size: 14,
+                            color: BusinessTheme.textMuted,
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: AppText.paragraph(
+                              'Switch to Personal',
+                              style: TextStyle(
+                                color: BusinessTheme.textDark,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 18,
+                            color: BusinessTheme.textMuted,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required dynamic icon,
+    required String label,
+    required bool isSelected,
+    VoidCallback? onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: InkWell(
+        onTap: onTap ?? () {},
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? BusinessTheme.primaryAmber.withValues(alpha: 0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              FaIcon(
+                icon,
+                size: 16,
+                color: isSelected
+                    ? BusinessTheme.primaryAmber
+                    : BusinessTheme.textMuted,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AppText.button(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isSelected
+                        ? BusinessTheme.charcoal
+                        : BusinessTheme.textMuted,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: BusinessTheme.textMuted.withValues(alpha: 0.2),
+      ),
+    );
+  }
+}
