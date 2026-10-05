@@ -179,7 +179,7 @@ class _BusinessWalletScreenState extends State<BusinessWalletScreen> {
                     ),
                     _buildActionButton(
                       icon: FontAwesomeIcons.buildingColumns,
-                      label: 'Bank Account',
+                      label: 'Record Sales',
                       onTap: () {
                         _showAccountDetailsModal(context);
                       },

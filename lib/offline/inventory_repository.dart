@@ -9,7 +9,7 @@ class InventoryRepository {
   static InventoryRepository get instance => _instance;
   InventoryRepository._internal();
 
-  final SupabaseClient _supabaseClient = Supabase.instance.client;
+  SupabaseClient get _supabaseClient => Supabase.instance.client;
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   // Retrieve inventory items: fetches from Supabase and caches them if online; loads from SQLite if offline.
@@ -199,4 +199,107 @@ class InventoryRepository {
       {},
     );
   }
+
+  // Deduct stock when a sale or invoice payment is made
+  Future<bool> deductStock({
+    required String itemId,
+    required int quantityToDeduct,
+    String? referenceId,
+    String? note,
+  }) async {
+    if (quantityToDeduct <= 0) return false;
+
+    final List<Map<String, dynamic>> items = await _dbHelper.queryCache(
+      'local_inventory_items',
+      where: 'id = ?',
+      whereArgs: [itemId],
+    );
+
+    if (items.isEmpty) return false;
+
+    final currentItem = items.first;
+    final currentQty = (currentItem['quantity'] as num?)?.toInt() ?? 0;
+    final newQty = currentQty - quantityToDeduct;
+
+    // Update item quantity
+    await updateInventoryItem(itemId, {
+      'quantity': newQty,
+    });
+
+    // Record stock movement audit entry
+    await recordStockMovement({
+      'id': 'mov_${DateTime.now().millisecondsSinceEpoch}_$itemId',
+      'item_id': itemId,
+      'item_name': currentItem['item_name'] ?? 'Item',
+      'change_quantity': -quantityToDeduct,
+      'resulting_quantity': newQty,
+      'movement_type': 'sale',
+      'reference_id': referenceId,
+      'note': note ?? 'Deducted on sale/invoice payment',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    return true;
+  }
+
+  // Restock an inventory item
+  Future<bool> restockItem({
+    required String itemId,
+    required int quantityToAdd,
+    double? newCostPrice,
+    String? note,
+  }) async {
+    if (quantityToAdd <= 0) return false;
+
+    final List<Map<String, dynamic>> items = await _dbHelper.queryCache(
+      'local_inventory_items',
+      where: 'id = ?',
+      whereArgs: [itemId],
+    );
+
+    if (items.isEmpty) return false;
+
+    final currentItem = items.first;
+    final currentQty = (currentItem['quantity'] as num?)?.toInt() ?? 0;
+    final newQty = currentQty + quantityToAdd;
+
+    final Map<String, dynamic> updates = {
+      'quantity': newQty,
+    };
+    if (newCostPrice != null && newCostPrice > 0) {
+      updates['cost_price'] = newCostPrice;
+    }
+
+    await updateInventoryItem(itemId, updates);
+
+    // Record stock movement audit entry
+    await recordStockMovement({
+      'id': 'mov_${DateTime.now().millisecondsSinceEpoch}_$itemId',
+      'item_id': itemId,
+      'item_name': currentItem['item_name'] ?? 'Item',
+      'change_quantity': quantityToAdd,
+      'resulting_quantity': newQty,
+      'movement_type': 'restock',
+      'note': note ?? 'Restocked item',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    return true;
+  }
+
+  // Record a stock movement
+  Future<void> recordStockMovement(Map<String, dynamic> movement) async {
+    await _dbHelper.cacheUpsert('local_stock_movements', movement);
+  }
+
+  // Retrieve stock movements for an item
+  Future<List<Map<String, dynamic>>> getStockMovements(String itemId) async {
+    return await _dbHelper.queryCache(
+      'local_stock_movements',
+      where: 'item_id = ?',
+      whereArgs: [itemId],
+      orderBy: 'created_at DESC',
+    );
+  }
 }
+

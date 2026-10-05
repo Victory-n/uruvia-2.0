@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       pathString,
-      version: 3,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -62,12 +62,31 @@ class DatabaseHelper {
         cost_price REAL,
         selling_price REAL,
         low_stock_alert INTEGER,
+        low_stock_threshold INTEGER DEFAULT 5,
+        sku TEXT,
+        unit TEXT DEFAULT 'units',
+        image_path TEXT,
         created_at TEXT,
         updated_at TEXT
       )
     ''');
 
-    // 4. Create cached budget plans table
+    // 4. Create cached stock movements table for audit trail
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS local_stock_movements (
+        id TEXT PRIMARY KEY,
+        item_id TEXT NOT NULL,
+        item_name TEXT NOT NULL,
+        change_quantity INTEGER NOT NULL,
+        resulting_quantity INTEGER NOT NULL,
+        movement_type TEXT NOT NULL,
+        reference_id TEXT,
+        note TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    // 5. Create cached budget plans table
     await db.execute('''
       CREATE TABLE IF NOT EXISTS local_budget_plans (
         id TEXT PRIMARY KEY,
@@ -83,7 +102,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // 5. Create cached budget category items table
+    // 6. Create cached budget category items table
     await db.execute('''
       CREATE TABLE IF NOT EXISTS local_budget_items (
         id TEXT PRIMARY KEY,
@@ -153,6 +172,37 @@ class DatabaseHelper {
         ''');
       } catch (_) {}
     }
+    if (oldVersion < 4) {
+      try {
+        await db.execute("ALTER TABLE local_inventory_items ADD COLUMN low_stock_threshold INTEGER DEFAULT 5;");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE local_inventory_items ADD COLUMN sku TEXT;");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE local_inventory_items ADD COLUMN unit TEXT DEFAULT 'units';");
+      } catch (_) {}
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS local_stock_movements (
+            id TEXT PRIMARY KEY,
+            item_id TEXT NOT NULL,
+            item_name TEXT NOT NULL,
+            change_quantity INTEGER NOT NULL,
+            resulting_quantity INTEGER NOT NULL,
+            movement_type TEXT NOT NULL,
+            reference_id TEXT,
+            note TEXT,
+            created_at TEXT NOT NULL
+          )
+        ''');
+      } catch (_) {}
+    }
+    if (oldVersion < 5) {
+      try {
+        await db.execute("ALTER TABLE local_inventory_items ADD COLUMN image_path TEXT;");
+      } catch (_) {}
+    }
   }
 
   // Clear cache helper for a specific table
@@ -168,6 +218,7 @@ class DatabaseHelper {
       'offline_actions',
       'local_profiles',
       'local_inventory_items',
+      'local_stock_movements',
       'local_budget_plans',
       'local_budget_items',
     ];

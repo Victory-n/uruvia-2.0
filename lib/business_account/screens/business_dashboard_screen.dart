@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../theme/business/business_theme.dart';
 import '../../../shared/widgets/app_text.dart';
 import '../sidebar/business_sidebar.dart';
+import '../../../shared/features/inventory/screens/inventory_list_screen.dart';
 
 class BusinessDashboardScreen extends StatefulWidget {
   const BusinessDashboardScreen({super.key});
@@ -305,7 +306,14 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
                           child: _buildSecondaryActionButton(
                             icon: FontAwesomeIcons.tag,
                             label: 'Record Sales',
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const InventoryListScreen(),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],

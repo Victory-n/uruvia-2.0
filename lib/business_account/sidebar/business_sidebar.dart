@@ -4,6 +4,7 @@ import '../../../shared/widgets/app_text.dart';
 import 'package:uruvia/theme/business/business_theme.dart';
 import '../screens/business_dashboard_screen.dart';
 import '../screens/wallet/business_wallet_screen.dart';
+import '../../../shared/features/inventory/screens/inventory_list_screen.dart';
 
 class BusinessSidebar extends StatelessWidget {
   final String activeRoute;
@@ -98,9 +99,20 @@ class BusinessSidebar extends StatelessWidget {
                   isSelected: false,
                 ),
                 _buildNavItem(
-                  icon: FontAwesomeIcons.star,
-                  label: 'Products',
-                  isSelected: false,
+                  icon: FontAwesomeIcons.boxesStacked,
+                  label: 'Inventory',
+                  isSelected: activeRoute == 'Inventory',
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (activeRoute != 'Inventory') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const InventoryListScreen(),
+                        ),
+                      );
+                    }
+                  },
                 ),
                 _buildNavItem(
                   icon: FontAwesomeIcons.fileInvoiceDollar,
