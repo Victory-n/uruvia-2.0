@@ -3,6 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../shared/features/events/screens/events_screen.dart';
 import '../../../shared/features/inventory/screens/inventory_list_screen.dart';
 import '../../../shared/widgets/app_text.dart';
+import '../../../shared/function/delete_account.dart';
+import '../../../shared/features/support/screens/support_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../../theme/individual/app_theme.dart';
 import 'settings/settings.dart';
@@ -110,8 +112,33 @@ class AppSidebar extends StatelessWidget {
                 );
               },
             ),
+            _buildNavItem(
+              FontAwesomeIcons.headset,
+              'Support & Help',
+              activeItem == 'Support',
+              onTap: () {
+                Navigator.pop(context);
+                if (activeItem != 'Support') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SupportScreen()),
+                  );
+                }
+              },
+            ),
             const Spacer(),
             const Divider(color: Colors.white24),
+            _buildNavItem(
+              FontAwesomeIcons.trashCan,
+              'Delete Account',
+              false,
+              iconColor: AppTheme.white.withValues(alpha: 0.6),
+              textColor: AppTheme.white.withValues(alpha: 0.6),
+              onTap: () {
+                Navigator.pop(context);
+                showDeleteAccountDialog(context, isBusiness: false);
+              },
+            ),
             _buildNavItem(Icons.logout, 'Logout', false),
             const SizedBox(height: 24),
           ],
@@ -120,19 +147,30 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(dynamic icon, String title, bool isSelected, {VoidCallback? onTap}) {
-    final Color iconColor = isSelected ? AppTheme.accentBlue : AppTheme.white;
+  Widget _buildNavItem(
+    dynamic icon,
+    String title,
+    bool isSelected, {
+    VoidCallback? onTap,
+    Color? iconColor,
+    Color? textColor,
+  }) {
+    final Color effectiveIconColor =
+        iconColor ?? (isSelected ? AppTheme.accentBlue : AppTheme.white);
+    final Color effectiveTextColor =
+        textColor ?? (isSelected ? AppTheme.accentBlue : AppTheme.white);
     return ListTile(
       leading: icon is IconData
-          ? Icon(icon, color: iconColor)
-          : FaIcon(icon, color: iconColor, size: 20),
+          ? Icon(icon, color: effectiveIconColor)
+          : FaIcon(icon, color: effectiveIconColor, size: 20),
       title: AppText.button(
         title,
         style: TextStyle(
-          color: isSelected ? AppTheme.accentBlue : AppTheme.white,
+          color: effectiveTextColor,
         ),
       ),
       onTap: onTap ?? () {},
     );
   }
 }
+

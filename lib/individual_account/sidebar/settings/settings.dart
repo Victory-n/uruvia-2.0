@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../theme/individual/app_theme.dart';
 import '../../../shared/widgets/app_text.dart';
+import '../../../shared/function/delete_account.dart';
 import '../../../business_account/welcome/business_onboarding_prompt_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -126,15 +127,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       });
                     }
                   },
-                  activeColor: AppTheme.sleekBlue,
+                  activeThumbColor: AppTheme.sleekBlue,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
           const Divider(thickness: 0.2),
+          ListTile(
+            leading: const FaIcon(
+              FontAwesomeIcons.trashCan,
+              color: AppTheme.textMuted,
+              size: 16,
+            ),
+            title: const AppText.paragraph(
+              'Delete Account',
+              style: TextStyle(
+                color: Color(0xFFB91C1C),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            trailing: const FaIcon(
+              FontAwesomeIcons.chevronRight,
+              color: AppTheme.textMuted,
+              size: 14,
+            ),
+            contentPadding: EdgeInsets.zero,
+            onTap: () => showDeleteAccountDialog(context, isBusiness: false),
+          ),
         ],
       ),
     );
   }
 }
+

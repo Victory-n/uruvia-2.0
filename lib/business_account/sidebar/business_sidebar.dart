@@ -5,6 +5,8 @@ import 'package:uruvia/theme/business/business_theme.dart';
 import '../screens/business_dashboard_screen.dart';
 import '../screens/wallet/business_wallet_screen.dart';
 import '../../../shared/features/inventory/screens/inventory_list_screen.dart';
+import '../../../shared/function/delete_account.dart';
+import '../../../shared/features/support/screens/support_screen.dart';
 
 class BusinessSidebar extends StatelessWidget {
   final String activeRoute;
@@ -50,99 +52,135 @@ class BusinessSidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.house,
-                  label: 'Dashboard',
-                  isSelected: activeRoute == 'Dashboard',
-                  onTap: () {
-                    Navigator.pop(context); // Close the drawer
-                    if (activeRoute != 'Dashboard') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BusinessDashboardScreen(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.house,
+                          label: 'Dashboard',
+                          isSelected: activeRoute == 'Dashboard',
+                          onTap: () {
+                            Navigator.pop(context); // Close the drawer
+                            if (activeRoute != 'Dashboard') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const BusinessDashboardScreen(),
+                                ),
+                              );
+                            }
+                          },
                         ),
-                      );
-                    }
-                  },
-                ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.wallet,
-                  label: 'Wallet',
-                  isSelected: activeRoute == 'Wallet',
-                  onTap: () {
-                    Navigator.pop(context); // Close the drawer
-                    if (activeRoute != 'Wallet') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BusinessWalletScreen(),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.wallet,
+                          label: 'Wallet',
+                          isSelected: activeRoute == 'Wallet',
+                          onTap: () {
+                            Navigator.pop(context); // Close the drawer
+                            if (activeRoute != 'Wallet') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const BusinessWalletScreen(),
+                                ),
+                              );
+                            }
+                          },
                         ),
-                      );
-                    }
-                  },
+                        _buildDivider(),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.chartPie,
+                          label: 'Analytics',
+                          isSelected: false,
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.users,
+                          label: 'Customers',
+                          isSelected: false,
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.cartShopping,
+                          label: 'Orders',
+                          isSelected: false,
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.boxesStacked,
+                          label: 'Inventory',
+                          isSelected: activeRoute == 'Inventory',
+                          onTap: () {
+                            Navigator.pop(context);
+                            if (activeRoute != 'Inventory') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const InventoryListScreen(),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.fileInvoiceDollar,
+                          label: 'Invoice',
+                          isSelected: false,
+                        ),
+                        _buildDivider(),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.store,
+                          label: 'Outlet',
+                          isSelected: false,
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.userTie,
+                          label: 'Employee',
+                          isSelected: false,
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.truck,
+                          label: 'Shipment',
+                          isSelected: false,
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.bullhorn,
+                          label: 'Marketing',
+                          isSelected: false,
+                        ),
+                        _buildNavItem(
+                          icon: FontAwesomeIcons.headset,
+                          label: 'Support & Help',
+                          isSelected: activeRoute == 'Support',
+                          onTap: () {
+                            Navigator.pop(context);
+                            if (activeRoute != 'Support') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SupportScreen(isBusiness: true),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                _buildDivider(),
+                const SizedBox(height: 8),
                 _buildNavItem(
-                  icon: FontAwesomeIcons.chartPie,
-                  label: 'Analytics',
+                  icon: FontAwesomeIcons.trashCan,
+                  label: 'Delete Account',
                   isSelected: false,
-                ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.users,
-                  label: 'Customers',
-                  isSelected: false,
-                ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.cartShopping,
-                  label: 'Orders',
-                  isSelected: false,
-                ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.boxesStacked,
-                  label: 'Inventory',
-                  isSelected: activeRoute == 'Inventory',
+                  iconColor: BusinessTheme.textMuted,
+                  textColor: BusinessTheme.textMuted,
                   onTap: () {
                     Navigator.pop(context);
-                    if (activeRoute != 'Inventory') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const InventoryListScreen(),
-                        ),
-                      );
-                    }
+                    showDeleteAccountDialog(context, isBusiness: true);
                   },
                 ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.fileInvoiceDollar,
-                  label: 'Invoice',
-                  isSelected: false,
-                ),
-                _buildDivider(),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.store,
-                  label: 'Outlet',
-                  isSelected: false,
-                ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.userTie,
-                  label: 'Employee',
-                  isSelected: false,
-                ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.truck,
-                  label: 'Shipment',
-                  isSelected: false,
-                ),
-                _buildNavItem(
-                  icon: FontAwesomeIcons.bullhorn,
-                  label: 'Marketing',
-                  isSelected: false,
-                ),
-                const Spacer(),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                   child: InkWell(
                     onTap: () =>
                         Navigator.popUntil(context, (route) => route.isFirst),
@@ -198,8 +236,14 @@ class BusinessSidebar extends StatelessWidget {
     required dynamic icon,
     required String label,
     required bool isSelected,
+    Color? iconColor,
+    Color? textColor,
     VoidCallback? onTap,
   }) {
+    final effectiveIconColor = iconColor ??
+        (isSelected ? BusinessTheme.primaryAmber : BusinessTheme.textMuted);
+    final effectiveTextColor = textColor ??
+        (isSelected ? BusinessTheme.charcoal : BusinessTheme.textMuted);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: InkWell(
@@ -218,9 +262,7 @@ class BusinessSidebar extends StatelessWidget {
               FaIcon(
                 icon,
                 size: 16,
-                color: isSelected
-                    ? BusinessTheme.primaryAmber
-                    : BusinessTheme.textMuted,
+                color: effectiveIconColor,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -228,9 +270,7 @@ class BusinessSidebar extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isSelected
-                        ? BusinessTheme.charcoal
-                        : BusinessTheme.textMuted,
+                    color: effectiveTextColor,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
@@ -253,3 +293,4 @@ class BusinessSidebar extends StatelessWidget {
     );
   }
 }
+
