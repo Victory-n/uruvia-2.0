@@ -49,6 +49,10 @@
 	<string>Uruvia needs microphone access to log expenses by voice</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Uruvia needs microphone access to hear your expense logs</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Uruvia needs camera access to take photos of your inventory items</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Uruvia needs photo library access to attach images to your items and businesses</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
