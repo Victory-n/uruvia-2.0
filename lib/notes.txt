@@ -2,7 +2,7 @@
 
 2. Make sure to add const modifiers to widgets that are not mutable.
 
-3. No backend. Strictly frontend.
+3. Create the bacned code if needed, but make sure you follow the DRY principle and make it neat.
 
 4. Reminder (Notification Module): When building the notification module later, connect the Intelligent Budget Analytics feature to trigger proactive push/in-app notifications suggesting budget tightening opportunities and goal completion acceleration.
 

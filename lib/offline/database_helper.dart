@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       pathString,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -48,6 +48,8 @@ class DatabaseHelper {
         last_name TEXT NOT NULL,
         email TEXT,
         currency TEXT NOT NULL DEFAULT 'NGN',
+        phone TEXT,
+        active_account_type TEXT NOT NULL DEFAULT 'individual',
         updated_at TEXT NOT NULL
       )
     ''');
@@ -201,6 +203,14 @@ class DatabaseHelper {
     if (oldVersion < 5) {
       try {
         await db.execute("ALTER TABLE local_inventory_items ADD COLUMN image_path TEXT;");
+      } catch (_) {}
+    }
+    if (oldVersion < 6) {
+      try {
+        await db.execute("ALTER TABLE local_profiles ADD COLUMN phone TEXT;");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE local_profiles ADD COLUMN active_account_type TEXT NOT NULL DEFAULT 'individual';");
       } catch (_) {}
     }
   }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/widgets/app_text.dart';
 import '../../../theme/individual/app_theme.dart';
 import 'forgot_password_screen.dart';
 import 'registration_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'auto_login_screen.dart';
-import '../../../individual_account/screens/dashboard_screen.dart';
-import '../../../business_account/welcome/business_onboarding_prompt_screen.dart';
+import 'otp_screen.dart';
+import '../../../offline/profile_repository.dart';
+import '../../services/session_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -28,22 +29,77 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasSeenPrompt = prefs.getBool('has_seen_business_prompt') ?? false;
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: AppText.paragraph(message)),
+    );
+  }
 
-    if (mounted) {
-      if (!hasSeenPrompt) {
-        Navigator.pushReplacement(
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please enter your email and password');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final client = Supabase.instance.client;
+    try {
+      final response = await client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException('Login failed. Please try again.');
+      }
+
+      // First login on this device reads the profile from Supabase; later
+      // logins read the local copy first (so offline entries are never lost)
+      // and sync in the background. New users default to 'individual'.
+      Map<String, dynamic> profile;
+      try {
+        profile = await ProfileRepository.instance.loadProfile(user.id);
+      } catch (_) {
+        await client.auth.signOut();
+        if (mounted) {
+          _showMessage('Could not load your account. Check your connection.');
+        }
+        return;
+      }
+      final accountType =
+          (profile['active_account_type'] as String?) ?? 'individual';
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => SessionRouter.screenFor(accountType)),
+      );
+    } on AuthException catch (e) {
+      if (e.code == 'email_not_confirmed') {
+        // Send a fresh code and continue verification.
+        try {
+          await client.auth.resend(type: OtpType.signup, email: email);
+        } catch (_) {}
+        if (!mounted) return;
+        _showMessage('Please verify your email to continue');
+        Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const BusinessOnboardingPromptScreen()),
+          MaterialPageRoute(builder: (_) => OtpScreen(email: email)),
         );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      } else if (mounted) {
+        _showMessage(
+          e.code == 'invalid_credentials'
+              ? 'Incorrect email or password'
+              : e.message,
         );
       }
+    } catch (_) {
+      if (mounted) _showMessage('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -114,8 +170,14 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _handleLogin,
-                  child: const AppText.button('Login'),
+                  onPressed: _isLoading ? null : _handleLogin,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const AppText.button('Login'),
                 ),
               ),
               const SizedBox(height: 24),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../offline/profile_repository.dart';
 import '../../../shared/widgets/app_text.dart';
 import '../../../theme/individual/app_theme.dart';
+import '../../services/session_router.dart';
 import 'login_screen.dart';
 
 class AutoLoginScreen extends StatefulWidget {
@@ -11,9 +13,45 @@ class AutoLoginScreen extends StatefulWidget {
 }
 
 class _AutoLoginScreenState extends State<AutoLoginScreen> {
+  String _firstName = '';
+  bool _isLoading = false;
 
-  void _handleBiometricLogin() {
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  // Shows the cached user's name; with no session there is nothing to
+  // unlock, so fall back to the password login.
+  Future<void> _loadUser() async {
+    final profile = await ProfileRepository.instance.getCachedProfile();
+    final home = await SessionRouter.restoreHome();
+    if (!mounted) return;
+
+    if (home == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
+    }
+    setState(() => _firstName = (profile?['first_name'] as String?) ?? '');
+  }
+
+  void _handleBiometricLogin() async {
     // TODO: Implement biometric auth or PIN validation
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    final home = await SessionRouter.restoreHome();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => home ?? const LoginScreen()),
+    );
   }
 
   @override
@@ -39,7 +77,7 @@ class _AutoLoginScreenState extends State<AutoLoginScreen> {
               ),
               const SizedBox(height: 8),
               AppText.title(
-                'Jonathan', // Mock user name
+                _firstName.isEmpty ? 'there' : _firstName,
                 style: TextStyle(color: AppTheme.white),
               ),
               const Spacer(),

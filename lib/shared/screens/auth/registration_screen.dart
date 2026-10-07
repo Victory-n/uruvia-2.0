@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/widgets/app_text.dart';
 import '../../../theme/individual/app_theme.dart';
 import 'login_screen.dart';
+import 'otp_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -21,6 +23,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -33,19 +36,83 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     super.dispose();
   }
 
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: AppText.paragraph(message)),
+    );
+  }
+
   void _handleRegistration() async {
-    if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: AppText.paragraph('You must agree to the terms and conditions')),
-      );
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || phone.isEmpty) {
+      _showMessage('Please fill in all fields');
       return;
     }
-    
-    // Redirect to login after successful registration/OTP
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _showMessage('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      _showMessage('Password must be at least 6 characters');
+      return;
+    }
+    if (password != _confirmPasswordController.text) {
+      _showMessage('Passwords do not match');
+      return;
+    }
+    if (!_agreeToTerms) {
+      _showMessage('You must agree to the terms and conditions');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      // The handle_new_user DB trigger creates the profile row on the
+      // default 'individual' account using this metadata.
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'first_name': firstName,
+          'last_name': lastName,
+          'phone': phone,
+          'agreed_to_terms': true,
+        },
+      );
+
+      if (!mounted) return;
+
+      // With email confirmation enabled no session is returned yet and
+      // the user must enter the emailed OTP.
+      if (response.session == null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => OtpScreen(email: email)),
+        );
+        return;
+      }
+
+      // Confirmation disabled: user is already verified. Sign out so they
+      // log in through the normal flow.
+      await Supabase.instance.client.auth.signOut();
+      if (!mounted) return;
+      _showMessage('Account created! Please log in.');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } on AuthException catch (e) {
+      if (mounted) _showMessage(e.message);
+    } catch (_) {
+      if (mounted) _showMessage('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -216,8 +283,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _handleRegistration,
-                  child: const AppText.button('Sign Up'),
+                  onPressed: _isLoading ? null : _handleRegistration,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const AppText.button('Sign Up'),
                 ),
               ),
               const SizedBox(height: 24),

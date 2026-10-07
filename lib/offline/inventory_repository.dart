@@ -12,11 +12,22 @@ class InventoryRepository {
   SupabaseClient get _supabaseClient => Supabase.instance.client;
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
+  // Flushes the offline queue first. Returns true only when no inventory
+  // changes are waiting, i.e. it's safe to replace the local cache with
+  // server data without losing offline entries.
+  Future<bool> _canRefreshCacheFromRemote() async {
+    final sync = SyncService.instance;
+    if (await sync.pendingCount() > 0) {
+      await sync.processQueue();
+    }
+    return await sync.pendingCount(tableName: 'inventory_items') == 0;
+  }
+
   // Retrieve inventory items: fetches from Supabase and caches them if online; loads from SQLite if offline.
   Future<List<Map<String, dynamic>>> getInventoryItems() async {
     final bool isOnline = ConnectivityService.instance.isConnected.value;
 
-    if (isOnline) {
+    if (isOnline && await _canRefreshCacheFromRemote()) {
       try {
         if (kDebugMode) {
           print('Fetch inventory from remote Supabase DB...');

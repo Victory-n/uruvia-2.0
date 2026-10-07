@@ -39,6 +39,18 @@ class SyncService {
     }
   }
 
+  // Number of queued actions, optionally limited to one table
+  Future<int> pendingCount({String? tableName}) async {
+    final db = await _dbHelper.database;
+    final rows = await db.query(
+      'offline_actions',
+      columns: ['id'],
+      where: tableName == null ? null : 'table_name = ?',
+      whereArgs: tableName == null ? null : [tableName],
+    );
+    return rows.length;
+  }
+
   // Trigger outbox processing loop
   Future<void> processQueue() async {
     if (_isSyncing) return;

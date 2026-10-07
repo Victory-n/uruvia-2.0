@@ -8,6 +8,8 @@ import '../../../shared/features/support/screens/support_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../../theme/individual/app_theme.dart';
 import 'settings/settings.dart';
+import '../../offline/profile_repository.dart';
+import '../../shared/services/auth_service.dart';
 
 class AppSidebar extends StatelessWidget {
   final String activeItem;
@@ -36,9 +38,18 @@ class AppSidebar extends StatelessWidget {
                     child: Icon(Icons.person, size: 32, color: AppTheme.sleekBlue),
                   ),
                   const SizedBox(height: 16),
-                  const AppText.subtitle(
-                    'Jonathan',
-                    style: TextStyle(color: AppTheme.white),
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: ProfileRepository.instance.getCachedProfile(),
+                    builder: (context, snapshot) {
+                      final profile = snapshot.data;
+                      final name =
+                          '${profile?['first_name'] ?? ''} ${profile?['last_name'] ?? ''}'
+                              .trim();
+                      return AppText.subtitle(
+                        name.isEmpty ? 'Uruvia User' : name,
+                        style: const TextStyle(color: AppTheme.white),
+                      );
+                    },
                   ),
                   const SizedBox(height: 4),
                   AppText.paragraph(
@@ -139,7 +150,12 @@ class AppSidebar extends StatelessWidget {
                 showDeleteAccountDialog(context, isBusiness: false);
               },
             ),
-            _buildNavItem(Icons.logout, 'Logout', false),
+            _buildNavItem(
+              Icons.logout,
+              'Logout',
+              false,
+              onTap: () => AuthService.logout(context),
+            ),
             const SizedBox(height: 24),
           ],
         ),

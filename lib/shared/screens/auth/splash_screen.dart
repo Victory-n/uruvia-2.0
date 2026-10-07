@@ -1,14 +1,61 @@
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_text.dart';
 import '../../../theme/individual/app_theme.dart';
+import '../../services/session_router.dart';
 import 'login_screen.dart';
 import 'registration_screen.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  bool _checkingSession = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreSession();
+  }
+
+  // If a session already exists, skip the welcome screen and open the
+  // dashboard for the user's active account type.
+  Future<void> _restoreSession() async {
+    final home = await SessionRouter.restoreHome();
+    if (!mounted) return;
+
+    if (home != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => home),
+      );
+    } else {
+      setState(() => _checkingSession = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_checkingSession) {
+      return Scaffold(
+        backgroundColor: AppTheme.sleekBlue,
+        body: Center(
+          child: Image.asset(
+            'assets/img/logo.png',
+            height: 48,
+            errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.account_balance_wallet,
+              size: 48,
+              color: AppTheme.white,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.sleekBlue,
       body: SafeArea(

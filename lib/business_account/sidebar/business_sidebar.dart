@@ -7,6 +7,8 @@ import '../screens/wallet/business_wallet_screen.dart';
 import '../../../shared/features/inventory/screens/inventory_list_screen.dart';
 import '../../../shared/function/delete_account.dart';
 import '../../../shared/features/support/screens/support_screen.dart';
+import '../../offline/profile_repository.dart';
+import '../../shared/services/auth_service.dart';
 
 class BusinessSidebar extends StatelessWidget {
   final String activeRoute;
@@ -52,6 +54,35 @@ class BusinessSidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: FutureBuilder<Map<String, dynamic>?>(
+                    future: ProfileRepository.instance.getCachedProfile(),
+                    builder: (context, snapshot) {
+                      final profile = snapshot.data;
+                      final name =
+                          '${profile?['first_name'] ?? ''} ${profile?['last_name'] ?? ''}'
+                              .trim();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText.subtitle(
+                            name.isEmpty ? 'Uruvia User' : name,
+                            style: const TextStyle(
+                              color: BusinessTheme.textDark,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const AppText.paragraph(
+                            'Business Account',
+                            style: TextStyle(color: BusinessTheme.textMuted),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                _buildDivider(),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -178,6 +209,12 @@ class BusinessSidebar extends StatelessWidget {
                     Navigator.pop(context);
                     showDeleteAccountDialog(context, isBusiness: true);
                   },
+                ),
+                _buildNavItem(
+                  icon: FontAwesomeIcons.rightFromBracket,
+                  label: 'Logout',
+                  isSelected: false,
+                  onTap: () => AuthService.logout(context),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
