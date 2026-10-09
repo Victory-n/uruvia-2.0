@@ -1,16 +1,16 @@
-# uruvia
+# Uruvia
 
-A new Flutter project.
+Money management for individuals and small businesses. Flutter and Supabase.
 
-## Getting Started
+- Architecture and folder rules: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Database: `schema.sql` (to be replaced by migrations under `supabase/`)
 
-This project is a starting point for a Flutter application.
+## Run
 
-A few resources to get you started if this is your first Flutter project:
+```
+flutter pub get
+flutter run
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Point a build at another Supabase project with
+`--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...`.
