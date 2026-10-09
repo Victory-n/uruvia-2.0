@@ -1,0 +1,966 @@
+From edc1f1702301b63fff94805d04cdd249e1e29084 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 9 Oct 2026 11:11:48 +0100
+Subject: [PATCH] Set up feature-first folder structure, theme, router and
+ state scaffolding
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01DGrWUcf7dpZy5HmsPPSpH3
+---
+ README.md                                     |  22 ++--
+ assets/svg/.gitkeep                           |   0
+ docs/ARCHITECTURE.md                          |  41 +++++++
+ lib/app/app.dart                              |  26 +++++
+ lib/app/router/app_router.dart                |  24 +++++
+ lib/app/router/routes.dart                    |   7 ++
+ lib/app/theme/app_palette.dart                |  77 +++++++++++++
+ lib/app/theme/app_theme.dart                  |  24 +++++
+ lib/core/config/env.dart                      |  19 ++++
+ lib/core/constants/.gitkeep                   |   0
+ lib/core/errors/.gitkeep                      |   0
+ lib/core/services/supabase_client.dart        |  14 +++
+ lib/core/utils/money.dart                     |  14 +++
+ lib/core/widgets/.gitkeep                     |   0
+ .../account/application/active_account.dart   |  16 +++
+ lib/features/account/data/.gitkeep            |   0
+ lib/features/account/domain/.gitkeep          |   0
+ lib/features/account/domain/account_type.dart |   1 +
+ lib/features/account/presentation/.gitkeep    |   0
+ lib/features/alerts/data/.gitkeep             |   0
+ lib/features/alerts/domain/.gitkeep           |   0
+ lib/features/alerts/presentation/.gitkeep     |   0
+ lib/features/auth/data/.gitkeep               |   0
+ lib/features/auth/domain/.gitkeep             |   0
+ lib/features/auth/presentation/.gitkeep       |   0
+ .../auth/presentation/splash_screen.dart      |  27 +++++
+ lib/features/budget/data/.gitkeep             |   0
+ lib/features/budget/domain/.gitkeep           |   0
+ lib/features/budget/presentation/.gitkeep     |   0
+ lib/features/customers/data/.gitkeep          |   0
+ lib/features/customers/domain/.gitkeep        |   0
+ lib/features/customers/presentation/.gitkeep  |   0
+ lib/features/expenses/data/.gitkeep           |   0
+ lib/features/expenses/domain/.gitkeep         |   0
+ lib/features/expenses/presentation/.gitkeep   |   0
+ lib/features/health/data/.gitkeep             |   0
+ lib/features/health/domain/.gitkeep           |   0
+ lib/features/health/presentation/.gitkeep     |   0
+ lib/features/home/data/.gitkeep               |   0
+ lib/features/home/domain/.gitkeep             |   0
+ lib/features/home/presentation/.gitkeep       |   0
+ .../home/presentation/home_placeholder.dart   |  28 +++++
+ lib/features/hub/data/.gitkeep                |   0
+ lib/features/hub/domain/.gitkeep              |   0
+ lib/features/hub/presentation/.gitkeep        |   0
+ lib/features/inventory/data/.gitkeep          |   0
+ lib/features/inventory/domain/.gitkeep        |   0
+ lib/features/inventory/presentation/.gitkeep  |   0
+ lib/features/invoices/data/.gitkeep           |   0
+ lib/features/invoices/domain/.gitkeep         |   0
+ lib/features/invoices/presentation/.gitkeep   |   0
+ lib/features/kyc/data/.gitkeep                |   0
+ lib/features/kyc/domain/.gitkeep              |   0
+ lib/features/kyc/presentation/.gitkeep        |   0
+ lib/features/notifications/data/.gitkeep      |   0
+ lib/features/notifications/domain/.gitkeep    |   0
+ .../notifications/presentation/.gitkeep       |   0
+ lib/features/onboarding/data/.gitkeep         |   0
+ lib/features/onboarding/domain/.gitkeep       |   0
+ lib/features/onboarding/presentation/.gitkeep |   0
+ lib/features/reports/data/.gitkeep            |   0
+ lib/features/reports/domain/.gitkeep          |   0
+ lib/features/reports/presentation/.gitkeep    |   0
+ lib/features/sales/data/.gitkeep              |   0
+ lib/features/sales/domain/.gitkeep            |   0
+ lib/features/sales/presentation/.gitkeep      |   0
+ lib/features/savings/data/.gitkeep            |   0
+ lib/features/savings/domain/.gitkeep          |   0
+ lib/features/savings/presentation/.gitkeep    |   0
+ lib/features/settings/data/.gitkeep           |   0
+ lib/features/settings/domain/.gitkeep         |   0
+ lib/features/settings/presentation/.gitkeep   |   0
+ lib/features/subscription/data/.gitkeep       |   0
+ lib/features/subscription/domain/.gitkeep     |   0
+ .../subscription/presentation/.gitkeep        |   0
+ lib/features/support/data/.gitkeep            |   0
+ lib/features/support/domain/.gitkeep          |   0
+ lib/features/support/presentation/.gitkeep    |   0
+ lib/features/wallet/data/.gitkeep             |   0
+ lib/features/wallet/domain/.gitkeep           |   0
+ lib/features/wallet/presentation/.gitkeep     |   0
+ lib/main.dart                                 | 102 ++----------------
+ pubspec.yaml                                  |   3 +
+ test/core/money_test.dart                     |  11 ++
+ test/widget_test.dart                         |   7 --
+ 85 files changed, 349 insertions(+), 114 deletions(-)
+ create mode 100644 assets/svg/.gitkeep
+ create mode 100644 docs/ARCHITECTURE.md
+ create mode 100644 lib/app/app.dart
+ create mode 100644 lib/app/router/app_router.dart
+ create mode 100644 lib/app/router/routes.dart
+ create mode 100644 lib/app/theme/app_palette.dart
+ create mode 100644 lib/app/theme/app_theme.dart
+ create mode 100644 lib/core/config/env.dart
+ create mode 100644 lib/core/constants/.gitkeep
+ create mode 100644 lib/core/errors/.gitkeep
+ create mode 100644 lib/core/services/supabase_client.dart
+ create mode 100644 lib/core/utils/money.dart
+ create mode 100644 lib/core/widgets/.gitkeep
+ create mode 100644 lib/features/account/application/active_account.dart
+ create mode 100644 lib/features/account/data/.gitkeep
+ create mode 100644 lib/features/account/domain/.gitkeep
+ create mode 100644 lib/features/account/domain/account_type.dart
+ create mode 100644 lib/features/account/presentation/.gitkeep
+ create mode 100644 lib/features/alerts/data/.gitkeep
+ create mode 100644 lib/features/alerts/domain/.gitkeep
+ create mode 100644 lib/features/alerts/presentation/.gitkeep
+ create mode 100644 lib/features/auth/data/.gitkeep
+ create mode 100644 lib/features/auth/domain/.gitkeep
+ create mode 100644 lib/features/auth/presentation/.gitkeep
+ create mode 100644 lib/features/auth/presentation/splash_screen.dart
+ create mode 100644 lib/features/budget/data/.gitkeep
+ create mode 100644 lib/features/budget/domain/.gitkeep
+ create mode 100644 lib/features/budget/presentation/.gitkeep
+ create mode 100644 lib/features/customers/data/.gitkeep
+ create mode 100644 lib/features/customers/domain/.gitkeep
+ create mode 100644 lib/features/customers/presentation/.gitkeep
+ create mode 100644 lib/features/expenses/data/.gitkeep
+ create mode 100644 lib/features/expenses/domain/.gitkeep
+ create mode 100644 lib/features/expenses/presentation/.gitkeep
+ create mode 100644 lib/features/health/data/.gitkeep
+ create mode 100644 lib/features/health/domain/.gitkeep
+ create mode 100644 lib/features/health/presentation/.gitkeep
+ create mode 100644 lib/features/home/data/.gitkeep
+ create mode 100644 lib/features/home/domain/.gitkeep
+ create mode 100644 lib/features/home/presentation/.gitkeep
+ create mode 100644 lib/features/home/presentation/home_placeholder.dart
+ create mode 100644 lib/features/hub/data/.gitkeep
+ create mode 100644 lib/features/hub/domain/.gitkeep
+ create mode 100644 lib/features/hub/presentation/.gitkeep
+ create mode 100644 lib/features/inventory/data/.gitkeep
+ create mode 100644 lib/features/inventory/domain/.gitkeep
+ create mode 100644 lib/features/inventory/presentation/.gitkeep
+ create mode 100644 lib/features/invoices/data/.gitkeep
+ create mode 100644 lib/features/invoices/domain/.gitkeep
+ create mode 100644 lib/features/invoices/presentation/.gitkeep
+ create mode 100644 lib/features/kyc/data/.gitkeep
+ create mode 100644 lib/features/kyc/domain/.gitkeep
+ create mode 100644 lib/features/kyc/presentation/.gitkeep
+ create mode 100644 lib/features/notifications/data/.gitkeep
+ create mode 100644 lib/features/notifications/domain/.gitkeep
+ create mode 100644 lib/features/notifications/presentation/.gitkeep
+ create mode 100644 lib/features/onboarding/data/.gitkeep
+ create mode 100644 lib/features/onboarding/domain/.gitkeep
+ create mode 100644 lib/features/onboarding/presentation/.gitkeep
+ create mode 100644 lib/features/reports/data/.gitkeep
+ create mode 100644 lib/features/reports/domain/.gitkeep
+ create mode 100644 lib/features/reports/presentation/.gitkeep
+ create mode 100644 lib/features/sales/data/.gitkeep
+ create mode 100644 lib/features/sales/domain/.gitkeep
+ create mode 100644 lib/features/sales/presentation/.gitkeep
+ create mode 100644 lib/features/savings/data/.gitkeep
+ create mode 100644 lib/features/savings/domain/.gitkeep
+ create mode 100644 lib/features/savings/presentation/.gitkeep
+ create mode 100644 lib/features/settings/data/.gitkeep
+ create mode 100644 lib/features/settings/domain/.gitkeep
+ create mode 100644 lib/features/settings/presentation/.gitkeep
+ create mode 100644 lib/features/subscription/data/.gitkeep
+ create mode 100644 lib/features/subscription/domain/.gitkeep
+ create mode 100644 lib/features/subscription/presentation/.gitkeep
+ create mode 100644 lib/features/support/data/.gitkeep
+ create mode 100644 lib/features/support/domain/.gitkeep
+ create mode 100644 lib/features/support/presentation/.gitkeep
+ create mode 100644 lib/features/wallet/data/.gitkeep
+ create mode 100644 lib/features/wallet/domain/.gitkeep
+ create mode 100644 lib/features/wallet/presentation/.gitkeep
+ create mode 100644 test/core/money_test.dart
+ delete mode 100644 test/widget_test.dart
+
+diff --git a/README.md b/README.md
+index 2115675..20ad7ff 100644
+--- a/README.md
++++ b/README.md
+@@ -1,16 +1,16 @@
+-# uruvia
++# Uruvia
+ 
+-A new Flutter project.
++Money management for individuals and small businesses. Flutter and Supabase.
+ 
+-## Getting Started
++- Architecture and folder rules: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
++- Database: `schema.sql` (to be replaced by migrations under `supabase/`)
+ 
+-This project is a starting point for a Flutter application.
++## Run
+ 
+-A few resources to get you started if this is your first Flutter project:
++```
++flutter pub get
++flutter run
++```
+ 
+-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+-
+-For help getting started with Flutter development, view the
+-[online documentation](https://docs.flutter.dev/), which offers tutorials,
+-samples, guidance on mobile development, and a full API reference.
++Point a build at another Supabase project with
++`--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...`.
+diff --git a/assets/svg/.gitkeep b/assets/svg/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+new file mode 100644
+index 0000000..707fd27
+--- /dev/null
++++ b/docs/ARCHITECTURE.md
+@@ -0,0 +1,41 @@
++# Uruvia architecture
++
++Feature-first Flutter app on Supabase. State: Riverpod. Routing: go_router.
++
++```
++lib/
++  main.dart                 start-up only: init Supabase, run the app
++  app/
++    app.dart                MaterialApp.router, picks the theme from the active account
++    router/                 routes.dart (all paths) and app_router.dart (redirects: session, KYC, app lock)
++    theme/                  AppPalette (Individual and Business colours) and buildTheme()
++  core/
++    config/                 Env: Supabase URL and publishable key (override with --dart-define)
++    services/               Supabase client, later: secure storage, biometrics, notifications
++    utils/                  money (integer kobo), dates, validators
++    widgets/                shared components: buttons, fields, keypad, bottom sheets, status tags
++    errors/ constants/
++  features/<name>/
++    data/                   repositories and Supabase calls (only place that touches the database)
++    domain/                 models and rules (plain Dart, no Flutter)
++    presentation/           screens, widgets and Riverpod controllers for that feature
++```
++
++Features: auth, onboarding, kyc, home, notifications, account (type and switcher),
++settings, support, subscription, wallet, savings, budget, expenses, and the Business-only
++inventory, invoices, customers, sales, reports, hub, health (Business Health and loans), alerts.
++
++## Rules
++
++1. Widgets never call Supabase directly. They use a controller, which uses a repository.
++2. A feature may import `core/` and `app/theme`, but not another feature's `data/`.
++   Shared models go in the feature that owns them and are imported from its `domain/`.
++3. Money is an integer number of kobo everywhere. Format only at the edge with `formatNaira`.
++4. All colours come from `AppPalette` or `StatusColors`. No hex values in screens.
++5. Business-only features are hidden and blocked (in the router and by RLS) for Individual accounts.
++6. Never put a service-role key in the app. Security lives in Row Level Security.
++
++## Naming
++
++Files are `snake_case`. Screens end in `_screen.dart`, repositories in `_repository.dart`,
++controllers in `_controller.dart`. Route paths live in `AppRoutes`.
+diff --git a/lib/app/app.dart b/lib/app/app.dart
+new file mode 100644
+index 0000000..3af6f18
+--- /dev/null
++++ b/lib/app/app.dart
+@@ -0,0 +1,26 @@
++import 'package:flutter/material.dart';
++import 'package:flutter_riverpod/flutter_riverpod.dart';
++
++import '../features/account/application/active_account.dart';
++import '../features/account/domain/account_type.dart';
++import 'router/app_router.dart';
++import 'theme/app_palette.dart';
++import 'theme/app_theme.dart';
++
++class UruviaApp extends ConsumerWidget {
++  const UruviaApp({super.key});
++
++  @override
++  Widget build(BuildContext context, WidgetRef ref) {
++    final account = ref.watch(activeAccountProvider);
++    final palette = account == AccountType.business
++        ? AppPalette.business
++        : AppPalette.individual;
++    return MaterialApp.router(
++      title: 'Uruvia',
++      debugShowCheckedModeBanner: false,
++      theme: buildTheme(palette),
++      routerConfig: ref.watch(routerProvider),
++    );
++  }
++}
+diff --git a/lib/app/router/app_router.dart b/lib/app/router/app_router.dart
+new file mode 100644
+index 0000000..4efd22d
+--- /dev/null
++++ b/lib/app/router/app_router.dart
+@@ -0,0 +1,24 @@
++import 'package:flutter_riverpod/flutter_riverpod.dart';
++import 'package:go_router/go_router.dart';
++
++import '../../features/auth/presentation/splash_screen.dart';
++import '../../features/home/presentation/home_placeholder.dart';
++import 'routes.dart';
++
++final routerProvider = Provider<GoRouter>((ref) {
++  return GoRouter(
++    initialLocation: AppRoutes.splash,
++    // Later: redirect based on the Supabase session, KYC state and the
++    // app lock (PIN after 3 minutes idle).
++    routes: [
++      GoRoute(
++        path: AppRoutes.splash,
++        builder: (_, __) => const SplashScreen(),
++      ),
++      GoRoute(
++        path: AppRoutes.home,
++        builder: (_, __) => const HomePlaceholder(),
++      ),
++    ],
++  );
++});
+diff --git a/lib/app/router/routes.dart b/lib/app/router/routes.dart
+new file mode 100644
+index 0000000..ead813a
+--- /dev/null
++++ b/lib/app/router/routes.dart
+@@ -0,0 +1,7 @@
++/// Every route path lives here so screens never hard-code strings.
++class AppRoutes {
++  const AppRoutes._();
++
++  static const splash = '/';
++  static const home = '/home';
++}
+diff --git a/lib/app/theme/app_palette.dart b/lib/app/theme/app_palette.dart
+new file mode 100644
+index 0000000..09e8b48
+--- /dev/null
++++ b/lib/app/theme/app_palette.dart
+@@ -0,0 +1,77 @@
++import 'package:flutter/material.dart';
++
++/// The colours that change between the Individual ("Fresh Growth") and
++/// Business ("Trust and Control") accounts. Read it with
++/// `Theme.of(context).extension<AppPalette>()!`.
++@immutable
++class AppPalette extends ThemeExtension<AppPalette> {
++  const AppPalette({
++    required this.hero,
++    required this.action,
++    required this.tint,
++    required this.accent,
++    required this.onAccent,
++  });
++
++  final Color hero; // header and hero cards
++  final Color action; // buttons, links, active states
++  final Color tint; // soft backgrounds
++  final Color accent; // highlights
++  final Color onAccent; // text on the accent colour
++
++  static const individual = AppPalette(
++    hero: Color(0xFF096240),
++    action: Color(0xFF0B7A4B),
++    tint: Color(0xFFE3F6EC),
++    accent: Color(0xFFF5A623),
++    onAccent: Color(0xFF101828),
++  );
++
++  static const business = AppPalette(
++    hero: Color(0xFF0A3860),
++    action: Color(0xFF0E4D86),
++    tint: Color(0xFFE1EEF9),
++    accent: Color(0xFF12B76A),
++    onAccent: Color(0xFF052E1A),
++  );
++
++  @override
++  AppPalette copyWith({
++    Color? hero,
++    Color? action,
++    Color? tint,
++    Color? accent,
++    Color? onAccent,
++  }) =>
++      AppPalette(
++        hero: hero ?? this.hero,
++        action: action ?? this.action,
++        tint: tint ?? this.tint,
++        accent: accent ?? this.accent,
++        onAccent: onAccent ?? this.onAccent,
++      );
++
++  @override
++  AppPalette lerp(ThemeExtension<AppPalette>? other, double t) {
++    if (other is! AppPalette) return this;
++    return AppPalette(
++      hero: Color.lerp(hero, other.hero, t)!,
++      action: Color.lerp(action, other.action, t)!,
++      tint: Color.lerp(tint, other.tint, t)!,
++      accent: Color.lerp(accent, other.accent, t)!,
++      onAccent: Color.lerp(onAccent, other.onAccent, t)!,
++    );
++  }
++}
++
++/// Status colours shared by both themes.
++class StatusColors {
++  const StatusColors._();
++
++  static const success = Color(0xFF067647);
++  static const warning = Color(0xFFF79009);
++  static const warningText = Color(0xFFB54708);
++  static const error = Color(0xFFD92D20);
++  static const errorText = Color(0xFFB42318);
++  static const border = Color(0xFFEAECF0);
++}
+diff --git a/lib/app/theme/app_theme.dart b/lib/app/theme/app_theme.dart
+new file mode 100644
+index 0000000..48afc8f
+--- /dev/null
++++ b/lib/app/theme/app_theme.dart
+@@ -0,0 +1,24 @@
++import 'package:flutter/material.dart';
++import 'package:google_fonts/google_fonts.dart';
++
++import 'app_palette.dart';
++
++ThemeData buildTheme(AppPalette p) {
++  final base = GoogleFonts.interTextTheme();
++  final heading = GoogleFonts.plusJakartaSans;
++  return ThemeData(
++    useMaterial3: true,
++    colorScheme: ColorScheme.fromSeed(
++      seedColor: p.action,
++      primary: p.action,
++      surface: Colors.white,
++    ),
++    scaffoldBackgroundColor: Colors.white,
++    textTheme: base.copyWith(
++      headlineLarge: heading(fontSize: 32, fontWeight: FontWeight.w800),
++      headlineMedium: heading(fontSize: 24, fontWeight: FontWeight.w800),
++      titleLarge: heading(fontSize: 18, fontWeight: FontWeight.w700),
++    ),
++    extensions: [p],
++  );
++}
+diff --git a/lib/core/config/env.dart b/lib/core/config/env.dart
+new file mode 100644
+index 0000000..5daeb49
+--- /dev/null
++++ b/lib/core/config/env.dart
+@@ -0,0 +1,19 @@
++/// Build-time configuration. Override with
++/// `--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...`
++/// (for example to point a build at a staging project).
++///
++/// The publishable key is safe to ship in the app: it is protected by
++/// Row Level Security. Never put a service-role / secret key here.
++class Env {
++  const Env._();
++
++  static const supabaseUrl = String.fromEnvironment(
++    'SUPABASE_URL',
++    defaultValue: 'https://mvisrdmdxbenuqezprdn.supabase.co',
++  );
++
++  static const supabasePublishableKey = String.fromEnvironment(
++    'SUPABASE_PUBLISHABLE_KEY',
++    defaultValue: 'sb_publishable_5n0XY_6HBYN-xQwp5XV7eg_o7RqUQVp',
++  );
++}
+diff --git a/lib/core/constants/.gitkeep b/lib/core/constants/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/core/errors/.gitkeep b/lib/core/errors/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/core/services/supabase_client.dart b/lib/core/services/supabase_client.dart
+new file mode 100644
+index 0000000..a829965
+--- /dev/null
++++ b/lib/core/services/supabase_client.dart
+@@ -0,0 +1,14 @@
++import 'package:supabase_flutter/supabase_flutter.dart';
++
++import '../config/env.dart';
++
++Future<void> initSupabase() async {
++  await Supabase.initialize(
++    url: Env.supabaseUrl,
++    publishableKey: Env.supabasePublishableKey,
++  );
++}
++
++/// Global Supabase client. Use it only inside repositories
++/// (`features/<name>/data/`), never directly in widgets.
++SupabaseClient get supabase => Supabase.instance.client;
+diff --git a/lib/core/utils/money.dart b/lib/core/utils/money.dart
+new file mode 100644
+index 0000000..15a3e7b
+--- /dev/null
++++ b/lib/core/utils/money.dart
+@@ -0,0 +1,14 @@
++/// Money is stored and passed around as integer kobo (1 naira = 100 kobo)
++/// so there are never floating point errors.
++String formatNaira(int kobo, {bool showKobo = true}) {
++  final negative = kobo < 0;
++  final abs = kobo.abs();
++  final naira = abs ~/ 100;
++  final rest = abs % 100;
++  final grouped = naira.toString().replaceAllMapped(
++        RegExp(r'\B(?=(\d{3})+(?!\d))'),
++        (_) => ',',
++      );
++  final fraction = showKobo ? '.${rest.toString().padLeft(2, '0')}' : '';
++  return '${negative ? '-' : ''}₦$grouped$fraction';
++}
+diff --git a/lib/core/widgets/.gitkeep b/lib/core/widgets/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/account/application/active_account.dart b/lib/features/account/application/active_account.dart
+new file mode 100644
+index 0000000..8f3823f
+--- /dev/null
++++ b/lib/features/account/application/active_account.dart
+@@ -0,0 +1,16 @@
++import 'package:flutter_riverpod/flutter_riverpod.dart';
++
++import '../domain/account_type.dart';
++
++/// Which account the user is currently using. It drives the theme, the
++/// sidebar and the Home screen. Later this is loaded from
++/// `profiles.active_account_type` after the PIN check on switching.
++class ActiveAccount extends Notifier<AccountType> {
++  @override
++  AccountType build() => AccountType.individual;
++
++  void switchTo(AccountType type) => state = type;
++}
++
++final activeAccountProvider =
++    NotifierProvider<ActiveAccount, AccountType>(ActiveAccount.new);
+diff --git a/lib/features/account/data/.gitkeep b/lib/features/account/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/account/domain/.gitkeep b/lib/features/account/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/account/domain/account_type.dart b/lib/features/account/domain/account_type.dart
+new file mode 100644
+index 0000000..ae7cc27
+--- /dev/null
++++ b/lib/features/account/domain/account_type.dart
+@@ -0,0 +1 @@
++enum AccountType { individual, business }
+diff --git a/lib/features/account/presentation/.gitkeep b/lib/features/account/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/alerts/data/.gitkeep b/lib/features/alerts/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/alerts/domain/.gitkeep b/lib/features/alerts/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/alerts/presentation/.gitkeep b/lib/features/alerts/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/auth/data/.gitkeep b/lib/features/auth/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/auth/domain/.gitkeep b/lib/features/auth/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/auth/presentation/.gitkeep b/lib/features/auth/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/auth/presentation/splash_screen.dart b/lib/features/auth/presentation/splash_screen.dart
+new file mode 100644
+index 0000000..df845c4
+--- /dev/null
++++ b/lib/features/auth/presentation/splash_screen.dart
+@@ -0,0 +1,27 @@
++import 'package:flutter/material.dart';
++import 'package:go_router/go_router.dart';
++
++import '../../../app/router/routes.dart';
++
++class SplashScreen extends StatelessWidget {
++  const SplashScreen({super.key});
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      body: Center(
++        child: Column(
++          mainAxisSize: MainAxisSize.min,
++          children: [
++            Image.asset('assets/img/logo.png', width: 120),
++            const SizedBox(height: 24),
++            FilledButton(
++              onPressed: () => context.go(AppRoutes.home),
++              child: const Text('Continue'),
++            ),
++          ],
++        ),
++      ),
++    );
++  }
++}
+diff --git a/lib/features/budget/data/.gitkeep b/lib/features/budget/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/budget/domain/.gitkeep b/lib/features/budget/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/budget/presentation/.gitkeep b/lib/features/budget/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/customers/data/.gitkeep b/lib/features/customers/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/customers/domain/.gitkeep b/lib/features/customers/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/customers/presentation/.gitkeep b/lib/features/customers/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/expenses/data/.gitkeep b/lib/features/expenses/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/expenses/domain/.gitkeep b/lib/features/expenses/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/expenses/presentation/.gitkeep b/lib/features/expenses/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/health/data/.gitkeep b/lib/features/health/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/health/domain/.gitkeep b/lib/features/health/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/health/presentation/.gitkeep b/lib/features/health/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/home/data/.gitkeep b/lib/features/home/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/home/domain/.gitkeep b/lib/features/home/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/home/presentation/.gitkeep b/lib/features/home/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/home/presentation/home_placeholder.dart b/lib/features/home/presentation/home_placeholder.dart
+new file mode 100644
+index 0000000..c855797
+--- /dev/null
++++ b/lib/features/home/presentation/home_placeholder.dart
+@@ -0,0 +1,28 @@
++import 'package:flutter/material.dart';
++import 'package:flutter_riverpod/flutter_riverpod.dart';
++
++import '../../account/application/active_account.dart';
++import '../../account/domain/account_type.dart';
++
++/// Temporary screen that proves the two themes switch. Replaced when the
++/// Home dashboards are built.
++class HomePlaceholder extends ConsumerWidget {
++  const HomePlaceholder({super.key});
++
++  @override
++  Widget build(BuildContext context, WidgetRef ref) {
++    final account = ref.watch(activeAccountProvider);
++    final isBusiness = account == AccountType.business;
++    return Scaffold(
++      appBar: AppBar(title: Text(isBusiness ? 'Business' : 'Individual')),
++      body: Center(
++        child: FilledButton(
++          onPressed: () => ref.read(activeAccountProvider.notifier).switchTo(
++                isBusiness ? AccountType.individual : AccountType.business,
++              ),
++          child: const Text('Switch account'),
++        ),
++      ),
++    );
++  }
++}
+diff --git a/lib/features/hub/data/.gitkeep b/lib/features/hub/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/hub/domain/.gitkeep b/lib/features/hub/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/hub/presentation/.gitkeep b/lib/features/hub/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/inventory/data/.gitkeep b/lib/features/inventory/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/inventory/domain/.gitkeep b/lib/features/inventory/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/inventory/presentation/.gitkeep b/lib/features/inventory/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/invoices/data/.gitkeep b/lib/features/invoices/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/invoices/domain/.gitkeep b/lib/features/invoices/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/invoices/presentation/.gitkeep b/lib/features/invoices/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/kyc/data/.gitkeep b/lib/features/kyc/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/kyc/domain/.gitkeep b/lib/features/kyc/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/kyc/presentation/.gitkeep b/lib/features/kyc/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/notifications/data/.gitkeep b/lib/features/notifications/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/notifications/domain/.gitkeep b/lib/features/notifications/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/notifications/presentation/.gitkeep b/lib/features/notifications/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/onboarding/data/.gitkeep b/lib/features/onboarding/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/onboarding/domain/.gitkeep b/lib/features/onboarding/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/onboarding/presentation/.gitkeep b/lib/features/onboarding/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/reports/data/.gitkeep b/lib/features/reports/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/reports/domain/.gitkeep b/lib/features/reports/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/reports/presentation/.gitkeep b/lib/features/reports/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/sales/data/.gitkeep b/lib/features/sales/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/sales/domain/.gitkeep b/lib/features/sales/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/sales/presentation/.gitkeep b/lib/features/sales/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/savings/data/.gitkeep b/lib/features/savings/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/savings/domain/.gitkeep b/lib/features/savings/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/savings/presentation/.gitkeep b/lib/features/savings/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/settings/data/.gitkeep b/lib/features/settings/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/settings/domain/.gitkeep b/lib/features/settings/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/settings/presentation/.gitkeep b/lib/features/settings/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/subscription/data/.gitkeep b/lib/features/subscription/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/subscription/domain/.gitkeep b/lib/features/subscription/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/subscription/presentation/.gitkeep b/lib/features/subscription/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/support/data/.gitkeep b/lib/features/support/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/support/domain/.gitkeep b/lib/features/support/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/support/presentation/.gitkeep b/lib/features/support/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/wallet/data/.gitkeep b/lib/features/wallet/data/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/wallet/domain/.gitkeep b/lib/features/wallet/domain/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/features/wallet/presentation/.gitkeep b/lib/features/wallet/presentation/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/main.dart b/lib/main.dart
+index b9a9de8..ccc6daf 100644
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -1,101 +1,11 @@
+ import 'package:flutter/material.dart';
+-import 'package:supabase_flutter/supabase_flutter.dart';
++import 'package:flutter_riverpod/flutter_riverpod.dart';
++
++import 'app/app.dart';
++import 'core/services/supabase_client.dart';
+ 
+ Future<void> main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+-
+-  await Supabase.initialize(
+-    url: 'https://mvisrdmdxbenuqezprdn.supabase.co',
+-    publishableKey: 'sb_publishable_5n0XY_6HBYN-xQwp5XV7eg_o7RqUQVp',
+-  );
+-
+-  runApp(const MyApp());
+-}
+-
+-/// Global Supabase client shortcut.
+-final supabase = Supabase.instance.client;
+-
+-class MyApp extends StatelessWidget {
+-  const MyApp({super.key});
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return MaterialApp(
+-      title: 'Uruvia',
+-      debugShowCheckedModeBanner: false,
+-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+-    );
+-  }
+-}
+-
+-class MyHomePage extends StatefulWidget {
+-  const MyHomePage({super.key, required this.title});
+-
+-  final String title;
+-
+-  @override
+-  State<MyHomePage> createState() => _MyHomePageState();
+-}
+-
+-class _MyHomePageState extends State<MyHomePage> {
+-  int _counter = 0;
+-
+-  void _incrementCounter() {
+-    setState(() {
+-      _counter++;
+-    });
+-  }
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    // This method is rerun every time setState is called, for instance as done
+-    // by the _incrementCounter method above.
+-    //
+-    // The Flutter framework has been optimized to make rerunning build methods
+-    // fast, so that you can just rebuild anything that needs updating rather
+-    // than having to individually change instances of widgets.
+-    return Scaffold(
+-      appBar: AppBar(
+-        // TRY THIS: Try changing the color here to a specific color (to
+-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+-        // change color while the other colors stay the same.
+-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+-        // Here we take the value from the MyHomePage object that was created by
+-        // the App.build method, and use it to set our appbar title.
+-        title: Text(widget.title),
+-      ),
+-      body: Center(
+-        // Center is a layout widget. It takes a single child and positions it
+-        // in the middle of the parent.
+-        child: Column(
+-          // Column is also a layout widget. It takes a list of children and
+-          // arranges them vertically. By default, it sizes itself to fit its
+-          // children horizontally, and tries to be as tall as its parent.
+-          //
+-          // Column has various properties to control how it sizes itself and
+-          // how it positions its children. Here we use mainAxisAlignment to
+-          // center the children vertically; the main axis here is the vertical
+-          // axis because Columns are vertical (the cross axis would be
+-          // horizontal).
+-          //
+-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
+-          // action in the IDE, or press "p" in the console), to see the
+-          // wireframe for each widget.
+-          mainAxisAlignment: MainAxisAlignment.center,
+-          children: [
+-            const Text('You have pushed the button this many times:'),
+-            Text(
+-              '$_counter',
+-              style: Theme.of(context).textTheme.headlineMedium,
+-            ),
+-          ],
+-        ),
+-      ),
+-      floatingActionButton: FloatingActionButton(
+-        onPressed: _incrementCounter,
+-        tooltip: 'Increment',
+-        child: const Icon(Icons.add),
+-      ),
+-    );
+-  }
++  await initSupabase();
++  runApp(const ProviderScope(child: UruviaApp()));
+ }
+diff --git a/pubspec.yaml b/pubspec.yaml
+index adcddb5..401fb36 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -35,6 +35,9 @@ dependencies:
+   # Use with the CupertinoIcons class for iOS style icons.
+   cupertino_icons: ^1.0.8
+   supabase_flutter: ^2.18.0
++  flutter_riverpod: ^2.6.1
++  go_router: ^14.8.1
++  google_fonts: ^6.2.1
+ 
+ dev_dependencies:
+   flutter_test:
+diff --git a/test/core/money_test.dart b/test/core/money_test.dart
+new file mode 100644
+index 0000000..00987c6
+--- /dev/null
++++ b/test/core/money_test.dart
+@@ -0,0 +1,11 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:uruvia/core/utils/money.dart';
++
++void main() {
++  test('formats kobo as naira', () {
++    expect(formatNaira(128450000), '₦1,284,500.00');
++    expect(formatNaira(24850000), '₦248,500.00');
++    expect(formatNaira(5), '₦0.05');
++    expect(formatNaira(-150000, showKobo: false), '-₦1,500');
++  });
++}
+diff --git a/test/widget_test.dart b/test/widget_test.dart
+deleted file mode 100644
+index b5bf95d..0000000
+--- a/test/widget_test.dart
++++ /dev/null
+@@ -1,7 +0,0 @@
+-import 'package:flutter_test/flutter_test.dart';
+-
+-void main() {
+-  test('Dummy widget test placeholder', () {
+-    expect(true, isTrue);
+-  });
+-}
+-- 
+2.43.0
+
