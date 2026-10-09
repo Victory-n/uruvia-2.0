@@ -119,3 +119,55 @@ create policy "Owners can update own business profile"
   to authenticated
   using ((select auth.uid()) = owner_id)
   with check ((select auth.uid()) = owner_id);
+
+-- ---------- inventory_items ----------
+create table if not exists public.inventory_items (
+  id                   uuid primary key default gen_random_uuid(),
+  owner_id             uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  item_name            text not null,
+  category             text not null default 'General',
+  quantity             integer not null default 0,
+  cost_price           numeric not null default 0.0,
+  selling_price        numeric not null default 0.0,
+  low_stock_alert      boolean not null default true,
+  low_stock_threshold  integer not null default 5,
+  sku                  text,
+  unit                 text default 'units',
+  image_path           text,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+
+create trigger inventory_items_set_updated_at
+  before update on public.inventory_items
+  for each row execute function public.set_updated_at();
+
+alter table public.inventory_items enable row level security;
+
+create policy "Users can manage their own inventory items"
+  on public.inventory_items for all
+  to authenticated
+  using ((select auth.uid()) = owner_id)
+  with check ((select auth.uid()) = owner_id);
+
+-- ---------- stock_movements ----------
+create table if not exists public.stock_movements (
+  id                   text primary key,
+  owner_id             uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  item_id              uuid not null references public.inventory_items (id) on delete cascade,
+  item_name            text not null,
+  change_quantity      integer not null,
+  resulting_quantity   integer not null,
+  movement_type        text not null,
+  reference_id         text,
+  note                 text,
+  created_at           timestamptz not null default now()
+);
+
+alter table public.stock_movements enable row level security;
+
+create policy "Users can manage their own stock movements"
+  on public.stock_movements for all
+  to authenticated
+  using ((select auth.uid()) = owner_id)
+  with check ((select auth.uid()) = owner_id);
