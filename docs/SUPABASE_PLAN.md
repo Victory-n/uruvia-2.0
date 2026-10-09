@@ -1,6 +1,9 @@
 # Uruvia: Supabase plan
 
-Status: draft for review, 9 Oct 2026. Nothing in this plan has been run yet.
+Status: 9 Oct 2026. Hosted Supabase project chosen (ref `mvisrdmdxbenuqezprdn`).
+**On hold:** the payment partner and all wallet integration (section 4, and the wallet-linked parts of savings, invoices, subscriptions and loans).
+The wallet screens are built as UI with dummy data only. No wallet tables, money functions or webhooks are written until the hold is lifted.
+Migrations written and tested so far: 0001 helpers, 0002 identity and accounts, 0003 KYC config.
 Source: the Uruvia Design Reference (58 screens). Items still waiting on the board are marked **[OPEN]** and are
 handled with configuration tables, so a decision never needs a code change.
 
@@ -51,7 +54,7 @@ One person, up to two accounts (Individual, Business), one wallet per account (a
 - Approval is written by a webhook Edge Function (service role), which updates `profiles.kyc_tier`. Users cannot set their own tier.
 - Limit checks (send, fund, wallet cap) read `kyc_tiers` inside the money functions, so the "limit exceeded" screens always agree with the server.
 
-## 4. Wallet and ledger (screens 15 to 18)
+## 4. Wallet and ledger (screens 15 to 18) **[ON HOLD: UI with dummy data only]**
 
 | Table | Purpose |
 |---|---|
@@ -254,5 +257,5 @@ Created with `supabase migration new <name>` (never hand-named):
 ## 17. Decisions needed from you to start Step 2 build
 
 1. **Hosted project or local CLI?** Recommendation: use the existing hosted project (ref `mvisrdmdxbenuqezprdn`) with `supabase link` and `supabase db push`. It needs no Docker and uses fewer tokens and less laptop time. Local can be added later.
-2. **Payment partner:** not needed to write the tables, only for the webhooks. Leave as the provider-neutral function above until chosen.
+2. **Payment partner:** on hold by decision. Columns that will later point at wallet transactions (expenses, savings entries, invoice payments) are plain nullable `uuid` columns for now, with the foreign key added when the wallet migration is written.
 3. Everything marked **[OPEN]** stays as configuration until the board answers; see `claude/uruvia-open-decisions.md` in the Project.
