@@ -19,7 +19,7 @@ class LockPinStore {
   static const _kBio = 'lock_biometrics';
 
   static String _hash(String salt, String pin) {
-    var digest = utf8.encode('$salt:$pin');
+    List<int> digest = utf8.encode('$salt:$pin');
     for (var i = 0; i < 2000; i++) {
       digest = sha256.convert(digest).bytes;
     }
