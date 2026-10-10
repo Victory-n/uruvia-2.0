@@ -46,6 +46,9 @@ String friendlyError(Object error) {
     }
     if (error.code == '23505') return 'That already exists.';
     if (error.code == '23503') return 'That is still in use, so it cannot be removed.';
+    // Messages written by our own database functions are plain and safe to show.
+    final ours = _ownMessage(error.message);
+    if (ours != null && (error.code == '55000' || error.code == '23514' || error.code == '22023')) return ours;
     if (error.code == '23514') {
       // Our own stock messages start with "Only N available" and are safe to show.
       if (error.message.startsWith('Only ')) return error.message;
@@ -55,4 +58,28 @@ String friendlyError(Object error) {
   }
 
   return 'Something went wrong. Please try again.';
+}
+
+const _ownPrefixes = [
+  'add at least one item',
+  'amount is more than the balance',
+  'amount must be above zero',
+  'due date cannot be before',
+  'this customer still has unpaid invoices',
+  'an invoice can only be edited',
+  'only a draft can be issued',
+  'payments can only be recorded',
+  'this invoice cannot be cancelled',
+  'this invoice can no longer be edited',
+  'items can only change',
+];
+
+/// The database message with a capital letter and a full stop, when it is one of ours.
+String? _ownMessage(String message) {
+  final m = message.trim();
+  final lower = m.toLowerCase();
+  if (!_ownPrefixes.any(lower.startsWith)) return null;
+  if (lower.startsWith('amount is more than the balance')) return 'That is more than the balance still owing.';
+  final capped = m[0].toUpperCase() + m.substring(1);
+  return capped.endsWith('.') ? capped : '$capped.';
 }
