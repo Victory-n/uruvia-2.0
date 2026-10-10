@@ -65,7 +65,6 @@ class BusinessHome extends StatelessWidget {
               label: 'Spent this month',
               value: AmountText(s.spentThisMonthKobo, size: AmountSize.l, showKobo: false),
               note: 'Business expenses',
-              onTap: () => context.go(AppRoutes.expenses),
             ),
           ],
         ),

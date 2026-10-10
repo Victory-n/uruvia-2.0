@@ -15,6 +15,12 @@ import '../../features/auth/presentation/verify_email_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../core/services/local_store.dart';
 import '../../features/auth/presentation/splash_screen.dart';
+import '../../features/budget/presentation/budget_detail_screen.dart';
+import '../../features/budget/presentation/budget_form_screen.dart';
+import '../../features/budget/presentation/budget_list_screen.dart';
+import '../../features/expenses/presentation/expense_form_screen.dart';
+import '../../features/expenses/presentation/expense_insights_screen.dart';
+import '../../features/expenses/presentation/expense_list_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
@@ -22,6 +28,9 @@ import '../shell/app_shell.dart';
 import '../shell/coming_soon_screen.dart';
 import '../shell/nav_items.dart';
 import 'routes.dart';
+
+/// Destinations that have a real screen; the rest still show "Coming soon".
+const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, AppRoutes.expenses};
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect whenever the active account changes.
@@ -78,6 +87,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.accountType, builder: (_, __) => const AccountTypeScreen()),
       GoRoute(path: AppRoutes.businessSetup, builder: (_, __) => const BusinessSetupScreen()),
       GoRoute(path: AppRoutes.pin, builder: (_, __) => const CreatePinScreen()),
+      // Forms and detail pages open full screen, with a back arrow. Fixed paths come before :id.
+      GoRoute(path: AppRoutes.expensesNew, builder: (_, __) => const ExpenseFormScreen()),
+      GoRoute(path: AppRoutes.expensesInsights, builder: (_, __) => const ExpenseInsightsScreen()),
+      GoRoute(
+        path: '/expenses/:id',
+        builder: (_, state) => ExpenseFormScreen(expenseId: state.pathParameters['id']),
+      ),
+      GoRoute(path: AppRoutes.budgetsNew, builder: (_, __) => const BudgetFormScreen()),
+      GoRoute(
+        path: '/budgets/:id/edit',
+        builder: (_, state) => BudgetFormScreen(budgetId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: '/budgets/:id',
+        builder: (_, state) => BudgetDetailScreen(budgetId: state.pathParameters['id']!),
+      ),
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(location: state.matchedLocation, child: child),
@@ -86,7 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.home,
             builder: (_, __) => const HomeScreen(),
           ),
-          for (final item in allNavItems.where((i) => i.route != AppRoutes.home && i.route != AppRoutes.settings))
+          for (final item in allNavItems.where((i) => !_builtRoutes.contains(i.route)))
             GoRoute(
               path: item.route,
               builder: (_, __) => ComingSoonScreen(title: item.label),
@@ -95,6 +120,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.notifications,
             builder: (_, __) => const NotificationsScreen(),
           ),
+          GoRoute(path: AppRoutes.budgets, builder: (_, __) => const BudgetListScreen()),
+          GoRoute(path: AppRoutes.expenses, builder: (_, __) => const ExpenseListScreen()),
           GoRoute(
             path: AppRoutes.settings,
             builder: (_, __) => const SettingsScreen(),

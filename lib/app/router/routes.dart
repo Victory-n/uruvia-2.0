@@ -21,6 +21,12 @@ class AppRoutes {
   static const budgets = '/budgets';
   static const savings = '/savings';
   static const expenses = '/expenses';
+  static const expensesNew = '/expenses/new';
+  static const expensesInsights = '/expenses/insights';
+  static String expenseEdit(String id) => '/expenses/$id';
+  static const budgetsNew = '/budgets/new';
+  static String budgetDetail(String id) => '/budgets/$id';
+  static String budgetEdit(String id) => '/budgets/$id/edit';
   static const plan = '/plan';
   static const support = '/support';
   static const settings = '/settings';

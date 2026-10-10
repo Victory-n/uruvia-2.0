@@ -55,10 +55,13 @@ class StatTile extends StatelessWidget {
 }
 
 class QuickAction {
-  const QuickAction(this.icon, this.label, this.route);
+  const QuickAction(this.icon, this.label, this.route, {this.push = false});
   final IconData icon;
   final String label;
   final String route;
+
+  /// Open on top of the current screen (forms), so the back arrow returns here.
+  final bool push;
 }
 
 /// Row of round shortcut buttons.
@@ -80,7 +83,7 @@ class QuickActions extends StatelessWidget {
               excludeSemantics: true,
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppRadius.card),
-                onTap: () => context.go(a.route),
+                onTap: () => a.push ? context.push(a.route) : context.go(a.route),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   child: Column(

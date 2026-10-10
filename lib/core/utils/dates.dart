@@ -24,3 +24,22 @@ String greetingFor(DateTime now) {
   if (now.hour < 17) return 'Good afternoon';
   return 'Good evening';
 }
+
+const _longMonths = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/// "October 2026"
+String formatMonthYear(DateTime d) => '${_longMonths[d.month - 1]} ${d.year}';
+
+/// "Today", "Yesterday" or "Mon 5 Oct".
+String formatDayHeader(DateTime d, {DateTime? now}) {
+  final t = now ?? DateTime.now();
+  final day = DateTime(d.year, d.month, d.day);
+  final today = DateTime(t.year, t.month, t.day);
+  if (day == today) return 'Today';
+  if (day == today.subtract(const Duration(days: 1))) return 'Yesterday';
+  return '${_weekdays[d.weekday - 1]} ${formatShortDate(d, now: t)}';
+}

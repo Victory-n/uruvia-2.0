@@ -25,7 +25,7 @@ class IndividualHome extends StatelessWidget {
         const WalletCard(),
         const SizedBox(height: AppSpacing.sectionGap),
         const QuickActions(actions: [
-          QuickAction(Icons.add_circle_outline_rounded, 'Add expense', AppRoutes.expenses),
+          QuickAction(Icons.add_circle_outline_rounded, 'Add expense', AppRoutes.expensesNew, push: true),
           QuickAction(Icons.pie_chart_outline_rounded, 'Budgets', AppRoutes.budgets),
           QuickAction(Icons.savings_outlined, 'Savings', AppRoutes.savings),
           QuickAction(Icons.receipt_long_outlined, 'Expenses', AppRoutes.expenses),
@@ -43,7 +43,7 @@ class IndividualHome extends StatelessWidget {
             title: 'No expenses yet',
             message: 'Log what you spend and it will show up here.',
             actionLabel: 'Add expense',
-            onAction: () => context.go(AppRoutes.expenses),
+            onAction: () => context.push(AppRoutes.expensesNew),
           )
         else
           AppCard(
