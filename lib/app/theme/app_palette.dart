@@ -11,13 +11,15 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.tint,
     required this.accent,
     required this.onAccent,
+    required this.background,
   });
 
   final Color hero; // header and hero cards
   final Color action; // buttons, links, active states
-  final Color tint; // soft backgrounds
+  final Color tint; // soft backgrounds, selected rows, chips
   final Color accent; // highlights
   final Color onAccent; // text on the accent colour
+  final Color background; // screen background
 
   static const individual = AppPalette(
     hero: Color(0xFF096240),
@@ -25,6 +27,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     tint: Color(0xFFE3F6EC),
     accent: Color(0xFFF5A623),
     onAccent: Color(0xFF101828),
+    background: Color(0xFFF6FBF8),
   );
 
   static const business = AppPalette(
@@ -33,6 +36,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     tint: Color(0xFFE1EEF9),
     accent: Color(0xFF12B76A),
     onAccent: Color(0xFF052E1A),
+    background: Color(0xFFF4F7FB),
   );
 
   @override
@@ -42,6 +46,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     Color? tint,
     Color? accent,
     Color? onAccent,
+    Color? background,
   }) =>
       AppPalette(
         hero: hero ?? this.hero,
@@ -49,6 +54,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
         tint: tint ?? this.tint,
         accent: accent ?? this.accent,
         onAccent: onAccent ?? this.onAccent,
+        background: background ?? this.background,
       );
 
   @override
@@ -60,8 +66,34 @@ class AppPalette extends ThemeExtension<AppPalette> {
       tint: Color.lerp(tint, other.tint, t)!,
       accent: Color.lerp(accent, other.accent, t)!,
       onAccent: Color.lerp(onAccent, other.onAccent, t)!,
+      background: Color.lerp(background, other.background, t)!,
     );
   }
+}
+
+/// Neutral colours shared by both themes.
+class AppColors {
+  const AppColors._();
+
+  static const ink = Color(0xFF101828); // headings, amounts
+  static const inkSoft = Color(0xFF667085); // captions, helper text
+  static const border = Color(0xFFE4E7EC); // inputs, dividers, card outlines
+  static const surface = Colors.white;
+  static const skeleton = Color(0xFFEAECF0);
+  static const disabledFill = Color(0xFFF2F4F7);
+
+  // Premium gold: Pro badges and upgrade banners.
+  static const goldDark = Color(0xFFD4A017);
+  static const goldLight = Color(0xFFF5C84C);
+
+  // Soft backgrounds for status chips (text stays in StatusColors).
+  static const successBg = Color(0xFFECFDF3);
+  static const warningBg = Color(0xFFFFFAEB);
+  static const errorBg = Color(0xFFFEF3F2);
+  static const infoBg = Color(0xFFE6F5FC);
+  static const infoText = Color(0xFF0B6A9A);
+  static const neutralBg = Color(0xFFF2F4F7);
+  static const neutralText = Color(0xFF475467);
 }
 
 /// Status colours shared by both themes.

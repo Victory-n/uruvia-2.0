@@ -6,6 +6,7 @@ import '../features/account/domain/account_type.dart';
 import 'router/app_router.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme.dart';
+import 'theme/tokens.dart';
 
 class UruviaApp extends ConsumerWidget {
   const UruviaApp({super.key});
@@ -20,6 +21,9 @@ class UruviaApp extends ConsumerWidget {
       title: 'Uruvia',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(palette),
+      // Header and sidebar colours glide to the new account's colours.
+      themeAnimationDuration: AppDurations.accountSwitch,
+      themeAnimationCurve: Curves.easeOut,
       routerConfig: ref.watch(routerProvider),
     );
   }
