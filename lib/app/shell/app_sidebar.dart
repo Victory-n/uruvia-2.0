@@ -7,6 +7,7 @@ import '../../features/account/application/profile_name.dart';
 import '../../features/account/domain/account_type.dart';
 import '../../features/account/presentation/account_pill.dart';
 import '../../features/account/presentation/account_switcher_sheet.dart';
+import '../../features/auth/application/auth_actions.dart';
 import '../../features/subscription/application/pro_status.dart';
 import '../theme/app_palette.dart';
 import '../theme/tokens.dart';
@@ -74,9 +75,7 @@ class AppSidebar extends ConsumerWidget {
               selected: false,
               onTap: () {
                 closeDrawer();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Log out works once sign-in is built.')),
-                );
+                ref.read(authActionsProvider).signOut();
               },
             ),
           ),

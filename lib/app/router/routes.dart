@@ -6,6 +6,16 @@ class AppRoutes {
   static const home = '/home';
   static const notifications = '/notifications';
 
+  // Before sign-in and during onboarding
+  static const onboarding = '/onboarding';
+  static const signIn = '/auth/sign-in';
+  static const signUp = '/auth/sign-up';
+  static const verifyEmail = '/auth/verify';
+  static const forgotPassword = '/auth/forgot';
+  static const accountType = '/account-type';
+  static const businessSetup = '/business-setup';
+  static const pin = '/pin';
+
   // Shared by both account types
   static const wallet = '/wallet';
   static const budgets = '/budgets';
