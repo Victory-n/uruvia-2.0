@@ -25,7 +25,7 @@ class BusinessHome extends StatelessWidget {
         const WalletCard(),
         const SizedBox(height: AppSpacing.sectionGap),
         const QuickActions(actions: [
-          QuickAction(Icons.description_outlined, 'New invoice', AppRoutes.invoices),
+          QuickAction(Icons.description_outlined, 'New invoice', AppRoutes.invoicesNew, push: true),
           QuickAction(Icons.point_of_sale_rounded, 'Sales', AppRoutes.sales),
           QuickAction(Icons.inventory_2_outlined, 'Inventory', AppRoutes.inventory),
           QuickAction(Icons.people_outline_rounded, 'Customers', AppRoutes.customers),
@@ -139,6 +139,7 @@ class _InvoiceRow extends StatelessWidget {
           StatusChip(label, tone: tone),
         ],
       ),
+      onTap: () => context.push(AppRoutes.invoiceDetail(invoice.id)),
     );
   }
 }

@@ -18,6 +18,9 @@ import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/budget/presentation/budget_detail_screen.dart';
 import '../../features/budget/presentation/budget_form_screen.dart';
 import '../../features/budget/presentation/budget_list_screen.dart';
+import '../../features/customers/presentation/customer_detail_screen.dart';
+import '../../features/customers/presentation/customer_form_screen.dart';
+import '../../features/customers/presentation/customer_list_screen.dart';
 import '../../features/expenses/presentation/expense_form_screen.dart';
 import '../../features/expenses/presentation/expense_insights_screen.dart';
 import '../../features/expenses/presentation/expense_list_screen.dart';
@@ -28,6 +31,12 @@ import '../../features/inventory/presentation/low_stock_screen.dart';
 import '../../features/inventory/presentation/product_detail_screen.dart';
 import '../../features/inventory/presentation/product_form_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/invoices/presentation/invoice_detail_screen.dart';
+import '../../features/invoices/presentation/invoice_form_screen.dart';
+import '../../features/invoices/presentation/invoice_list_screen.dart';
+import '../../features/invoices/presentation/invoice_preview_screen.dart';
+import '../../features/sales/presentation/sale_detail_screen.dart';
+import '../../features/sales/presentation/sale_list_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../shell/app_shell.dart';
 import '../shell/coming_soon_screen.dart';
@@ -35,7 +44,12 @@ import '../shell/nav_items.dart';
 import 'routes.dart';
 
 /// Destinations that have a real screen; the rest still show "Coming soon".
-const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, AppRoutes.expenses, AppRoutes.inventory};
+const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, AppRoutes.expenses,
+  AppRoutes.inventory,
+  AppRoutes.invoices,
+  AppRoutes.sales,
+  AppRoutes.customers,
+};
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect whenever the active account changes.
@@ -119,6 +133,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/inventory/:id',
         builder: (_, state) => ProductDetailScreen(productId: state.pathParameters['id']!),
       ),
+      GoRoute(path: AppRoutes.customersNew, builder: (_, __) => const CustomerFormScreen()),
+      GoRoute(
+        path: '/customers/:id/edit',
+        builder: (_, state) => CustomerFormScreen(customerId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: '/customers/:id',
+        builder: (_, state) => CustomerDetailScreen(customerId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.invoicesNew,
+        builder: (_, state) => InvoiceFormScreen(customerId: state.uri.queryParameters['customer']),
+      ),
+      GoRoute(
+        path: '/invoices/:id/edit',
+        builder: (_, state) => InvoiceFormScreen(invoiceId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: '/invoices/:id/preview',
+        builder: (_, state) => InvoicePreviewScreen(invoiceId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/invoices/:id',
+        builder: (_, state) => InvoiceDetailScreen(invoiceId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/sales/:id',
+        builder: (_, state) => SaleDetailScreen(saleId: state.pathParameters['id']!),
+      ),
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(location: state.matchedLocation, child: child),
@@ -139,6 +182,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: AppRoutes.budgets, builder: (_, __) => const BudgetListScreen()),
           GoRoute(path: AppRoutes.expenses, builder: (_, __) => const ExpenseListScreen()),
           GoRoute(path: AppRoutes.inventory, builder: (_, __) => const InventoryListScreen()),
+          GoRoute(path: AppRoutes.invoices, builder: (_, __) => const InvoiceListScreen()),
+          GoRoute(path: AppRoutes.sales, builder: (_, __) => const SaleListScreen()),
+          GoRoute(path: AppRoutes.customers, builder: (_, __) => const CustomerListScreen()),
           GoRoute(
             path: AppRoutes.settings,
             builder: (_, __) => const SettingsScreen(),
