@@ -103,7 +103,6 @@ ThemeData buildTheme(AppPalette p) {
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       shape: buttonShape,
-      duration: const Duration(seconds: 4),
     ),
   );
 }
