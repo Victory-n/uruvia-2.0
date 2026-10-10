@@ -51,12 +51,14 @@ class _AccountSwitcherBodyState extends ConsumerState<_AccountSwitcherBody> {
   void _snack(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
   Future<void> _switch(AccountType type) async {
+    final biometric = await _biometricCheck();
+    if (!mounted) return;
     final confirmed = await showPinPrompt(
       context,
       title: 'Enter your PIN',
       message: 'Confirm it is you before switching to your ${type == AccountType.business ? 'Business' : 'Individual'} account.',
       verify: ref.read(accountActionsProvider).verifyPin,
-      onBiometric: await _biometricCheck(),
+      onBiometric: biometric,
     );
     if (confirmed != true || !mounted) return;
 

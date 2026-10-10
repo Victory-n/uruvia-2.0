@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/routes.dart';
+import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
 import '../../../core/utils/dates.dart';

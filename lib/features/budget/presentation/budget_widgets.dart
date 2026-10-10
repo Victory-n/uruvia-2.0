@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_palette.dart';
-import '../../../app/theme/tokens.dart';
 import '../domain/budget_models.dart';
 
 Color budgetColor(BuildContext context, BudgetState state) => switch (state) {
