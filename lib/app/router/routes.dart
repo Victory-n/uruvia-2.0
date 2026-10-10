@@ -33,6 +33,11 @@ class AppRoutes {
 
   // Business only
   static const inventory = '/inventory';
+  static const inventoryNew = '/inventory/new';
+  static const inventoryLow = '/inventory/low';
+  static const inventoryCategories = '/inventory/categories';
+  static String productDetail(String id) => '/inventory/$id';
+  static String productEdit(String id) => '/inventory/$id/edit';
   static const invoices = '/invoices';
   static const sales = '/sales';
   static const customers = '/customers';

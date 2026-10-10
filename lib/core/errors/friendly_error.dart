@@ -45,6 +45,12 @@ String friendlyError(Object error) {
       return 'Too many wrong PIN tries. Try again in 15 minutes.';
     }
     if (error.code == '23505') return 'That already exists.';
+    if (error.code == '23503') return 'That is still in use, so it cannot be removed.';
+    if (error.code == '23514') {
+      // Our own stock messages start with "Only N available" and are safe to show.
+      if (error.message.startsWith('Only ')) return error.message;
+      return 'That would take stock below zero or below what is reserved.';
+    }
     return 'Something went wrong on our side. Please try again.';
   }
 

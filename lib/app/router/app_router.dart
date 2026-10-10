@@ -22,6 +22,11 @@ import '../../features/expenses/presentation/expense_form_screen.dart';
 import '../../features/expenses/presentation/expense_insights_screen.dart';
 import '../../features/expenses/presentation/expense_list_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/inventory/presentation/category_screen.dart';
+import '../../features/inventory/presentation/inventory_list_screen.dart';
+import '../../features/inventory/presentation/low_stock_screen.dart';
+import '../../features/inventory/presentation/product_detail_screen.dart';
+import '../../features/inventory/presentation/product_form_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../shell/app_shell.dart';
@@ -30,7 +35,7 @@ import '../shell/nav_items.dart';
 import 'routes.dart';
 
 /// Destinations that have a real screen; the rest still show "Coming soon".
-const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, AppRoutes.expenses};
+const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, AppRoutes.expenses, AppRoutes.inventory};
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect whenever the active account changes.
@@ -103,6 +108,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/budgets/:id',
         builder: (_, state) => BudgetDetailScreen(budgetId: state.pathParameters['id']!),
       ),
+      GoRoute(path: AppRoutes.inventoryNew, builder: (_, __) => const ProductFormScreen()),
+      GoRoute(path: AppRoutes.inventoryLow, builder: (_, __) => const LowStockScreen()),
+      GoRoute(path: AppRoutes.inventoryCategories, builder: (_, __) => const CategoryScreen()),
+      GoRoute(
+        path: '/inventory/:id/edit',
+        builder: (_, state) => ProductFormScreen(productId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: '/inventory/:id',
+        builder: (_, state) => ProductDetailScreen(productId: state.pathParameters['id']!),
+      ),
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(location: state.matchedLocation, child: child),
@@ -122,6 +138,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(path: AppRoutes.budgets, builder: (_, __) => const BudgetListScreen()),
           GoRoute(path: AppRoutes.expenses, builder: (_, __) => const ExpenseListScreen()),
+          GoRoute(path: AppRoutes.inventory, builder: (_, __) => const InventoryListScreen()),
           GoRoute(
             path: AppRoutes.settings,
             builder: (_, __) => const SettingsScreen(),
