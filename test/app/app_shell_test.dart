@@ -7,6 +7,7 @@ import 'package:uruvia/app/shell/app_shell.dart';
 import 'package:uruvia/app/theme/app_palette.dart';
 import 'package:uruvia/features/account/application/active_account.dart';
 import 'package:uruvia/features/account/domain/account_type.dart';
+import 'package:uruvia/features/notifications/application/notifications_controller.dart';
 
 class _BusinessAccount extends ActiveAccount {
   @override
@@ -28,6 +29,7 @@ Widget buildApp({bool business = false}) {
   );
   return ProviderScope(
     overrides: <Override>[
+      unreadCountProvider.overrideWith((ref) async => 0),
       if (business) activeAccountProvider.overrideWith(_BusinessAccount.new),
     ],
     child: MaterialApp.router(

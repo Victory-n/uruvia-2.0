@@ -9,6 +9,9 @@ abstract class AccountRepository {
   Future<void> createIndividual(String name);
   Future<void> createBusiness(BusinessSetup setup);
   Future<void> setTransactionPin(String pin);
+  Future<bool> verifyTransactionPin(String pin);
+  Future<void> setActiveAccount(String accountId);
+  Future<void> updateFullName(String name);
 }
 
 class SupabaseAccountRepository implements AccountRepository {
@@ -60,6 +63,23 @@ class SupabaseAccountRepository implements AccountRepository {
   @override
   Future<void> setTransactionPin(String pin) async {
     await supabase.rpc('set_transaction_pin', params: {'p_pin': pin});
+  }
+
+  @override
+  Future<bool> verifyTransactionPin(String pin) async {
+    return await supabase.rpc('verify_transaction_pin', params: {'p_pin': pin}) as bool;
+  }
+
+  @override
+  Future<void> setActiveAccount(String accountId) async {
+    final uid = supabase.auth.currentUser!.id;
+    await supabase.from('profiles').update({'last_active_account_id': accountId}).eq('id', uid);
+  }
+
+  @override
+  Future<void> updateFullName(String name) async {
+    final uid = supabase.auth.currentUser!.id;
+    await supabase.from('profiles').update({'full_name': name.trim()}).eq('id', uid);
   }
 }
 

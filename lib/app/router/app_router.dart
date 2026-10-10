@@ -15,7 +15,9 @@ import '../../features/auth/presentation/verify_email_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../core/services/local_store.dart';
 import '../../features/auth/presentation/splash_screen.dart';
-import '../../features/home/presentation/home_placeholder.dart';
+import '../../features/home/presentation/home_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 import '../shell/app_shell.dart';
 import '../shell/coming_soon_screen.dart';
 import '../shell/nav_items.dart';
@@ -82,16 +84,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: AppRoutes.home,
-            builder: (_, __) => const HomePlaceholder(),
+            builder: (_, __) => const HomeScreen(),
           ),
-          for (final item in allNavItems.where((i) => i.route != AppRoutes.home))
+          for (final item in allNavItems.where((i) => i.route != AppRoutes.home && i.route != AppRoutes.settings))
             GoRoute(
               path: item.route,
               builder: (_, __) => ComingSoonScreen(title: item.label),
             ),
           GoRoute(
             path: AppRoutes.notifications,
-            builder: (_, __) => const ComingSoonScreen(title: 'Notifications'),
+            builder: (_, __) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.settings,
+            builder: (_, __) => const SettingsScreen(),
           ),
         ],
       ),

@@ -91,6 +91,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
               accountName: _accName.text,
             ),
           );
+      if (mounted) context.go(AppRoutes.home);
     } catch (e) {
       if (mounted) setState(() => _error = friendlyError(e));
     } finally {

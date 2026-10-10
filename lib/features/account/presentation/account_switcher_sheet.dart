@@ -5,42 +5,127 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
+import '../../../core/errors/friendly_error.dart';
+import '../../../core/services/local_store.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/pin_prompt.dart';
+import '../../auth/application/app_lock.dart';
+import '../../auth/application/auth_actions.dart';
+import '../application/account_actions.dart';
 import '../application/active_account.dart';
+import '../application/bootstrap.dart';
 import '../domain/account_type.dart';
 
-/// Bottom sheet to switch between the Individual and Business accounts.
-/// Returns true when the account was changed. The PIN or biometric check and
-/// the "Create a business account" path are added with the account screens.
+/// Returns true when the user switched account.
 Future<bool> showAccountSwitcher(BuildContext context) async {
   final router = GoRouter.of(context);
-  final switched = await showAppSheet<bool>(
+  final result = await showAppSheet<_SwitchResult>(
     context,
     title: 'Switch account',
     builder: (_) => const _AccountSwitcherBody(),
   );
-  if (switched == true) router.go(AppRoutes.home);
-  return switched == true;
+  switch (result) {
+    case _SwitchResult.switched:
+      router.go(AppRoutes.home);
+      return true;
+    case _SwitchResult.createBusiness:
+      router.go(AppRoutes.businessSetup);
+      return false;
+    case null:
+      return false;
+  }
 }
 
-class _AccountSwitcherBody extends ConsumerWidget {
+enum _SwitchResult { switched, createBusiness }
+
+class _AccountSwitcherBody extends ConsumerStatefulWidget {
   const _AccountSwitcherBody();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AccountSwitcherBody> createState() => _AccountSwitcherBodyState();
+}
+
+class _AccountSwitcherBodyState extends ConsumerState<_AccountSwitcherBody> {
+  bool _busy = false;
+
+  void _snack(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  Future<void> _switch(AccountType type) async {
+    final confirmed = await showPinPrompt(
+      context,
+      title: 'Enter your PIN',
+      message: 'Confirm it is you before switching to your ${type == AccountType.business ? 'Business' : 'Individual'} account.',
+      verify: ref.read(accountActionsProvider).verifyPin,
+      onBiometric: await _biometricCheck(),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await ref.read(accountActionsProvider).switchTo(type);
+      if (mounted) Navigator.of(context).pop(_SwitchResult.switched);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _busy = false);
+        _snack(friendlyError(e));
+      }
+    }
+  }
+
+  /// Fingerprint shortcut, only when the user turned it on.
+  Future<Future<bool> Function()?> _biometricCheck() async {
+    if (!await ref.read(lockPinStoreProvider).biometricsEnabled()) return null;
+    return () => ref.read(biometricsProvider).authenticate('Switch account');
+  }
+
+  Future<void> _createIndividual() async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(authActionsProvider).createIndividualAccount();
+      if (mounted) Navigator.of(context).pop(_SwitchResult.switched);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _busy = false);
+        _snack(friendlyError(e));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final active = ref.watch(activeAccountProvider);
+    final accounts = ref.watch(bootstrapProvider).valueOrNull?.accounts ?? const [];
+    final hasIndividual = accounts.any((a) => a.type == AccountType.individual);
+    final hasBusiness = accounts.any((a) => a.type == AccountType.business);
+
     return Column(
       children: [
-        for (final type in AccountType.values)
+        for (final a in accounts)
           _Row(
-            type: type,
-            selected: type == active,
-            onTap: () {
-              if (type != active) {
-                ref.read(activeAccountProvider.notifier).switchTo(type);
-              }
-              Navigator.of(context).pop(type != active);
-            },
+            icon: a.type == AccountType.business ? Icons.storefront_outlined : Icons.person_outline_rounded,
+            title: a.type == AccountType.business ? 'Business' : 'Individual',
+            subtitle: a.name,
+            selected: a.type == active,
+            onTap: _busy ? null : () => a.type == active ? Navigator.of(context).pop() : _switch(a.type),
+          ),
+        if (!hasBusiness)
+          _Row(
+            icon: Icons.add_business_outlined,
+            title: 'Create a business account',
+            subtitle: 'Invoices, stock, customers and sales',
+            onTap: _busy ? null : () => Navigator.of(context).pop(_SwitchResult.createBusiness),
+          ),
+        if (!hasIndividual)
+          _Row(
+            icon: Icons.person_add_alt_outlined,
+            title: 'Create an individual account',
+            subtitle: 'Personal budgets, expenses and savings',
+            onTap: _busy ? null : _createIndividual,
+          ),
+        if (_busy)
+          const Padding(
+            padding: EdgeInsets.only(top: AppSpacing.lg),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2.5, semanticsLabel: 'Switching')),
           ),
       ],
     );
@@ -48,31 +133,27 @@ class _AccountSwitcherBody extends ConsumerWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.type, required this.selected, required this.onTap});
+  const _Row({required this.icon, required this.title, this.subtitle, this.selected = false, required this.onTap});
 
-  final AccountType type;
+  final IconData icon;
+  final String title;
+  final String? subtitle;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = theme.extension<AppPalette>()!;
-    final isBusiness = type == AccountType.business;
     return Semantics(
       button: true,
       selected: selected,
       child: ListTile(
-        minTileHeight: AppSpacing.minTouchTarget,
+        minTileHeight: AppSpacing.minTouchTarget + 8,
         contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(
-          backgroundColor: palette.tint,
-          child: Icon(
-            isBusiness ? Icons.storefront_outlined : Icons.person_outline_rounded,
-            color: palette.action,
-          ),
-        ),
-        title: Text(isBusiness ? 'Business' : 'Individual', style: theme.textTheme.titleMedium),
+        leading: CircleAvatar(backgroundColor: palette.tint, child: Icon(icon, color: palette.action)),
+        title: Text(title, style: theme.textTheme.titleMedium),
+        subtitle: subtitle == null ? null : Text(subtitle!, style: theme.textTheme.bodySmall),
         trailing: selected ? Icon(Icons.check_circle_rounded, color: palette.action) : null,
         onTap: onTap,
       ),

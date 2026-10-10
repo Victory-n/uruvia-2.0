@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/account/application/active_account.dart';
 import '../../features/account/presentation/account_pill.dart';
+import '../../features/notifications/application/notifications_controller.dart';
 import '../router/routes.dart';
 import 'app_sidebar.dart';
 import 'nav_items.dart';
@@ -31,6 +32,7 @@ class AppShell extends ConsumerWidget {
     final title = current?.label ??
         (location.startsWith(AppRoutes.notifications) ? 'Notifications' : 'Uruvia');
 
+    final unread = ref.watch(unreadCountProvider).valueOrNull ?? 0;
     final width = MediaQuery.sizeOf(context).width;
     final pinned = width >= pinnedBreakpoint;
     final sidebar = AppSidebar(location: location, permanent: pinned);
@@ -41,8 +43,12 @@ class AppShell extends ConsumerWidget {
         actions: [
           AccountPill(type: account, onHero: true),
           IconButton(
-            tooltip: 'Notifications',
-            icon: const Icon(Icons.notifications_none_rounded),
+            tooltip: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',
+            icon: Badge(
+              isLabelVisible: unread > 0,
+              label: Text(unread > 9 ? '9+' : '$unread'),
+              child: const Icon(Icons.notifications_none_rounded),
+            ),
             onPressed: () => context.go(AppRoutes.notifications),
           ),
           const SizedBox(width: 4),
