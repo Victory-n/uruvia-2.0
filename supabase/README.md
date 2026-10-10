@@ -38,5 +38,5 @@ npx supabase db push
 `supabase/manual/apply_all.sql`, click Run. Run it once, on an empty project.
 Later, to switch to the CLI, mark these as already applied so `db push` does not run them again:
 ```powershell
-npx supabase migration repair --status applied 20261009181228 20261009181230 20261009181232 20261010003954 20261010003956 20261010003958 20261010004000
+npx supabase migration repair --status applied 20261009181228 20261009181230 20261009181232 20261010003954 20261010003956 20261010003958 20261010004000 20261010011341
 ```
