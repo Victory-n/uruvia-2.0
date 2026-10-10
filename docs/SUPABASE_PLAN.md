@@ -3,7 +3,12 @@
 Status: 9 Oct 2026. Hosted Supabase project chosen (ref `mvisrdmdxbenuqezprdn`).
 **On hold:** the payment partner and all wallet integration (section 4, and the wallet-linked parts of savings, invoices, subscriptions and loans).
 The wallet screens are built as UI with dummy data only. No wallet tables, money functions or webhooks are written until the hold is lifted.
-Migrations written and tested so far: 0001 helpers, 0002 identity and accounts, 0003 KYC config.
+Migrations written and tested so far (7 files, 85 automated checks on a scratch Postgres, none yet run on the hosted project):
+0001 helpers, 0002 identity and accounts, 0003 KYC config, 0004 budgets and expenses, 0005 inventory,
+0006 customers, invoices and sales, 0007 notifications, support, plans and subscriptions, with scheduled stock and overdue jobs.
+**Not written yet (touch the wallet, on hold):** wallet and ledger, savings pockets and group savings, loans, subscription charging.
+**Not written yet (open board decisions):** Business Health scoring, report access, Hub listings.
+Design note: an issued invoice with no payment is edited by `revert_invoice_to_draft()` (releases stock), then re-issued.
 Source: the Uruvia Design Reference (58 screens). Items still waiting on the board are marked **[OPEN]** and are
 handled with configuration tables, so a decision never needs a code change.
 
