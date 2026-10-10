@@ -104,7 +104,12 @@ Each step ends with `flutter analyze` clean, tests for the domain rules, and the
 
 Wallet, savings, voice and Pro screens switch from DUMMY to LIVE only after the payment partner and the board decisions are settled (see the open-decisions checklist in the Project).
 
-## 5. Known gaps
+## 5. Decisions
+
+- **Verification (10 Oct 2026):** email code at sign-up; phone number verified later, as a step in KYC (screen 5) and required before any wallet feature goes live. Phone-number sign-in waits until an SMS provider is chosen with the payment partner. Before real users sign up, connect a custom SMTP sender (Resend or Brevo) because Supabase's built-in sender is rate limited.
+- Android back button is swallowed while the lock screen shows (done in `AppLockGate`).
+
+## 6. Known gaps
 
 - Payment partner, KYC tier limits, billing period and grace days: not decided. Tables hold placeholders.
 - Group savings screens will be revised with Victory before they are built.

@@ -38,6 +38,15 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
     super.dispose();
   }
 
+  /// Android back button: while the lock screen is showing, swallow it so the
+  /// app underneath cannot be navigated. Our observer registers before the
+  /// router's, so this runs first.
+  @override
+  Future<bool> didPopRoute() async {
+    final locked = ref.read(appLockProvider) && ref.read(appStageProvider) == AppStage.ready;
+    return locked;
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final lock = ref.read(appLockProvider.notifier);
