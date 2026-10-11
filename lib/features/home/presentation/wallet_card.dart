@@ -60,7 +60,7 @@ class _WalletCardState extends State<WalletCard> {
               Expanded(
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: palette.hero),
-                  onPressed: () => context.go(AppRoutes.wallet),
+                  onPressed: () => context.push(AppRoutes.walletFund),
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Fund'),
                 ),
@@ -72,7 +72,7 @@ class _WalletCardState extends State<WalletCard> {
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Colors.white70, width: 1.5),
                   ),
-                  onPressed: () => context.go(AppRoutes.wallet),
+                  onPressed: () => context.push(AppRoutes.walletSend),
                   icon: const Icon(Icons.arrow_upward_rounded),
                   label: const Text('Send'),
                 ),

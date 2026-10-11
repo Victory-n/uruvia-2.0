@@ -18,6 +18,10 @@ class AppRoutes {
 
   // Shared by both account types
   static const wallet = '/wallet';
+  static const walletFund = '/wallet/fund';
+  static const walletSend = '/wallet/send';
+  static const walletTransactions = '/wallet/transactions';
+  static String walletTransaction(String id) => '/wallet/transactions/$id';
   static const budgets = '/budgets';
   static const savings = '/savings';
   static const expenses = '/expenses';
