@@ -9,6 +9,15 @@ abstract class SalesRepository {
   Future<Sale?> sale(String id);
   Future<Sale?> saleForInvoice(String invoiceId);
   Future<List<SaleItem>> items(String saleId);
+
+  /// Records a counter sale in one step and returns its id.
+  Future<String> recordQuickSale({
+    required String accountId,
+    String? customerId,
+    required String method,
+    String? note,
+    required List<Map<String, dynamic>> items,
+  });
 }
 
 class SupabaseSalesRepository implements SalesRepository {
@@ -58,6 +67,22 @@ class SupabaseSalesRepository implements SalesRepository {
     final list = await _withNames([r]);
     return list.first;
   }
+
+  @override
+  Future<String> recordQuickSale({
+    required String accountId,
+    String? customerId,
+    required String method,
+    String? note,
+    required List<Map<String, dynamic>> items,
+  }) =>
+      supabase.rpc('record_quick_sale', params: {
+        'p_account_id': accountId,
+        'p_customer_id': customerId,
+        'p_method': method,
+        'p_note': note,
+        'p_items': items,
+      }).then((id) => id as String);
 
   @override
   Future<List<SaleItem>> items(String saleId) async {

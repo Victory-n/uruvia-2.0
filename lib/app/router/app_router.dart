@@ -61,6 +61,7 @@ import '../../features/health/presentation/health_screen.dart';
 import '../../features/health/presentation/loan_screen.dart';
 import '../../features/hub/presentation/hub_screen.dart';
 import '../../features/reports/presentation/reports_screen.dart';
+import '../../features/sales/presentation/quick_sale_screen.dart';
 import '../shell/nav_items.dart';
 import 'routes.dart';
 
@@ -191,6 +192,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/invoices/:id',
         builder: (_, state) => InvoiceDetailScreen(invoiceId: state.pathParameters['id']!),
       ),
+      GoRoute(path: AppRoutes.salesNew, builder: (_, __) => const QuickSaleScreen()),
       GoRoute(
         path: '/sales/:id',
         builder: (_, state) => SaleDetailScreen(saleId: state.pathParameters['id']!),

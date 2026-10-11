@@ -27,16 +27,23 @@ class _SaleListScreenState extends ConsumerState<SaleListScreen> {
   @override
   Widget build(BuildContext context) {
     final value = ref.watch(salesProvider);
-    return AsyncView<List<Sale>>(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push(AppRoutes.salesNew),
+        icon: const Icon(Icons.point_of_sale_rounded),
+        label: const Text('Quick sale'),
+      ),
+      body: AsyncView<List<Sale>>(
       value: value,
       onRetry: () => ref.invalidate(salesProvider),
       isEmpty: (l) => l.isEmpty,
       empty: EmptyState(
         icon: Icons.shopping_bag_outlined,
         title: 'No sales yet',
-        message: 'A sale is recorded automatically when an invoice is paid in full.',
-        actionLabel: 'Create an invoice',
-        onAction: () => context.push(AppRoutes.invoicesNew),
+        message: 'Record a sale at the counter, or it is added automatically when an invoice is paid in full.',
+        actionLabel: 'Record a quick sale',
+        onAction: () => context.push(AppRoutes.salesNew),
       ),
       data: (all) {
         final shown = [for (final s in all) if (_period.contains(s.soldAt)) s];
@@ -89,6 +96,7 @@ class _SaleListScreenState extends ConsumerState<SaleListScreen> {
           ),
         );
       },
+    ),
     );
   }
 }

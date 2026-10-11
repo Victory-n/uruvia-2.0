@@ -58,6 +58,7 @@ class AppRoutes {
   static String invoicePreview(String id) => '/invoices/$id/preview';
   static String invoiceEdit(String id) => '/invoices/$id/edit';
   static const sales = '/sales';
+  static const salesNew = '/sales/new';
   static String saleDetail(String id) => '/sales/$id';
   static const customers = '/customers';
   static const customersNew = '/customers/new';

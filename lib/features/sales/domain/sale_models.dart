@@ -9,6 +9,8 @@ class Sale {
     this.customerId,
     this.customerName,
     this.reversedAt,
+    this.paymentMethod,
+    this.note,
   });
 
   final String id;
@@ -20,6 +22,10 @@ class Sale {
   final int costKobo;
   final DateTime soldAt;
   final DateTime? reversedAt;
+
+  /// Database value such as "cash"; null for sales that came from an invoice.
+  final String? paymentMethod;
+  final String? note;
 
   int get profitKobo => totalKobo - costKobo;
   bool get isReversed => reversedAt != null;
@@ -33,6 +39,8 @@ class Sale {
         totalKobo: (r['total_kobo'] as num).toInt(),
         costKobo: (r['cost_kobo'] as num).toInt(),
         soldAt: DateTime.parse(r['sold_at'] as String).toLocal(),
+        paymentMethod: r['payment_method'] as String?,
+        note: r['note'] as String?,
         reversedAt: r['reversed_at'] == null ? null : DateTime.parse(r['reversed_at'] as String).toLocal(),
       );
 }

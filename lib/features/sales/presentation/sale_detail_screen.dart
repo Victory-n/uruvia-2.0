@@ -12,6 +12,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../core/widgets/sub_page.dart';
+import '../../invoices/domain/invoice_models.dart' show PaymentMethod;
 import '../application/sales_controller.dart';
 import '../domain/sale_models.dart';
 
@@ -76,6 +77,8 @@ class _Detail extends ConsumerWidget {
               ),
               const Divider(height: AppSpacing.xxl),
               row('Sale total', formatNaira(s.totalKobo, showKobo: s.totalKobo % 100 != 0), strong: true),
+              if (s.paymentMethod != null) row('Paid by', PaymentMethod.parse(s.paymentMethod!).label),
+              if (s.note != null) row('Note', s.note!),
               row('Cost of goods', formatNaira(s.costKobo, showKobo: s.costKobo % 100 != 0)),
               row('Profit', formatNaira(s.profitKobo, showKobo: s.profitKobo % 100 != 0),
                   color: s.profitKobo < 0 ? StatusColors.errorText : palette.action),

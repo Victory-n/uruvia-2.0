@@ -5,6 +5,7 @@ Sale sale(int total, int cost, DateTime at, {DateTime? reversed}) =>
     Sale(id: 's', number: 'SAL-00001', totalKobo: total, costKobo: cost, soldAt: at, reversedAt: reversed);
 
 void main() {
+  quickSaleTests();
   final now = DateTime(2026, 10, 10, 15);
 
   test('periods', () {
@@ -32,5 +33,25 @@ void main() {
     const i = SaleItem(description: 'Rice', qty: 3, unitPriceKobo: 1000, unitCostKobo: 700);
     expect(i.totalKobo, 3000);
     expect(i.profitKobo, 900);
+  });
+}
+
+void quickSaleTests() {
+  test('a counter sale carries its payment method and note', () {
+    final s = Sale.fromRow({
+      'id': 'x',
+      'sale_number': 'SAL-00001',
+      'invoice_id': null,
+      'customer_id': null,
+      'total_kobo': 500000,
+      'cost_kobo': 300000,
+      'sold_at': '2026-10-11T10:00:00Z',
+      'reversed_at': null,
+      'payment_method': 'cash',
+      'note': 'Market day',
+    });
+    expect(s.paymentMethod, 'cash');
+    expect(s.note, 'Market day');
+    expect(s.profitKobo, 200000);
   });
 }
