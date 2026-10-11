@@ -146,14 +146,19 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
       _saving = true;
     });
     try {
-      await ref.read(expensesActionsProvider).save(
+      final queued = await ref.read(expensesActionsProvider).save(
             id: widget.existing?.id,
             amountKobo: kobo,
             spentAt: _date,
             categoryId: _categoryId,
             note: _note.text,
           );
-      if (mounted) context.canPop() ? context.pop() : context.go(AppRoutes.expenses);
+      if (!mounted) return;
+      if (queued) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Saved on this phone. It will be sent when you are back online.')));
+      }
+      context.canPop() ? context.pop() : context.go(AppRoutes.expenses);
     } catch (e) {
       if (mounted) {
         setState(() {

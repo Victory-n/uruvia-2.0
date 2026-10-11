@@ -9,6 +9,8 @@ import '../../../core/widgets/amount_field.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../account/application/active_account.dart';
+import '../../account/domain/account_type.dart';
 import '../../inventory/application/inventory_controller.dart';
 import '../../inventory/domain/inventory_models.dart';
 import '../domain/invoice_models.dart';
@@ -31,7 +33,8 @@ class _ItemForm extends ConsumerStatefulWidget {
 }
 
 class _ItemFormState extends ConsumerState<_ItemForm> {
-  late bool _fromStock = widget.existing == null || widget.existing!.productId != null;
+  bool get _isBusiness => ref.read(activeAccountProvider) == AccountType.business;
+  late bool _fromStock = (widget.existing == null || widget.existing!.productId != null) && _isBusiness;
   Product? _product;
   String? _productId;
   late final _description = TextEditingController(text: widget.existing?.description ?? '');
@@ -109,7 +112,7 @@ class _ItemFormState extends ConsumerState<_ItemForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!editing) ...[
+        if (!editing && _isBusiness) ...[
           SegmentedButton<bool>(
             segments: const [
               ButtonSegment(value: true, label: Text('From inventory'), icon: Icon(Icons.inventory_2_outlined)),

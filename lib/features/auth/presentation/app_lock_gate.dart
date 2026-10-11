@@ -65,7 +65,12 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
         fit: StackFit.expand,
         children: [
           widget.child,
-          if (locked && ready) const Positioned.fill(child: LockScreen()),
+          if (locked && ready)
+            Positioned.fill(
+              // The gate sits above the Navigator, so it has no Overlay. The PIN keypad's
+              // tooltips need one, so the lock screen gets its own.
+              child: Overlay.wrap(child: const LockScreen()),
+            ),
         ],
       ),
     );

@@ -23,6 +23,8 @@ const individualNav = [
   NavItem('Budget', Icons.pie_chart_outline_rounded, AppRoutes.budgets),
   NavItem('Savings', Icons.savings_outlined, AppRoutes.savings),
   NavItem('Expenses', Icons.receipt_long_outlined, AppRoutes.expenses),
+  NavItem('Invoices', Icons.description_outlined, AppRoutes.invoices),
+  NavItem('Customers', Icons.people_outline_rounded, AppRoutes.customers),
   NavItem('Subscription', Icons.workspace_premium_outlined, AppRoutes.plan),
   NavItem('Support', Icons.support_agent_outlined, AppRoutes.support),
   NavItem('Settings', Icons.settings_outlined, AppRoutes.settings),
@@ -34,6 +36,9 @@ const businessNav = [
   NavItem('Inventory', Icons.inventory_2_outlined, AppRoutes.inventory),
   NavItem('Invoices', Icons.description_outlined, AppRoutes.invoices),
   NavItem('Sales', Icons.shopping_bag_outlined, AppRoutes.sales),
+  NavItem('Expenses', Icons.receipt_long_outlined, AppRoutes.expenses),
+  NavItem('Budget', Icons.pie_chart_outline_rounded, AppRoutes.budgets),
+  NavItem('Savings', Icons.savings_outlined, AppRoutes.savings),
   NavItem('Customers', Icons.people_outline_rounded, AppRoutes.customers),
   NavItem('Reports', Icons.bar_chart_rounded, AppRoutes.reports),
   NavItem('Business Hub', Icons.storefront_outlined, AppRoutes.hub, proOnly: true),
@@ -48,9 +53,7 @@ List<NavItem> navItemsFor(AccountType type) =>
 /// Paths an Individual account may not open. The database blocks the data as well.
 const businessOnlyRoutes = [
   AppRoutes.inventory,
-  AppRoutes.invoices,
   AppRoutes.sales,
-  AppRoutes.customers,
   AppRoutes.reports,
   AppRoutes.hub,
 ];
