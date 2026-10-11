@@ -108,9 +108,11 @@ Wallet, savings, voice and Pro screens switch from DUMMY to LIVE only after the 
 
 - **Verification (10 Oct 2026):** email code at sign-up; phone number verified later, as a step in KYC (screen 5) and required before any wallet feature goes live. Phone-number sign-in waits until an SMS provider is chosen with the payment partner. Before real users sign up, connect a custom SMTP sender (Resend or Brevo) because Supabase's built-in sender is rate limited.
 - Android back button is swallowed while the lock screen shows (done in `AppLockGate`).
+- **Payment partner (11 Oct 2026): Providus Bank, using the Xpress Wallet API.** Uruvia registers as the merchant (CAC pack plus a director's BVN, then "Pending Review"). Each user gets a real wallet through `POST /wallet` (BVN, name, date of birth, phone, email, address), which returns an account number, bank, `bookedBalance`, `availableBalance`, a KYC `tier` and a BVN name-match result. For individuals, KYC and wallet creation are therefore one step. Nomba was looked at and set aside (virtual accounts hold no balance, a cap of 2 per user is unclear, no individual KYC). Questions for Providus are in the open-decisions doc in the Project. Wallet, KYC and savings stay DUMMY until those are answered.
+- Store the provider's customer id, wallet id, tier and name-match result. Do not store the BVN.
 
 ## 6. Known gaps
 
-- Payment partner, KYC tier limits, billing period and grace days: not decided. Tables hold placeholders.
+- KYC tier limits (Providus tiers are not documented), wallet webhooks, fees, sandbox URL, billing period and grace days: not known yet. Tables hold placeholders.
 - Group savings screens will be revised with Victory before they are built.
 - Fonts need a check that the naira sign renders in Plus Jakarta Sans; if it does not, amounts stay in Inter (already the rule).

@@ -79,7 +79,13 @@ Functions (private, called through thin RPC wrappers):
 - A trigger keeps `wallets.balance_kobo` equal to the ledger. A nightly check job compares the two and raises an alert if they differ.
 - Duplicate-transfer warning (same amount and recipient within a few minutes) is a read function the app calls before confirming.
 
-**Payment partner [OPEN, not yet chosen]:** virtual accounts, card funding, bank transfers and name lookup all need one. Plan: a single `payment_provider` module in Edge Functions, so only that one function changes when the partner is chosen. Webhooks verify the provider signature, then call the service-role credit function.
+**Payment partner: Providus Bank, Xpress Wallet API (chosen 11 Oct 2026, integration still on hold until Providus answers the open questions).** Plan: a single `payment_provider` module in Edge Functions, so only that one function talks to Providus. Webhooks verify the provider signature, then call the service-role credit function.
+- Merchant onboarding: register Uruvia as merchant, upload the CAC pack and director BVN, wait for review, then generate access keys. Keys and tokens live only in Edge Function secrets.
+- Wallet creation: `POST /wallet` per account with BVN, name, date of birth, phone, email, address. Keep on `wallets`: `provider_customer_id`, `provider_wallet_id`, account number, bank name, `provider_tier`, `name_match`. Never store the BVN.
+- Balance: the provider holds `availableBalance`; our ledger records every movement and a nightly job compares the two.
+- Transfers: customer-to-bank, customer-to-customer wallet, and batch, all through the provider function with our idempotency key.
+- Inflow webhook: the Digital Collection Services spec uses an `X-Auth-Signature` header (SHA-512 of Client-Id:Client-Secret) and `settlementId` for de-duplication. Confirm the same applies to Xpress Wallet.
+- Open with Providus: tier meaning and limits, wallet webhooks, sandbox URL, fees, licence and where funds sit, merchant registration documents, one auth model or two, and BVN name-mismatch handling.
 
 ## 5. Budgets and expenses (screens 20 to 23, 30 to 33)
 
