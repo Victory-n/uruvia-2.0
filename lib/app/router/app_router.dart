@@ -51,6 +51,10 @@ import '../../features/wallet/presentation/wallet_screen.dart';
 import '../../features/wallet/presentation/wallet_fund_screen.dart';
 import '../../features/wallet/presentation/wallet_send_screen.dart';
 import '../../features/wallet/presentation/wallet_transactions_screen.dart';
+import '../../features/savings/presentation/savings_screen.dart';
+import '../../features/savings/presentation/savings_type_screen.dart';
+import '../../features/savings/presentation/savings_create_screen.dart';
+import '../../features/savings/presentation/savings_detail_screen.dart';
 import '../shell/nav_items.dart';
 import 'routes.dart';
 
@@ -63,6 +67,7 @@ const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, App
   AppRoutes.plan,
   AppRoutes.support,
   AppRoutes.wallet,
+  AppRoutes.savings,
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -179,6 +184,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.settingsNotifications, builder: (_, __) => const NotificationPrefsScreen()),
       GoRoute(path: AppRoutes.settingsPin, builder: (_, __) => const ChangePinScreen()),
       GoRoute(path: AppRoutes.settingsBusiness, builder: (_, __) => const BusinessDetailsScreen()),
+      GoRoute(path: AppRoutes.savingsNew, builder: (_, __) => const SavingsTypeScreen()),
+      GoRoute(
+        path: '/savings/new/:type',
+        builder: (_, state) => SavingsCreateScreen(typeCode: state.pathParameters['type']!),
+      ),
+      GoRoute(
+        path: '/savings/:id',
+        builder: (_, state) => SavingsDetailScreen(pocketId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/savings/:id/confirm',
+        builder: (_, state) => SavingsConfirmScreen(pocketId: state.pathParameters['id']!),
+      ),
       GoRoute(path: AppRoutes.walletFund, builder: (_, __) => const WalletFundScreen()),
       GoRoute(path: AppRoutes.walletSend, builder: (_, __) => const WalletSendScreen()),
       GoRoute(path: AppRoutes.walletTransactions, builder: (_, __) => const WalletTransactionsScreen()),
@@ -214,6 +232,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: AppRoutes.invoices, builder: (_, __) => const InvoiceListScreen()),
           GoRoute(path: AppRoutes.sales, builder: (_, __) => const SaleListScreen()),
           GoRoute(path: AppRoutes.customers, builder: (_, __) => const CustomerListScreen()),
+          GoRoute(path: AppRoutes.savings, builder: (_, __) => const SavingsScreen()),
           GoRoute(path: AppRoutes.wallet, builder: (_, __) => const WalletScreen()),
           GoRoute(path: AppRoutes.plan, builder: (_, __) => const PlanScreen()),
           GoRoute(path: AppRoutes.support, builder: (_, __) => const SupportListScreen()),

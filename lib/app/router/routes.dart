@@ -24,6 +24,10 @@ class AppRoutes {
   static String walletTransaction(String id) => '/wallet/transactions/$id';
   static const budgets = '/budgets';
   static const savings = '/savings';
+  static const savingsNew = '/savings/new';
+  static String savingsCreate(String type) => '/savings/new/$type';
+  static String savingsDetail(String id) => '/savings/$id';
+  static String savingsConfirm(String id) => '/savings/$id/confirm';
   static const expenses = '/expenses';
   static const expensesNew = '/expenses/new';
   static const expensesInsights = '/expenses/insights';
