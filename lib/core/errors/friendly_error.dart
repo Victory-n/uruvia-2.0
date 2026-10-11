@@ -1,8 +1,21 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../features/auth/data/auth_repository.dart' show SocialSignInUnavailable;
+
+/// true when the error means the phone could not reach the server.
+bool isNetworkError(Object error) {
+  final raw = error.toString().toLowerCase();
+  return raw.contains('socketexception') ||
+      raw.contains('failed host lookup') ||
+      raw.contains('clientexception') ||
+      raw.contains('timeoutexception') ||
+      raw.contains('network is unreachable');
+}
+
 /// Turns any error into a short message a user can act on.
 /// Never shows raw server text, stack traces or table names.
 String friendlyError(Object error) {
+  if (error is SocialSignInUnavailable) return error.message;
   final raw = error.toString().toLowerCase();
 
   if (raw.contains('socketexception') ||

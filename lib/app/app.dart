@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/account/application/active_account.dart';
 import '../features/account/domain/account_type.dart';
+import '../features/expenses/application/expenses_controller.dart';
+import '../core/widgets/offline_shell.dart';
 import '../features/auth/presentation/app_lock_gate.dart';
 import 'router/app_router.dart';
 import 'theme/app_palette.dart';
@@ -14,6 +16,7 @@ class UruviaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(outboxSyncProvider); // sends cash expenses saved while offline
     final account = ref.watch(activeAccountProvider);
     final palette = account == AccountType.business
         ? AppPalette.business
@@ -25,7 +28,7 @@ class UruviaApp extends ConsumerWidget {
       // Header and sidebar colours glide to the new account's colours.
       themeAnimationDuration: AppDurations.accountSwitch,
       themeAnimationCurve: Curves.easeOut,
-      builder: (context, child) => AppLockGate(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => AppLockGate(child: OfflineShell(child: child ?? const SizedBox.shrink())),
       routerConfig: ref.watch(routerProvider),
     );
   }

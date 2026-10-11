@@ -117,7 +117,17 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
         .from('business_profiles')
         .select('business_name, address, vat_rate_bps, payment_details')
         .eq('account_id', accountId)
-        .single();
+        .maybeSingle();
+    if (r == null) {
+      // An Individual account has no business profile: invoice in the person's own name, with no VAT.
+      final uid = supabase.auth.currentUser?.id;
+      String? full;
+      if (uid != null) {
+        final p = await supabase.from('profiles').select('full_name').eq('id', uid).maybeSingle();
+        full = p?['full_name'] as String?;
+      }
+      return BusinessInfo(name: (full == null || full.trim().isEmpty) ? 'Uruvia user' : full.trim(), vatRateBps: 0);
+    }
     final pay = (r['payment_details'] as Map?) ?? const {};
     return BusinessInfo(
       name: r['business_name'] as String,

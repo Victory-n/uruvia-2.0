@@ -10,6 +10,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../core/widgets/status_chip.dart';
 import '../application/expenses_controller.dart';
 import '../domain/expense_models.dart';
 import 'month_selector.dart';
@@ -158,9 +159,11 @@ class _ExpenseTile extends StatelessWidget {
         child: Icon(categoryIcon(icon), color: palette.action, size: 20),
       ),
       title: Text(expense.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
-      subtitle: Text(expense.categoryName ?? 'No category', style: theme.textTheme.bodySmall),
+      subtitle: expense.pending
+          ? const Align(alignment: Alignment.centerLeft, child: StatusChip('Waiting to send', tone: StatusTone.warning))
+          : Text(expense.categoryName ?? 'No category', style: theme.textTheme.bodySmall),
       trailing: AmountText(-expense.amountKobo),
-      onTap: () => context.push(AppRoutes.expenseEdit(expense.id)),
+      onTap: expense.pending ? null : () => context.push(AppRoutes.expenseEdit(expense.id)),
     );
   }
 }

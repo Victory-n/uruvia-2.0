@@ -14,6 +14,8 @@ import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/sub_page.dart';
 import '../../sales/application/sales_controller.dart';
 import '../application/invoices_controller.dart';
+import '../../account/application/active_account.dart';
+import '../../account/domain/account_type.dart';
 import '../domain/invoice_models.dart';
 import 'invoice_widgets.dart';
 import 'payment_sheet.dart';
@@ -134,7 +136,7 @@ class _DetailState extends ConsumerState<_Detail> {
     final i = widget.invoice;
     final items = ref.watch(invoiceItemsProvider(i.id));
     final payments = ref.watch(invoicePaymentsProvider(i.id));
-    final sale = i.status == InvoiceStatus.paid ? ref.watch(saleForInvoiceProvider(i.id)).valueOrNull : null;
+    final sale = i.status == InvoiceStatus.paid && ref.watch(activeAccountProvider) == AccountType.business ? ref.watch(saleForInvoiceProvider(i.id)).valueOrNull : null;
     final vatPct = (i.vatRateBps / 100).toStringAsFixed(i.vatRateBps % 100 == 0 ? 0 : 1);
 
     Widget row(String label, int kobo, {bool strong = false, Color? color}) => Padding(

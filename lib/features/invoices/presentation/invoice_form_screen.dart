@@ -18,6 +18,8 @@ import '../../customers/application/customers_controller.dart';
 import '../../customers/domain/customer_models.dart';
 import '../../customers/presentation/customer_picker.dart';
 import '../application/invoices_controller.dart';
+import '../../account/application/active_account.dart';
+import '../../account/domain/account_type.dart';
 import '../domain/invoice_models.dart';
 import 'item_sheet.dart';
 
@@ -326,13 +328,14 @@ class _InvoiceFormState extends ConsumerState<_InvoiceForm> {
           onChangedKobo: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpacing.sm),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text('Add $vatLabel'),
-          subtitle: const Text('Applied after the discount.'),
-          value: _vat,
-          onChanged: _saving ? null : (v) => setState(() => _vat = v),
-        ),
+        if (ref.watch(activeAccountProvider) == AccountType.business)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text('Add $vatLabel'),
+            subtitle: const Text('Applied after the discount.'),
+            value: _vat,
+            onChanged: _saving ? null : (v) => setState(() => _vat = v),
+          ),
         const SizedBox(height: AppSpacing.md),
         AppCard(
           child: Column(

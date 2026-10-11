@@ -15,6 +15,7 @@ class Expense {
     this.categoryId,
     this.categoryName,
     this.note,
+    this.pending = false,
   });
 
   final String id;
@@ -23,6 +24,9 @@ class Expense {
   final String? categoryId;
   final String? categoryName;
   final String? note;
+
+  /// true while it is only saved on this phone and not yet sent.
+  final bool pending;
 
   String get title => (note != null && note!.trim().isNotEmpty) ? note!.trim() : (categoryName ?? 'Expense');
 }

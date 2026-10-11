@@ -116,3 +116,10 @@ Wallet, savings, voice and Pro screens switch from DUMMY to LIVE only after the 
 - KYC tier limits (Providus tiers are not documented), wallet webhooks, fees, sandbox URL, billing period and grace days: not known yet. Tables hold placeholders.
 - Group savings screens will be revised with Victory before they are built.
 - Fonts need a check that the naira sign renders in Plus Jakarta Sans; if it does not, amounts stay in Inter (already the rule).
+
+
+## Changes on 11 Oct 2026 (second pass)
+- **Features shared across account types:** Expenses, Budget and Savings are now in the Business sidebar. Invoices and Customers are now in the Individual sidebar (migration 0014; Individuals invoice with custom items, no VAT and no inventory; paid invoices create a hidden sale record). Inventory, Sales, Reports and Hub stay Business-only.
+- **Offline:** a banner shows on every screen when the phone has no connection (connectivity_plus). Cash expenses entered offline are kept on the phone (SharedPreferences outbox, client-made ids) and sent automatically when the connection returns; they show "Waiting to send". Everything else still needs a connection and shows "No internet connection". There is no read cache yet, so lists do not show last-saved data offline. A local database (Drift) is the next step if that is wanted.
+- **Sign in with Google (Android) and Apple (iOS):** see docs/SOCIAL_SIGNIN.md for the one-time setup.
+- **Lock screen:** the PIN keypad tooltips crashed because the lock overlay sat above the Navigator with no Overlay; it now gets its own.

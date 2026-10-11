@@ -30,6 +30,19 @@ class AuthActions {
     _ref.read(appLockProvider.notifier).unlock();
   }
 
+  /// Both return false when the user cancelled.
+  Future<bool> signInWithGoogle() async {
+    final ok = await _auth.signInWithGoogle();
+    if (ok) _ref.read(appLockProvider.notifier).unlock();
+    return ok;
+  }
+
+  Future<bool> signInWithApple() async {
+    final ok = await _auth.signInWithApple();
+    if (ok) _ref.read(appLockProvider.notifier).unlock();
+    return ok;
+  }
+
   Future<void> resendSignUpCode(String email) => _auth.resendSignUpCode(email);
   Future<void> sendResetCode(String email) => _auth.sendResetCode(email);
 

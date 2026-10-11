@@ -10,6 +10,7 @@ import '../../../core/widgets/app_text_field.dart';
 import '../application/auth_actions.dart';
 import '../domain/validators.dart';
 import 'auth_scaffold.dart';
+import 'social_buttons.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -108,6 +109,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         ),
         const SizedBox(height: AppSpacing.xxl),
         AppButton(label: 'Create account', onPressed: _submit, loading: _loading),
+        SocialSignInButtons(onError: (m) => setState(() => _error = m)),
       ],
     );
   }

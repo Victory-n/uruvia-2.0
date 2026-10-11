@@ -11,6 +11,7 @@ import '../../../core/widgets/app_text_field.dart';
 import '../application/auth_actions.dart';
 import '../domain/validators.dart';
 import 'auth_scaffold.dart';
+import 'social_buttons.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -104,6 +105,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         AppButton(label: 'Sign in', onPressed: _submit, loading: _loading),
+        SocialSignInButtons(onError: (m) => setState(() => _error = m)),
       ],
     );
   }

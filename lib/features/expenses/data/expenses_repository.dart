@@ -11,6 +11,7 @@ abstract class ExpensesRepository {
   Future<List<Expense>> between(String accountId, DateTime from, DateTime to);
   Future<Expense?> get(String id);
   Future<void> create({
+    String? id,
     required String accountId,
     required int amountKobo,
     required DateTime spentAt,
@@ -96,20 +97,23 @@ class SupabaseExpensesRepository implements ExpensesRepository {
 
   @override
   Future<void> create({
+    String? id,
     required String accountId,
     required int amountKobo,
     required DateTime spentAt,
     String? categoryId,
     String? note,
   }) async {
-    await supabase.from('expenses').insert({
+    // With a phone-made id, sending the same expense twice is ignored.
+    await supabase.from('expenses').upsert({
+      if (id != null) 'id': id,
       'account_id': accountId,
       'amount_kobo': amountKobo,
       'spent_at': spentAt.toUtc().toIso8601String(),
       'category_id': categoryId,
       'note': (note == null || note.trim().isEmpty) ? null : note.trim(),
       'source': 'manual',
-    });
+    }, onConflict: 'id', ignoreDuplicates: true);
   }
 
   @override
