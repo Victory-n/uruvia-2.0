@@ -30,6 +30,7 @@ class AppRoutes {
   static String savingsConfirm(String id) => '/savings/$id/confirm';
   static const expenses = '/expenses';
   static const expensesNew = '/expenses/new';
+  static const expensesVoice = '/expenses/voice';
   static const expensesInsights = '/expenses/insights';
   static String expenseEdit(String id) => '/expenses/$id';
   static const budgetsNew = '/budgets/new';
@@ -64,4 +65,6 @@ class AppRoutes {
   static String customerEdit(String id) => '/customers/$id/edit';
   static const reports = '/reports';
   static const hub = '/hub';
+  static const health = '/health';
+  static const healthLoan = '/health/loan';
 }

@@ -55,6 +55,12 @@ import '../../features/savings/presentation/savings_screen.dart';
 import '../../features/savings/presentation/savings_type_screen.dart';
 import '../../features/savings/presentation/savings_create_screen.dart';
 import '../../features/savings/presentation/savings_detail_screen.dart';
+import '../../features/expenses/presentation/voice_expense_screen.dart';
+import '../../features/expenses/domain/voice_parser.dart';
+import '../../features/health/presentation/health_screen.dart';
+import '../../features/health/presentation/loan_screen.dart';
+import '../../features/hub/presentation/hub_screen.dart';
+import '../../features/reports/presentation/reports_screen.dart';
 import '../shell/nav_items.dart';
 import 'routes.dart';
 
@@ -68,6 +74,8 @@ const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, App
   AppRoutes.support,
   AppRoutes.wallet,
   AppRoutes.savings,
+  AppRoutes.reports,
+  AppRoutes.hub,
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -126,7 +134,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.businessSetup, builder: (_, __) => const BusinessSetupScreen()),
       GoRoute(path: AppRoutes.pin, builder: (_, __) => const CreatePinScreen()),
       // Forms and detail pages open full screen, with a back arrow. Fixed paths come before :id.
-      GoRoute(path: AppRoutes.expensesNew, builder: (_, __) => const ExpenseFormScreen()),
+      GoRoute(
+        path: AppRoutes.expensesNew,
+        builder: (_, state) => ExpenseFormScreen(prefill: state.extra is ExpensePrefill ? state.extra as ExpensePrefill : null),
+      ),
+      GoRoute(path: AppRoutes.expensesVoice, builder: (_, __) => const VoiceExpenseScreen()),
+      GoRoute(path: AppRoutes.health, builder: (_, __) => const HealthScreen()),
+      GoRoute(path: AppRoutes.healthLoan, builder: (_, __) => const LoanScreen()),
       GoRoute(path: AppRoutes.expensesInsights, builder: (_, __) => const ExpenseInsightsScreen()),
       GoRoute(
         path: '/expenses/:id',
@@ -232,6 +246,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: AppRoutes.invoices, builder: (_, __) => const InvoiceListScreen()),
           GoRoute(path: AppRoutes.sales, builder: (_, __) => const SaleListScreen()),
           GoRoute(path: AppRoutes.customers, builder: (_, __) => const CustomerListScreen()),
+          GoRoute(path: AppRoutes.reports, builder: (_, __) => const ReportsScreen()),
+          GoRoute(path: AppRoutes.hub, builder: (_, __) => const HubScreen()),
           GoRoute(path: AppRoutes.savings, builder: (_, __) => const SavingsScreen()),
           GoRoute(path: AppRoutes.wallet, builder: (_, __) => const WalletScreen()),
           GoRoute(path: AppRoutes.plan, builder: (_, __) => const PlanScreen()),

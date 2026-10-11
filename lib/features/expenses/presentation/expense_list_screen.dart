@@ -25,10 +25,24 @@ class ExpenseListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.expensesNew),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add expense'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'voice-expense',
+            tooltip: 'Add by voice',
+            onPressed: () => context.push(AppRoutes.expensesVoice),
+            child: const Icon(Icons.mic_rounded),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FloatingActionButton.extended(
+            heroTag: 'add-expense',
+            onPressed: () => context.push(AppRoutes.expensesNew),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add expense'),
+          ),
+        ],
       ),
       body: Column(
         children: [

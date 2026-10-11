@@ -16,20 +16,24 @@ import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/sub_page.dart';
 import '../application/expenses_controller.dart';
 import '../domain/expense_models.dart';
+import '../domain/voice_parser.dart';
 
 /// Add a new expense, or edit one when [expenseId] is given.
 class ExpenseFormScreen extends ConsumerWidget {
-  const ExpenseFormScreen({super.key, this.expenseId});
+  const ExpenseFormScreen({super.key, this.expenseId, this.prefill});
   final String? expenseId;
+
+  /// Fields suggested by voice logging. The user still reviews and saves.
+  final ExpensePrefill? prefill;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final id = expenseId;
     if (id == null) {
-      return const SubPage(
+      return SubPage(
         title: 'Add expense',
         fallbackRoute: AppRoutes.expenses,
-        body: _ExpenseForm(),
+        body: _ExpenseForm(prefill: prefill),
       );
     }
     final existing = ref.watch(expenseProvider(id));
@@ -53,8 +57,9 @@ class ExpenseFormScreen extends ConsumerWidget {
 }
 
 class _ExpenseForm extends ConsumerStatefulWidget {
-  const _ExpenseForm({this.existing});
+  const _ExpenseForm({this.existing, this.prefill});
   final Expense? existing;
+  final ExpensePrefill? prefill;
 
   @override
   ConsumerState<_ExpenseForm> createState() => _ExpenseFormState();
@@ -62,10 +67,12 @@ class _ExpenseForm extends ConsumerStatefulWidget {
 
 class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
   late final _amount = TextEditingController(
-    text: widget.existing == null ? '' : _plain(widget.existing!.amountKobo),
+    text: widget.existing != null
+        ? _plain(widget.existing!.amountKobo)
+        : (widget.prefill?.amountKobo == null ? '' : _plain(widget.prefill!.amountKobo!)),
   );
-  late final _note = TextEditingController(text: widget.existing?.note ?? '');
-  late DateTime _date = widget.existing?.spentAt ?? DateTime.now();
+  late final _note = TextEditingController(text: widget.existing?.note ?? widget.prefill?.note ?? '');
+  late DateTime _date = widget.existing?.spentAt ?? widget.prefill?.spentAt ?? DateTime.now();
   late String? _categoryId = widget.existing?.categoryId;
   int? _kobo;
   String? _amountError;
@@ -81,7 +88,19 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
   @override
   void initState() {
     super.initState();
-    _kobo = widget.existing?.amountKobo;
+    _kobo = widget.existing?.amountKobo ?? widget.prefill?.amountKobo;
+    final hint = widget.prefill?.categoryHint;
+    if (widget.existing == null && hint != null) {
+      ref.read(categoriesProvider.future).then((cats) {
+        if (!mounted || _categoryId != null) return;
+        for (final c in cats) {
+          if (c.name.toLowerCase().contains(hint)) {
+            setState(() => _categoryId = c.id);
+            return;
+          }
+        }
+      }).catchError((_) {});
+    }
   }
 
   @override
