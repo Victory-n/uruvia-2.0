@@ -37,6 +37,13 @@ import '../../features/invoices/presentation/invoice_list_screen.dart';
 import '../../features/invoices/presentation/invoice_preview_screen.dart';
 import '../../features/sales/presentation/sale_detail_screen.dart';
 import '../../features/sales/presentation/sale_list_screen.dart';
+import '../../features/settings/presentation/business_details_screen.dart';
+import '../../features/settings/presentation/change_pin_screen.dart';
+import '../../features/settings/presentation/notification_prefs_screen.dart';
+import '../../features/subscription/presentation/plan_screen.dart';
+import '../../features/support/presentation/support_list_screen.dart';
+import '../../features/support/presentation/support_new_screen.dart';
+import '../../features/support/presentation/support_ticket_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../shell/app_shell.dart';
 import '../shell/coming_soon_screen.dart';
@@ -49,6 +56,8 @@ const _builtRoutes = {AppRoutes.home, AppRoutes.settings, AppRoutes.budgets, App
   AppRoutes.invoices,
   AppRoutes.sales,
   AppRoutes.customers,
+  AppRoutes.plan,
+  AppRoutes.support,
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -162,6 +171,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/sales/:id',
         builder: (_, state) => SaleDetailScreen(saleId: state.pathParameters['id']!),
       ),
+      GoRoute(path: AppRoutes.settingsNotifications, builder: (_, __) => const NotificationPrefsScreen()),
+      GoRoute(path: AppRoutes.settingsPin, builder: (_, __) => const ChangePinScreen()),
+      GoRoute(path: AppRoutes.settingsBusiness, builder: (_, __) => const BusinessDetailsScreen()),
+      GoRoute(path: AppRoutes.supportNew, builder: (_, __) => const SupportNewScreen()),
+      GoRoute(
+        path: '/support/:id',
+        builder: (_, state) => SupportTicketScreen(ticketId: state.pathParameters['id']!),
+      ),
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(location: state.matchedLocation, child: child),
@@ -185,6 +202,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: AppRoutes.invoices, builder: (_, __) => const InvoiceListScreen()),
           GoRoute(path: AppRoutes.sales, builder: (_, __) => const SaleListScreen()),
           GoRoute(path: AppRoutes.customers, builder: (_, __) => const CustomerListScreen()),
+          GoRoute(path: AppRoutes.plan, builder: (_, __) => const PlanScreen()),
+          GoRoute(path: AppRoutes.support, builder: (_, __) => const SupportListScreen()),
           GoRoute(
             path: AppRoutes.settings,
             builder: (_, __) => const SettingsScreen(),

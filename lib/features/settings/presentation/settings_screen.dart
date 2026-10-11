@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
@@ -11,6 +13,8 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../account/application/account_actions.dart';
+import '../../account/application/active_account.dart';
+import '../../account/domain/account_type.dart';
 import '../../account/application/profile_name.dart';
 import '../../auth/application/app_lock.dart';
 import '../../auth/application/auth_actions.dart';
@@ -25,6 +29,7 @@ class SettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final name = ref.watch(profileNameProvider);
     final email = ref.watch(sessionProvider).valueOrNull?.user.email ?? '';
+    final isBusiness = ref.watch(activeAccountProvider) == AccountType.business;
 
     return Center(
       child: ConstrainedBox(
@@ -61,10 +66,55 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            if (isBusiness) ...[
+              const SizedBox(height: AppSpacing.sectionGap),
+              Text('Business', style: theme.textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.sm),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: ListTile(
+                  minTileHeight: 64,
+                  leading: const Icon(Icons.storefront_outlined),
+                  title: const Text('Business details'),
+                  subtitle: const Text('Name, invoice prefix, VAT and bank details'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push(AppRoutes.settingsBusiness),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sectionGap),
+            Text('Notifications', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.sm),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                minTileHeight: 64,
+                leading: const Icon(Icons.notifications_outlined),
+                title: const Text('Alerts'),
+                subtitle: const Text('Choose which alerts you get'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.settingsNotifications),
+              ),
+            ),
             const SizedBox(height: AppSpacing.sectionGap),
             Text('Security', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.sm),
-            const AppCard(padding: EdgeInsets.zero, child: _BiometricsTile()),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    minTileHeight: 64,
+                    leading: const Icon(Icons.pin_outlined),
+                    title: const Text('Change PIN'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.settingsPin),
+                  ),
+                  const Divider(),
+                  const _BiometricsTile(),
+                ],
+              ),
+            ),
             const SizedBox(height: AppSpacing.sectionGap),
             AppButton(
               label: 'Log out',

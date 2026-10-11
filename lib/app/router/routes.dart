@@ -29,7 +29,12 @@ class AppRoutes {
   static String budgetEdit(String id) => '/budgets/$id/edit';
   static const plan = '/plan';
   static const support = '/support';
+  static const supportNew = '/support/new';
+  static String supportTicket(String id) => '/support/$id';
   static const settings = '/settings';
+  static const settingsNotifications = '/settings/notifications';
+  static const settingsPin = '/settings/pin';
+  static const settingsBusiness = '/settings/business';
 
   // Business only
   static const inventory = '/inventory';
