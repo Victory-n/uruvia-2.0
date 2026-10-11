@@ -57,6 +57,18 @@ class AuthActions {
     await _auth.signOut();
   }
 
+  /// Deletes the account on the server, then clears everything on this phone.
+  Future<void> deleteAccount() async {
+    await _accounts.deleteMyAccount();
+    await _ref.read(lockPinStoreProvider).clear();
+    _ref.invalidate(hasLockPinProvider);
+    try {
+      await _auth.signOutLocal();
+    } catch (_) {
+      // The user is already gone on the server; nothing more to undo.
+    }
+  }
+
   Future<void> createIndividualAccount() async {
     final name = _ref.read(bootstrapProvider).valueOrNull?.fullName?.trim();
     await _accounts.createIndividual((name == null || name.isEmpty) ? 'Personal' : name);

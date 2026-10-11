@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
+import '../../../core/config/app_links.dart';
 import '../../../core/errors/friendly_error.dart';
 import '../../../core/services/local_store.dart';
+import '../../../core/utils/open_link.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_sheet.dart';
@@ -116,11 +118,43 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.sectionGap),
+            Text('About', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.sm),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    minTileHeight: 64,
+                    leading: const Icon(Icons.privacy_tip_outlined),
+                    title: const Text('Privacy policy'),
+                    trailing: const Icon(Icons.open_in_new_rounded),
+                    onTap: () => openLink(context, AppLinks.privacy),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    minTileHeight: 64,
+                    leading: const Icon(Icons.description_outlined),
+                    title: const Text('Terms and conditions'),
+                    trailing: const Icon(Icons.open_in_new_rounded),
+                    onTap: () => openLink(context, AppLinks.terms),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sectionGap),
             AppButton(
               label: 'Log out',
               style: AppButtonStyle.secondary,
               icon: Icons.logout_rounded,
               onPressed: () => _confirmLogout(context, ref),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Center(
+              child: TextButton(
+                onPressed: () => context.push(AppRoutes.settingsDelete),
+                child: Text('Delete my account', style: TextStyle(color: StatusColors.errorText)),
+              ),
             ),
           ],
         ),

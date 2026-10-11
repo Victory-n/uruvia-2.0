@@ -44,6 +44,7 @@ class AppRoutes {
   static const settingsNotifications = '/settings/notifications';
   static const settingsPin = '/settings/pin';
   static const settingsBusiness = '/settings/business';
+  static const settingsDelete = '/settings/delete';
 
   // Business only
   static const inventory = '/inventory';

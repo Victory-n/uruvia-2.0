@@ -17,8 +17,8 @@ Google Play: prominent in-app disclosure right before a sensitive permission; re
 Re-add the removed keys together with the feature that uses them.
 
 ## Store requirements
-- [ ] Privacy policy URL: in App Store Connect, Play Console and inside the app (Settings).
-- [ ] In-app account deletion (Apple 5.1.1(v)). NOT built yet.
+- [ ] Privacy policy URL https://uruvia.com/privacy and terms https://uruvia.com/terms: in-app done; also enter them in App Store Connect and Play Console. Make sure both pages are live and mention account deletion.
+- [x] In-app account deletion (Apple 5.1.1(v)): built, Settings > Delete my account.
 - [ ] Play: Data safety form, Financial features declaration, content rating.
 - [ ] Play: target Android 16 (API 36) for new apps/updates from 31 Aug 2026. Check `flutter --version`, set targetSdk explicitly if needed.
 - [ ] Play: check 16 KB page-size support (plugins and NDK; ndkVersion is 29, good).

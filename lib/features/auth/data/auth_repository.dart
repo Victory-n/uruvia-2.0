@@ -38,6 +38,9 @@ abstract class AuthRepository {
   Future<bool> signInWithApple();
 
   Future<void> signOut();
+
+  /// Ends the session on this phone only (the server session no longer exists after deletion).
+  Future<void> signOutLocal();
 }
 
 class SupabaseAuthRepository implements AuthRepository {
@@ -142,6 +145,9 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() => _auth.signOut();
+
+  @override
+  Future<void> signOutLocal() => _auth.signOut(scope: SignOutScope.local);
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) => const SupabaseAuthRepository());

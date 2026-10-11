@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/routes.dart';
 import '../../../app/theme/tokens.dart';
+import '../../../core/config/app_links.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/utils/open_link.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../application/auth_actions.dart';
@@ -109,6 +111,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         ),
         const SizedBox(height: AppSpacing.xxl),
         AppButton(label: 'Create account', onPressed: _submit, loading: _loading),
+        const SizedBox(height: AppSpacing.md),
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text('By continuing you agree to our ', style: Theme.of(context).textTheme.bodySmall),
+            InkWell(
+              onTap: () => openLink(context, AppLinks.terms),
+              child: Text('Terms', style: Theme.of(context).textTheme.bodySmall?.copyWith(decoration: TextDecoration.underline)),
+            ),
+            Text(' and ', style: Theme.of(context).textTheme.bodySmall),
+            InkWell(
+              onTap: () => openLink(context, AppLinks.privacy),
+              child: Text('Privacy policy', style: Theme.of(context).textTheme.bodySmall?.copyWith(decoration: TextDecoration.underline)),
+            ),
+            Text('.', style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
         SocialSignInButtons(onError: (m) => setState(() => _error = m)),
       ],
     );

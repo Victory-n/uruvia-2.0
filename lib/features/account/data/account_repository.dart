@@ -12,6 +12,9 @@ abstract class AccountRepository {
   Future<bool> verifyTransactionPin(String pin);
   Future<void> setActiveAccount(String accountId);
   Future<void> updateFullName(String name);
+
+  /// Deletes the signed-in user, their accounts and all their data. Server side.
+  Future<void> deleteMyAccount();
 }
 
 class SupabaseAccountRepository implements AccountRepository {
@@ -68,6 +71,11 @@ class SupabaseAccountRepository implements AccountRepository {
   @override
   Future<bool> verifyTransactionPin(String pin) async {
     return await supabase.rpc('verify_transaction_pin', params: {'p_pin': pin}) as bool;
+  }
+
+  @override
+  Future<void> deleteMyAccount() async {
+    await supabase.rpc('delete_my_account');
   }
 
   @override

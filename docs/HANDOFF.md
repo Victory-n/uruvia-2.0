@@ -124,3 +124,10 @@ Wallet, savings, voice and Pro screens switch from DUMMY to LIVE only after the 
 - **Sign in with Google (Android) and Apple (iOS):** see docs/SOCIAL_SIGNIN.md for the one-time setup.
 - **Lock screen:** the PIN keypad tooltips crashed because the lock overlay sat above the Navigator with no Overlay; it now gets its own.
 - **Planned later update (Victory, 11 Oct 2026): offline mode with a local database (Drift).** Read cache so lists show last-saved data offline, and a general queue for more entry types than cash expenses. Shipped as a user-facing update after launch.
+
+## Account deletion (12 Oct 2026)
+- `public.delete_my_account()` (migration 0016, `supabase/manual/apply_0016_only.sql`): signed-in user only. Refuses if their business has other members. Deletes children in order (RESTRICT keys), then `auth.users`, which cascades to profile, accounts, devices, PIN, notifications, tickets, subscriptions. Rows a member created in someone else's business keep their data and lose the author link (`created_by`/`recorded_by` now `on delete set null`). Tested on a local Postgres 16 with stubbed auth.
+- App: Settings > Delete my account > PIN + type DELETE > rpc > local sign-out. Privacy/Terms links in `lib/core/config/app_links.dart`, shown in Settings > About, sign-up and the delete screen (`url_launcher`).
+- TODO when KYC lands: files in the `kyc` bucket must be removed too. Supabase blocks deleting storage rows from SQL, so do it from an Edge Function (service role) before calling the rpc.
+- TODO when Providus wallet lands: refuse deletion while the wallet balance is not zero.
+- TODO when staff invites exist: owner must be able to remove members before deleting.
