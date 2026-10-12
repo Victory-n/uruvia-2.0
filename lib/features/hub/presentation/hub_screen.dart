@@ -22,7 +22,7 @@ class HubScreen extends ConsumerWidget {
 
     final tiles = [
       (Icons.monitor_heart_outlined, 'Business health', 'A score for how your business is doing.', AppRoutes.health, true),
-      (Icons.account_balance_outlined, 'Loan eligibility', 'See what you may qualify for.', AppRoutes.healthLoan, true),
+      // Loan eligibility is hidden until lender terms and Play/Apple lending approvals are in place.
       (Icons.bar_chart_rounded, 'Reports', 'Sales, expenses and profit.', AppRoutes.reports, false),
       (Icons.notifications_active_outlined, 'Smart alerts', 'Low stock, overdue invoices and more.', AppRoutes.notifications, false),
     ];
