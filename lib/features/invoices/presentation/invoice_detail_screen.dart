@@ -6,13 +6,19 @@ import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
+import 'package:share_plus/share_plus.dart';
+
 import '../../../core/utils/dates.dart';
+import '../../../core/utils/open_link.dart';
+import '../../../core/utils/phone_links.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/sub_page.dart';
 import '../../sales/application/sales_controller.dart';
+import '../../customers/application/customers_controller.dart';
+import '../application/invoice_pdf.dart';
 import '../application/invoices_controller.dart';
 import '../../account/application/active_account.dart';
 import '../../account/domain/account_type.dart';
@@ -24,6 +30,24 @@ import 'share_sheet.dart';
 class InvoiceDetailScreen extends ConsumerWidget {
   const InvoiceDetailScreen({super.key, required this.invoiceId});
   final String invoiceId;
+
+  /// Opens WhatsApp on the customer's number with a ready message, or the share sheet when there is no number.
+  Future<void> _remind(BuildContext context, WidgetRef ref, Invoice invoice) async {
+    try {
+      final business = await ref.read(businessInfoProvider.future);
+      if (business == null) throw StateError('No business details');
+      final customer = await ref.read(customerProvider(invoice.customerId).future);
+      final text = invoiceReminderText(business: business, invoice: invoice, customerName: customer?.name);
+      final link = whatsappLink(customer?.phone, message: text);
+      if (link != null) {
+        if (context.mounted) await openLink(context, link);
+      } else {
+        await SharePlus.instance.share(ShareParams(text: text));
+      }
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,6 +62,18 @@ class InvoiceDetailScreen extends ConsumerWidget {
             tooltip: 'Share invoice',
             icon: const Icon(Icons.share_outlined),
             onPressed: () => showShareSheet(context, invoice),
+          ),
+        if (invoice != null && !invoice.isDraft)
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            onSelected: (v) async {
+              if (v == 'copy') context.push('${AppRoutes.invoicesNew}?copy=${invoice.id}');
+              if (v == 'remind') await _remind(context, ref, invoice);
+            },
+            itemBuilder: (_) => [
+              if (invoice.isOpen && invoice.balanceKobo > 0) const PopupMenuItem(value: 'remind', child: Text('Send payment reminder')),
+              const PopupMenuItem(value: 'copy', child: Text('Duplicate as new invoice')),
+            ],
           ),
       ],
       body: AsyncView<Invoice?>(

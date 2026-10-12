@@ -1,3 +1,5 @@
+import '../../invoices/domain/invoice_models.dart';
+
 class Customer {
   const Customer({
     required this.id,
@@ -29,4 +31,17 @@ class Customer {
         notes: r['notes'] as String?,
         archived: r['archived_at'] != null,
       );
+}
+
+/// What a customer has been billed, has paid and still owes, from their invoices.
+/// Drafts and cancelled invoices are not counted: they were never a debt.
+({int billedKobo, int paidKobo, int outstandingKobo}) customerInvoiceTotals(Iterable<Invoice> invoices) {
+  var billed = 0, paid = 0, owed = 0;
+  for (final i in invoices) {
+    if (i.status == InvoiceStatus.draft || i.status == InvoiceStatus.cancelled) continue;
+    billed += i.totalKobo;
+    paid += i.amountPaidKobo;
+    owed += i.balanceKobo;
+  }
+  return (billedKobo: billed, paidKobo: paid, outstandingKobo: owed);
 }

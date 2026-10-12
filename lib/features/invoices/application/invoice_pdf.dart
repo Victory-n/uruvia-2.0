@@ -182,6 +182,29 @@ Future<Uint8List> buildInvoicePdf({
 }
 
 /// A short text version for sharing in a chat.
+/// A polite payment reminder, ready to send on WhatsApp or as a message.
+String invoiceReminderText({required BusinessInfo business, required Invoice invoice, String? customerName, DateTime? now}) {
+  final today = dateOnly(now ?? DateTime.now());
+  final late = invoice.dueDate.isBefore(today);
+  final hello = (customerName == null || customerName.trim().isEmpty) ? 'Hello,' : 'Hello ${customerName.trim()},';
+  final b = StringBuffer()
+    ..writeln(hello)
+    ..writeln(late
+        ? 'A friendly reminder that invoice ${invoice.number} from ${business.name} was due on ${formatShortDate(invoice.dueDate)}.'
+        : 'A friendly reminder that invoice ${invoice.number} from ${business.name} is due on ${formatShortDate(invoice.dueDate)}.')
+    ..writeln('Balance: ${pdfMoney(invoice.balanceKobo)}');
+  if (business.hasPaymentDetails) {
+    b
+      ..writeln()
+      ..writeln('Pay to: ${[if ((business.bankName ?? '').isNotEmpty) business.bankName!, business.accountNumber!].join(' - ')}');
+    if ((business.accountName ?? '').isNotEmpty) b.writeln(business.accountName!);
+  }
+  b
+    ..writeln()
+    ..write('Thank you.');
+  return b.toString().trim();
+}
+
 String invoiceShareText({required BusinessInfo business, required Invoice invoice}) {
   final b = StringBuffer()
     ..writeln('Invoice ${invoice.number} from ${business.name}')

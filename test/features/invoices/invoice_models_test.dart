@@ -151,4 +151,32 @@ void main() {
       expect(text, contains('0123456789'));
     });
   });
+
+  group('quickPaymentAmounts', () {
+    test('offers a quarter, a half and the full balance', () {
+      expect(quickPaymentAmounts(100000), [25000, 50000, 100000]);
+    });
+    test('drops repeats and zero amounts', () {
+      expect(quickPaymentAmounts(100), [100]);
+      expect(quickPaymentAmounts(0), isEmpty);
+    });
+    test('keeps amounts in whole naira', () {
+      expect(quickPaymentAmounts(100050).every((k) => k == 100050 || k % 100 == 0), isTrue);
+    });
+  });
+
+  group('invoiceReminderText', () {
+    const business = BusinessInfo(name: 'Ada Stores', vatRateBps: 0, accountNumber: '0123456789', bankName: 'Test Bank');
+    test('says overdue once the due date has passed', () {
+      final text = invoiceReminderText(business: business, invoice: inv(), customerName: 'Chidi', now: DateTime(2030, 1, 1));
+      expect(text, startsWith('Hello Chidi,'));
+      expect(text, contains('was due on'));
+      expect(text, contains('0123456789'));
+    });
+    test('says due on before the due date', () {
+      final text = invoiceReminderText(business: business, invoice: inv(), now: DateTime(2000, 1, 1));
+      expect(text, startsWith('Hello,'));
+      expect(text, contains('is due on'));
+    });
+  });
 }

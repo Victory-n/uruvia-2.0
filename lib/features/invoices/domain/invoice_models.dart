@@ -216,6 +216,17 @@ class BusinessInfo {
   bool get hasPaymentDetails => (accountNumber ?? '').isNotEmpty;
 }
 
+/// Quick payment amounts for a balance: a quarter, a half and all of it, in whole naira, without repeats.
+List<int> quickPaymentAmounts(int balanceKobo) {
+  if (balanceKobo <= 0) return const [];
+  int wholeNaira(int kobo) => (kobo ~/ 100) * 100;
+  final out = <int>[];
+  for (final v in [wholeNaira(balanceKobo ~/ 4), wholeNaira(balanceKobo ~/ 2), balanceKobo]) {
+    if (v > 0 && !out.contains(v)) out.add(v);
+  }
+  return out;
+}
+
 /// Totals for the list header.
 class InvoiceSummary {
   const InvoiceSummary({required this.outstandingKobo, required this.overdueCount, required this.draftCount});

@@ -26,7 +26,8 @@ import 'item_sheet.dart';
 /// Create an invoice, or edit a draft when [invoiceId] is given.
 /// [customerId] pre-selects the customer (from the customer page).
 class InvoiceFormScreen extends ConsumerWidget {
-  const InvoiceFormScreen({super.key, this.invoiceId, this.customerId});
+  const InvoiceFormScreen({super.key, this.invoiceId, this.customerId, this.copyFromId});
+  final String? copyFromId;
   final String? invoiceId;
   final String? customerId;
 
@@ -44,6 +45,26 @@ class InvoiceFormScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(businessInfoProvider),
         data: (info) {
           final vatRate = info?.vatRateBps ?? 750;
+          final copyId = copyFromId;
+          if (id == null && copyId != null) {
+            // A copy keeps the customer, items, VAT, charges, notes and terms; dates and number start fresh.
+            final src = ref.watch(invoiceProvider(copyId));
+            final srcItems = ref.watch(invoiceItemsProvider(copyId));
+            final s = src.valueOrNull;
+            final si = srcItems.valueOrNull;
+            if (s == null || si == null) {
+              return src.hasError || srcItems.hasError
+                  ? ErrorState(onRetry: () {
+                      ref.invalidate(invoiceProvider(copyId));
+                      ref.invalidate(invoiceItemsProvider(copyId));
+                    })
+                  : const Center(child: CircularProgressIndicator());
+            }
+            return _CustomerLoader(
+              customerId: s.customerId,
+              builder: (c) => _InvoiceForm(vatRateBps: vatRate, template: s, templateItems: si, initialCustomer: c),
+            );
+          }
           if (id == null) {
             return _CustomerLoader(
               customerId: customerId,
@@ -102,7 +123,9 @@ class _CustomerLoader extends ConsumerWidget {
 }
 
 class _InvoiceForm extends ConsumerStatefulWidget {
-  const _InvoiceForm({required this.vatRateBps, this.existing, this.existingItems, this.initialCustomer});
+  const _InvoiceForm({required this.vatRateBps, this.existing, this.existingItems, this.initialCustomer, this.template, this.templateItems});
+  final Invoice? template;
+  final List<InvoiceItem>? templateItems;
   final int vatRateBps;
   final Invoice? existing;
   final List<InvoiceItem>? existingItems;
@@ -116,12 +139,13 @@ class _InvoiceFormState extends ConsumerState<_InvoiceForm> {
   late Customer? _customer = widget.initialCustomer;
   late DateTime _issue = widget.existing?.issueDate ?? dateOnly(DateTime.now());
   late DateTime _due = widget.existing?.dueDate ?? dateOnly(DateTime.now()).add(const Duration(days: 14));
-  late final List<InvoiceItem> _items = [...?widget.existingItems];
-  late bool _vat = widget.existing?.vatEnabled ?? false;
-  late final _discount = TextEditingController(text: _plain(widget.existing?.discountKobo ?? 0));
-  late final _charges = TextEditingController(text: _plain(widget.existing?.chargesKobo ?? 0));
-  late final _notes = TextEditingController(text: widget.existing?.notes ?? '');
-  late final _terms = TextEditingController(text: widget.existing?.terms ?? '');
+  Invoice? get _src => widget.existing ?? widget.template;
+  late final List<InvoiceItem> _items = [...?(widget.existingItems ?? widget.templateItems)];
+  late bool _vat = _src?.vatEnabled ?? false;
+  late final _discount = TextEditingController(text: _plain(_src?.discountKobo ?? 0));
+  late final _charges = TextEditingController(text: _plain(_src?.chargesKobo ?? 0));
+  late final _notes = TextEditingController(text: _src?.notes ?? '');
+  late final _terms = TextEditingController(text: _src?.terms ?? '');
   String? _error;
   bool _saving = false;
 

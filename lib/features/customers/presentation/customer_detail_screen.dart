@@ -7,6 +7,8 @@ import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/open_link.dart';
+import '../../../core/utils/phone_links.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/state_views.dart';
@@ -16,6 +18,7 @@ import '../../invoices/domain/invoice_models.dart';
 import '../../invoices/presentation/invoice_widgets.dart';
 import '../../sales/application/sales_controller.dart';
 import '../../sales/domain/sale_models.dart';
+import '../../sales/presentation/sale_list_screen.dart' show SaleTile;
 import '../application/customers_controller.dart';
 import '../domain/customer_models.dart';
 
@@ -90,7 +93,8 @@ class _Detail extends ConsumerWidget {
     final invoices = ref.watch(customerInvoicesProvider(c.id));
     final sales = ref.watch(customerSalesProvider(c.id)).valueOrNull ?? const <Sale>[];
     final list = invoices.valueOrNull ?? const <Invoice>[];
-    final owed = summarizeInvoices(list).outstandingKobo;
+    final totals = customerInvoiceTotals(list);
+    final owed = totals.outstandingKobo;
     final bought = summarizeSales(sales).totalKobo;
 
     final info = [
@@ -131,6 +135,13 @@ class _Detail extends ConsumerWidget {
                   ),
                 ],
               ),
+              if (list.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Billed ${formatNaira(totals.billedKobo, showKobo: false)} · Paid ${formatNaira(totals.paidKobo, showKobo: false)}',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
               if (info.isNotEmpty) const Divider(height: AppSpacing.xxl),
               for (final (icon, text) in info)
                 Padding(
@@ -152,6 +163,30 @@ class _Detail extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
+        if (telLink(c.phone) != null) ...[
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Call',
+                  icon: Icons.call_outlined,
+                  style: AppButtonStyle.secondary,
+                  onPressed: () => openLink(context, telLink(c.phone)!),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppButton(
+                  label: 'WhatsApp',
+                  icon: Icons.chat_outlined,
+                  style: AppButtonStyle.secondary,
+                  onPressed: () => openLink(context, whatsappLink(c.phone, message: 'Hello ${c.name}, ')!),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         AppButton(
           label: 'New invoice',
           icon: Icons.description_outlined,
@@ -178,6 +213,22 @@ class _Detail extends ConsumerWidget {
             ),
           ),
         ),
+        if (sales.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sectionGap),
+          Text('Purchases', style: theme.textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.sm),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < sales.length && i < 10; i++) ...[
+                  if (i > 0) const Divider(),
+                  SaleTile(sale: sales[i]),
+                ],
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

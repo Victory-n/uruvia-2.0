@@ -180,7 +180,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.invoicesNew,
-        builder: (_, state) => InvoiceFormScreen(customerId: state.uri.queryParameters['customer']),
+        builder: (_, state) => InvoiceFormScreen(
+          customerId: state.uri.queryParameters['customer'],
+          copyFromId: state.uri.queryParameters['copy'],
+        ),
       ),
       GoRoute(
         path: '/invoices/:id/edit',

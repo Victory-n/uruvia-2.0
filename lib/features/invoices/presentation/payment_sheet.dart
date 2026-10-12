@@ -121,7 +121,7 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
           controller: _amount,
           label: 'Amount received',
           enabled: !_saving,
-          quickAmountsKobo: [if (balance > 0) balance],
+          quickAmountsKobo: quickPaymentAmounts(balance),
           onChangedKobo: (k) => setState(() {
             _kobo = k;
             _error = null;
