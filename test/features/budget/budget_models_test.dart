@@ -52,4 +52,36 @@ void main() {
     expect(t.spentKobo, 40);
     expect(t.remainingKobo, 60);
   });
+
+  group('rollover, templates and weekly bars', () {
+    test('base amount excludes the carry-over', () {
+      final b = BudgetProgress(
+        budgetId: 'b', categoryId: 'c', categoryName: 'Feeding', categoryIcon: 'restaurant',
+        amountKobo: 170000, spentKobo: 0, period: BudgetPeriod.monthly,
+        startsOn: DateTime(2026, 10), endsOn: DateTime(2026, 11), carryKobo: 70000,
+      );
+      expect(b.baseKobo, 100000);
+    });
+
+    test('templates exist for the seeded categories and not for unknown ones', () {
+      expect(budgetTemplateKobo('Feeding'), 3000000);
+      expect(budgetTemplateKobo(' airtime and data '), 500000);
+      expect(budgetTemplateKobo('Holiday'), isNull);
+    });
+
+    test('weekly spend buckets by 7-day weeks from the start and ignores outside dates', () {
+      final w = weeklySpend([
+        (spentAt: DateTime(2026, 10, 1, 9), amountKobo: 100),
+        (spentAt: DateTime(2026, 10, 7), amountKobo: 50),
+        (spentAt: DateTime(2026, 10, 8), amountKobo: 200),
+        (spentAt: DateTime(2026, 10, 31), amountKobo: 400),
+        (spentAt: DateTime(2026, 11, 1), amountKobo: 999),
+        (spentAt: DateTime(2026, 9, 30), amountKobo: 999),
+      ], DateTime(2026, 10), DateTime(2026, 11));
+      expect(w.length, 5);
+      expect(w[0], 150);
+      expect(w[1], 200);
+      expect(w[4], 400);
+    });
+  });
 }

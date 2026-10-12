@@ -133,6 +133,10 @@ class _Detail extends ConsumerWidget {
                   '${formatNaira(budget.spentKobo, showKobo: false)} spent of ${formatNaira(budget.amountKobo, showKobo: false)}',
                   style: theme.textTheme.bodyMedium,
                 ),
+                if (budget.carryKobo > 0)
+                  Text('Includes ${formatNaira(budget.carryKobo, showKobo: false)} carried over', style: theme.textTheme.bodySmall),
+                if (budget.nextAmountKobo != null)
+                  Text('From next period: ${formatNaira(budget.nextAmountKobo!, showKobo: false)}', style: theme.textTheme.bodySmall),
               ],
             ),
           ),
@@ -164,6 +168,18 @@ class _Detail extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Spending by week', style: theme.textTheme.labelLarge),
+          const SizedBox(height: AppSpacing.sm),
+          if (expenses.valueOrNull != null)
+            _WeekBars(
+              values: weeklySpend(
+                [for (final e in expenses.valueOrNull!) (spentAt: e.spentAt, amountKobo: e.amountKobo)],
+                budget.startsOn,
+                budget.endsOn,
+              ),
+              weeklyTargetKobo: budget.amountKobo ~/ (budget.endsOn.difference(budget.startsOn).inDays / 7).ceil().clamp(1, 53),
+            ),
           const SizedBox(height: AppSpacing.sectionGap),
           Text('Expenses in this budget', style: theme.textTheme.titleLarge),
           const SizedBox(height: AppSpacing.sm),
@@ -200,6 +216,53 @@ class _Detail extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// One bar per week of the budget period. A bar turns red when that week spent more than an even share of the budget.
+class _WeekBars extends StatelessWidget {
+  const _WeekBars({required this.values, required this.weeklyTargetKobo});
+  final List<int> values;
+  final int weeklyTargetKobo;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<AppPalette>()!;
+    final max = values.fold<int>(weeklyTargetKobo, (m, v) => v > m ? v : m);
+    const area = 72.0;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        for (var i = 0; i < values.length; i++)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: area,
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        height: max == 0 ? 3 : (area * values[i] / max).clamp(3, area).toDouble(),
+                        decoration: BoxDecoration(
+                          color: values[i] == 0
+                              ? palette.tint
+                              : (values[i] > weeklyTargetKobo ? StatusColors.errorText : palette.action),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('W${i + 1}', style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

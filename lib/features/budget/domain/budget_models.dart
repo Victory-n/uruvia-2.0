@@ -25,6 +25,9 @@ class BudgetProgress {
     this.alert100 = true,
     this.paused = false,
     this.repeat = true,
+    this.carryKobo = 0,
+    this.nextAmountKobo,
+    this.rollover = false,
   });
 
   final String budgetId;
@@ -40,6 +43,16 @@ class BudgetProgress {
   final bool alert100;
   final bool paused;
   final bool repeat;
+
+  /// Unspent money carried in from the last period (rollover). Already included in [amountKobo].
+  final int carryKobo;
+
+  /// An amount that starts with the next period, if the person chose "from next period".
+  final int? nextAmountKobo;
+  final bool rollover;
+
+  /// What the person set, without the carry-over.
+  int get baseKobo => amountKobo - carryKobo;
 
   int get remainingKobo => amountKobo - spentKobo;
   double get fraction => amountKobo == 0 ? 0 : spentKobo / amountKobo;
@@ -90,4 +103,33 @@ BudgetTotals totalsOf(List<BudgetProgress> list) {
     s += x.spentKobo;
   }
   return BudgetTotals(budgetedKobo: b, spentKobo: s);
+}
+
+/// A typical monthly amount for a category, by name, to start a budget in one tap. Null when there is no suggestion.
+int? budgetTemplateKobo(String categoryName) => switch (categoryName.trim().toLowerCase()) {
+      'feeding' => 3000000,
+      'transport' => 1500000,
+      'rent' => 10000000,
+      'airtime and data' => 500000,
+      'school fees' => 5000000,
+      'emergency fund' => 2000000,
+      'stock purchases' => 20000000,
+      'salaries' => 15000000,
+      'utilities' => 2000000,
+      'marketing' => 3000000,
+      _ => null,
+    };
+
+/// Spending per week of a budget period: week 1 is the first 7 days, and so on. Anything outside the period is ignored.
+List<int> weeklySpend(Iterable<({DateTime spentAt, int amountKobo})> items, DateTime startsOn, DateTime endsOn) {
+  final days = endsOn.difference(startsOn).inDays;
+  final weeks = (days / 7).ceil().clamp(1, 53);
+  final out = List<int>.filled(weeks, 0);
+  for (final e in items) {
+    final d = DateTime(e.spentAt.year, e.spentAt.month, e.spentAt.day);
+    if (d.isBefore(startsOn) || !d.isBefore(endsOn)) continue;
+    final w = d.difference(startsOn).inDays ~/ 7;
+    if (w >= 0 && w < weeks) out[w] += e.amountKobo;
+  }
+  return out;
 }

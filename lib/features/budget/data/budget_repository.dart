@@ -16,6 +16,7 @@ abstract class BudgetRepository {
     required bool repeat,
     required bool alert80,
     required bool alert100,
+    bool rollover = false,
   });
   Future<void> update(
     String budgetId, {
@@ -24,6 +25,8 @@ abstract class BudgetRepository {
     required bool alert80,
     required bool alert100,
     required bool paused,
+    bool rollover = false,
+    bool fromNextPeriod = false,
   });
   Future<void> delete(String budgetId);
   Future<List<Expense>> expensesFor(BudgetProgress budget);
@@ -68,6 +71,9 @@ class SupabaseBudgetRepository implements BudgetRepository {
           alert100: (flagById[r['budget_id']]?['alert_100'] as bool?) ?? true,
           paused: (flagById[r['budget_id']]?['paused'] as bool?) ?? false,
           repeat: (flagById[r['budget_id']]?['repeat'] as bool?) ?? true,
+          carryKobo: (r['carry_kobo'] as num?)?.toInt() ?? 0,
+          nextAmountKobo: (r['next_amount_kobo'] as num?)?.toInt(),
+          rollover: (r['rollover'] as bool?) ?? false,
         ),
     ];
   }
@@ -77,7 +83,7 @@ class SupabaseBudgetRepository implements BudgetRepository {
     final today = _date(DateTime.now());
     final rows = await supabase
         .from('budget_progress')
-        .select('budget_id, account_id, category_id, amount_kobo, period, starts_on, ends_on, spent_kobo')
+        .select('budget_id, account_id, category_id, amount_kobo, period, starts_on, ends_on, spent_kobo, carry_kobo, next_amount_kobo, rollover')
         .eq('account_id', accountId)
         .lte('starts_on', today)
         .gt('ends_on', today) as List;
@@ -90,7 +96,7 @@ class SupabaseBudgetRepository implements BudgetRepository {
   Future<BudgetProgress?> get(String budgetId) async {
     final rows = await supabase
         .from('budget_progress')
-        .select('budget_id, account_id, category_id, amount_kobo, period, starts_on, ends_on, spent_kobo')
+        .select('budget_id, account_id, category_id, amount_kobo, period, starts_on, ends_on, spent_kobo, carry_kobo, next_amount_kobo, rollover')
         .eq('budget_id', budgetId) as List;
     final list = await _build(rows);
     return list.isEmpty ? null : list.first;
@@ -105,8 +111,10 @@ class SupabaseBudgetRepository implements BudgetRepository {
     required bool repeat,
     required bool alert80,
     required bool alert100,
+    bool rollover = false,
   }) async {
     await supabase.from('budgets').insert({
+      'rollover': rollover,
       'account_id': accountId,
       'category_id': categoryId,
       'amount_kobo': amountKobo,
@@ -126,9 +134,13 @@ class SupabaseBudgetRepository implements BudgetRepository {
     required bool alert80,
     required bool alert100,
     required bool paused,
+    bool rollover = false,
+    bool fromNextPeriod = false,
   }) async {
+    // "From next period" keeps today's amount and stores the new one for the daily renewal job to pick up.
     await supabase.from('budgets').update({
-      'amount_kobo': amountKobo,
+      if (fromNextPeriod) 'next_amount_kobo': amountKobo else ...{'amount_kobo': amountKobo, 'next_amount_kobo': null},
+      'rollover': rollover,
       'repeat': repeat,
       'alert_80': alert80,
       'alert_100': alert100,

@@ -40,6 +40,7 @@ class BudgetActions {
     required bool repeat,
     required bool alert80,
     required bool alert100,
+    bool rollover = false,
   }) async {
     final account = _ref.read(activeAccountSummaryProvider);
     if (account == null) throw StateError('No active account');
@@ -51,6 +52,7 @@ class BudgetActions {
       repeat: repeat,
       alert80: alert80,
       alert100: alert100,
+      rollover: rollover,
     );
     _refresh();
   }
@@ -62,9 +64,17 @@ class BudgetActions {
     required bool alert80,
     required bool alert100,
     required bool paused,
+    bool rollover = false,
+    bool fromNextPeriod = false,
   }) async {
     await _repo.update(id,
-        amountKobo: amountKobo, repeat: repeat, alert80: alert80, alert100: alert100, paused: paused);
+        amountKobo: amountKobo,
+        repeat: repeat,
+        alert80: alert80,
+        alert100: alert100,
+        paused: paused,
+        rollover: rollover,
+        fromNextPeriod: fromNextPeriod);
     _refresh(id);
   }
 
