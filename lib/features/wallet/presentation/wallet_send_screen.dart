@@ -73,10 +73,12 @@ class _WalletSendScreenState extends ConsumerState<WalletSendScreen> {
           name: _recipientName,
           narration: _note.text.trim().isEmpty ? null : _note.text.trim(),
         );
-    if (mounted) setState(() {
-      _busy = false;
-      _done = tx;
-    });
+    if (mounted) {
+      setState(() {
+        _busy = false;
+        _done = tx;
+      });
+    }
   }
 
   @override

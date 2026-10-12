@@ -66,7 +66,7 @@ class PhotoField extends ConsumerStatefulWidget {
   final String label;
   final String bucket;
 
-  /// Folder inside the bucket, starting with the account or user id, e.g. "<account>/products".
+  /// Folder inside the bucket, starting with the account or user id, e.g. `account/products`.
   final String folder;
   final String? path;
   final ValueChanged<String?> onChanged;

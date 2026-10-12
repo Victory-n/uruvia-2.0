@@ -67,11 +67,11 @@ class _ShareOptionsState extends ConsumerState<_ShareOptions> {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${invoice.number}.pdf');
       await file.writeAsBytes(bytes, flush: true);
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'application/pdf')],
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(file.path, mimeType: 'application/pdf')],
         subject: 'Invoice ${invoice.number} from ${business.name}',
         text: 'Invoice ${invoice.number} from ${business.name}',
-      );
+      ));
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -90,7 +90,7 @@ class _ShareOptionsState extends ConsumerState<_ShareOptions> {
     });
     try {
       final business = await _business();
-      await Share.share(invoiceShareText(business: business, invoice: widget.invoice));
+      await SharePlus.instance.share(ShareParams(text: invoiceShareText(business: business, invoice: widget.invoice)));
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {

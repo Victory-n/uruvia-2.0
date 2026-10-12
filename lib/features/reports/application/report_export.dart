@@ -59,7 +59,7 @@ Future<void> shareReportPdf(ReportTable t, {required String businessName}) async
   final dir = await getTemporaryDirectory();
   final file = File('${dir.path}/${_fileStem(t)}.pdf');
   await file.writeAsBytes(bytes, flush: true);
-  await Share.shareXFiles([XFile(file.path, mimeType: 'application/pdf')], subject: '${t.title} - $businessName');
+  await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: 'application/pdf')], subject: '${t.title} - $businessName'));
 }
 
 Future<void> shareReportCsv(ReportTable t, {required String businessName}) async {
@@ -67,5 +67,5 @@ Future<void> shareReportCsv(ReportTable t, {required String businessName}) async
   final file = File('${dir.path}/${_fileStem(t)}.csv');
   // A byte-order mark makes Excel read the file as UTF-8.
   await file.writeAsBytes([0xEF, 0xBB, 0xBF, ...utf8.encode(t.toCsv())], flush: true);
-  await Share.shareXFiles([XFile(file.path, mimeType: 'text/csv')], subject: '${t.title} - $businessName');
+  await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: 'text/csv')], subject: '${t.title} - $businessName'));
 }

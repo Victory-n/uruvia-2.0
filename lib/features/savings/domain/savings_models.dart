@@ -1,9 +1,9 @@
 /// DUMMY savings data. Nothing here is saved or sent anywhere.
 enum PocketType {
-  saveAsYouSpend('save_as_you_spend', 'Save as you spend', 300, Icons_.spend,
+  saveAsYouSpend('save_as_you_spend', 'Save as you spend', 300, SavingsIconKey.spend,
       'Set aside a share of every spend automatically.'),
-  fixed('fixed', 'Fixed savings', 300, Icons_.fixed, 'Save towards a goal. Add money whenever you like.'),
-  locked('locked', 'Locked savings', 1200, Icons_.locked,
+  fixed('fixed', 'Fixed savings', 300, SavingsIconKey.fixed, 'Save towards a goal. Add money whenever you like.'),
+  locked('locked', 'Locked savings', 1200, SavingsIconKey.locked,
       'Lock money away until a date and earn a higher rate.');
 
   const PocketType(this.db, this.label, this.rateBps, this.iconKey, this.blurb);
@@ -12,7 +12,7 @@ enum PocketType {
 
   /// Simple interest per year, in basis points (300 = 3%).
   final int rateBps;
-  final Icons_ iconKey;
+  final SavingsIconKey iconKey;
   final String blurb;
 
   String get rateLabel => '${rateBps ~/ 100}% a year';
@@ -22,7 +22,7 @@ enum PocketType {
 }
 
 /// Keeps the domain free of Flutter; the screens map this to an icon.
-enum Icons_ { spend, fixed, locked }
+enum SavingsIconKey { spend, fixed, locked }
 
 enum EntryKind { contribution, withdrawal, interest }
 

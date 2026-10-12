@@ -9,9 +9,9 @@ import '../../../core/widgets/status_chip.dart';
 import '../domain/savings_models.dart';
 
 IconData pocketIcon(PocketType t) => switch (t.iconKey) {
-      Icons_.spend => Icons.shopping_bag_outlined,
-      Icons_.fixed => Icons.flag_outlined,
-      Icons_.locked => Icons.lock_outline_rounded,
+      SavingsIconKey.spend => Icons.shopping_bag_outlined,
+      SavingsIconKey.fixed => Icons.flag_outlined,
+      SavingsIconKey.locked => Icons.lock_outline_rounded,
     };
 
 /// Row card for one pocket on the overview.
