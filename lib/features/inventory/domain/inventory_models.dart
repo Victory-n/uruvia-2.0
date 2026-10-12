@@ -151,3 +151,13 @@ InventoryTotals inventoryTotals(List<Product> list) => InventoryTotals(
       stockValueKobo: list.fold(0, (s, p) => s + p.stockValueKobo),
       needRestock: list.where((p) => p.needsRestock).length,
     );
+
+/// The product whose SKU or barcode equals [code], ignoring case and surrounding spaces. Null if none.
+Product? findProductByCode(Iterable<Product> products, String code) {
+  final c = code.trim().toLowerCase();
+  if (c.isEmpty) return null;
+  for (final p in products) {
+    if (p.sku.trim().toLowerCase() == c) return p;
+  }
+  return null;
+}

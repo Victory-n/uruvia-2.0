@@ -6,6 +6,7 @@ import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/photos/photo_field.dart';
+import '../../../core/scanner/barcode_scanner_screen.dart';
 import '../../../core/photos/photo_service.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/amount_text.dart';
@@ -25,6 +26,22 @@ class InventoryListScreen extends ConsumerStatefulWidget {
 class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
   String _query = '';
   String? _categoryId;
+  bool _grid = false;
+
+  /// Scans a barcode: opens the product with that SKU, or offers to add it.
+  Future<void> _scan(List<Product> all) async {
+    final code = await scanBarcode(context);
+    if (code == null || !mounted) return;
+    final found = findProductByCode(all, code);
+    if (found != null) {
+      context.push(AppRoutes.productDetail(found.id));
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('No product with code $code.'),
+      action: SnackBarAction(label: 'Add it', onPressed: () => context.push(AppRoutes.inventoryNewWithCode(code))),
+    ));
+  }
 
   List<Product> _filter(List<Product> all) {
     final q = _query.trim().toLowerCase();
@@ -79,6 +96,17 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search by name or SKU',
                     prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(tooltip: 'Scan barcode', icon: const Icon(Icons.qr_code_scanner_rounded), onPressed: () => _scan(all)),
+                        IconButton(
+                          tooltip: _grid ? 'Show as list' : 'Show as grid',
+                          icon: Icon(_grid ? Icons.view_list_rounded : Icons.grid_view_rounded),
+                          onPressed: () => setState(() => _grid = !_grid),
+                        ),
+                      ],
+                    ),
                     filled: true,
                     fillColor: AppColors.surface,
                     border: OutlineInputBorder(
@@ -128,6 +156,16 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                   const Padding(
                     padding: EdgeInsets.all(AppSpacing.xxl),
                     child: Center(child: Text('No products match your search.')),
+                  )
+                else if (_grid)
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: AppSpacing.md,
+                    crossAxisSpacing: AppSpacing.md,
+                    childAspectRatio: 0.85,
+                    children: [for (final p in shown) _ProductCard(product: p)],
                   )
                 else
                   AppCard(
@@ -241,6 +279,36 @@ class _ProductRow extends StatelessWidget {
         ],
       ),
       onTap: () => context.push(AppRoutes.productDetail(p.id)),
+    );
+  }
+}
+
+class _ProductCard extends StatelessWidget {
+  const _ProductCard({required this.product});
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = product;
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      onTap: () => context.push(AppRoutes.productDetail(p.id)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(child: StoredImage(bucket: accountFilesBucket, path: p.imagePath, size: 72, placeholder: Icons.inventory_2_outlined)),
+          const SizedBox(height: AppSpacing.sm),
+          Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
+          const Spacer(),
+          Text(formatNaira(p.priceKobo, showKobo: false), style: theme.textTheme.titleMedium),
+          Text('${p.qtyAvailable} ${p.unit}', style: theme.textTheme.bodySmall),
+          if (p.isOut)
+            const StatusChip('Out of stock', tone: StatusTone.error)
+          else if (p.isLow)
+            const StatusChip('Low stock', tone: StatusTone.warning),
+        ],
+      ),
     );
   }
 }

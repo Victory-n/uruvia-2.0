@@ -158,7 +158,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/budgets/:id',
         builder: (_, state) => BudgetDetailScreen(budgetId: state.pathParameters['id']!),
       ),
-      GoRoute(path: AppRoutes.inventoryNew, builder: (_, __) => const ProductFormScreen()),
+      GoRoute(path: AppRoutes.inventoryNew, builder: (_, state) => ProductFormScreen(initialSku: state.uri.queryParameters['sku'])),
       GoRoute(path: AppRoutes.inventoryLow, builder: (_, __) => const LowStockScreen()),
       GoRoute(path: AppRoutes.inventoryCategories, builder: (_, __) => const CategoryScreen()),
       GoRoute(

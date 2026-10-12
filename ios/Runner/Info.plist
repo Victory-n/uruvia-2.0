@@ -48,7 +48,7 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Uruvia uses the camera only when you take a photo of a product, receipt or payment proof.</string>
+	<string>Uruvia uses the camera only when you take a photo (product, receipt, payment proof) or scan a product barcode.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Uruvia reads a photo only when you choose one for a product, logo, receipt, payment proof or profile picture.</string>
 	<key>CFBundleURLTypes</key>

@@ -17,20 +17,24 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/sub_page.dart';
+import '../../../core/scanner/barcode_scanner_screen.dart';
 import '../../account/application/active_account.dart';
 import '../application/inventory_controller.dart';
 import '../domain/inventory_models.dart';
 
 /// Add a product, or edit one when [productId] is given.
 class ProductFormScreen extends ConsumerWidget {
-  const ProductFormScreen({super.key, this.productId});
+  const ProductFormScreen({super.key, this.productId, this.initialSku});
   final String? productId;
+
+  /// A scanned barcode to start the SKU with.
+  final String? initialSku;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final id = productId;
     if (id == null) {
-      return const SubPage(title: 'Add product', fallbackRoute: AppRoutes.inventory, body: _ProductForm());
+      return const SubPage(title: 'Add product', fallbackRoute: AppRoutes.inventory, body: _ProductForm(initialSku: initialSku));
     }
     return SubPage(
       title: 'Edit product',
@@ -48,8 +52,9 @@ class ProductFormScreen extends ConsumerWidget {
 }
 
 class _ProductForm extends ConsumerStatefulWidget {
-  const _ProductForm({this.existing});
+  const _ProductForm({this.existing, this.initialSku});
   final Product? existing;
+  final String? initialSku;
 
   @override
   ConsumerState<_ProductForm> createState() => _ProductFormState();
@@ -57,7 +62,7 @@ class _ProductForm extends ConsumerStatefulWidget {
 
 class _ProductFormState extends ConsumerState<_ProductForm> {
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
-  late final _sku = TextEditingController(text: widget.existing?.sku ?? '');
+  late final _sku = TextEditingController(text: widget.existing?.sku ?? widget.initialSku ?? '');
   late final _cost = TextEditingController(text: _naira(widget.existing?.costKobo));
   late final _price = TextEditingController(text: _naira(widget.existing?.priceKobo));
   final _opening = TextEditingController();
@@ -108,7 +113,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
     if (created != null) setState(() => _categoryId = created.id);
   }
 
-  Future<void> _save() async {
+  Future<void> _save({bool another = false}) async {
     final name = _name.text.trim();
     final price = _priceKobo ?? parseNairaToKobo(_price.text);
     final cost = _costKobo ?? parseNairaToKobo(_cost.text) ?? 0;
@@ -155,7 +160,25 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
           imagePath: _imagePath,
         );
       }
-      if (mounted) context.canPop() ? context.pop() : context.go(AppRoutes.inventory);
+      if (!mounted) return;
+      if (another && !_editing) {
+        // Keep unit, category and alert settings: the next product is usually similar.
+        setState(() {
+          _saving = false;
+          _name.clear();
+          _sku.clear();
+          _cost.clear();
+          _price.clear();
+          _opening.clear();
+          _costKobo = null;
+          _priceKobo = null;
+          _imagePath = null;
+          _error = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$name added. Add the next one.')));
+        return;
+      }
+      context.canPop() ? context.pop() : context.go(AppRoutes.inventory);
     } catch (e) {
       if (!mounted) return;
       final duplicate = e is PostgrestException && e.code == '23505';
@@ -229,9 +252,19 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
         AppTextField(
           label: 'SKU (optional)',
           controller: _sku,
-          helper: 'Your own code for this product. Leave empty and we will make one.',
+          helper: 'Your own code or the barcode. Leave empty and we will make one.',
           textCapitalization: TextCapitalization.characters,
           enabled: !_saving,
+          suffix: IconButton(
+            tooltip: 'Scan barcode',
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            onPressed: _saving
+                ? null
+                : () async {
+                    final code = await scanBarcode(context);
+                    if (code != null && mounted) setState(() => _sku.text = code);
+                  },
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
         Text('Category', style: theme.textTheme.labelLarge),
@@ -323,7 +356,11 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
             enabled: !_saving,
           ),
         const SizedBox(height: AppSpacing.xxl),
-        AppButton(label: _editing ? 'Save changes' : 'Add product', onPressed: _save, loading: _saving),
+        AppButton(label: _editing ? 'Save changes' : 'Add product', onPressed: () => _save(), loading: _saving),
+        if (!_editing) ...[
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(label: 'Save and add another', style: AppButtonStyle.secondary, onPressed: _saving ? null : () => _save(another: true)),
+        ],
         if (_editing) ...[
           const SizedBox(height: AppSpacing.sm),
           AppButton(label: 'Remove product', style: AppButtonStyle.text, onPressed: _saving ? null : _archive),

@@ -51,4 +51,10 @@ void main() {
     expect(t.stockValueKobo, 700);
     expect(t.needRestock, 1);
   });
+
+  test('a scanned code finds the product by SKU, ignoring case and spaces', () {
+    expect(findProductByCode([p()], ' ric-1000 ')?.name, 'Rice');
+    expect(findProductByCode([p()], '999'), isNull);
+    expect(findProductByCode([p()], '  '), isNull);
+  });
 }

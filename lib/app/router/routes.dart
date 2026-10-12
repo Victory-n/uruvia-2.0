@@ -50,6 +50,7 @@ class AppRoutes {
   // Business only
   static const inventory = '/inventory';
   static const inventoryNew = '/inventory/new';
+  static String inventoryNewWithCode(String code) => '/inventory/new?sku=${Uri.encodeQueryComponent(code)}';
   static const inventoryLow = '/inventory/low';
   static const inventoryCategories = '/inventory/categories';
   static String productDetail(String id) => '/inventory/$id';
