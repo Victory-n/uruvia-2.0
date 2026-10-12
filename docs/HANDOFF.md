@@ -146,3 +146,8 @@ Wallet, savings, voice and Pro screens switch from DUMMY to LIVE only after the 
 - Used by: product form/list/detail, business logo (settings + invoice PDF header), profile picture (settings), expense receipt, payment proof (`p_proof_path`).
 - Uploads happen as soon as a photo is chosen, so cancelling a form can leave an orphan file. Clean-up job and removal on account deletion need an Edge Function (storage tables cannot be changed by SQL).
 - Photos need a connection; the offline expense outbox only carries the path of a photo already uploaded.
+
+## Budget rollover (migration 0019)
+- Rule chosen (change if the product rule differs): with rollover on, money left unspent in a period is added to the next period's limit and keeps accumulating while unspent. Turn it off and the carry stops.
+- `budgets.carry_kobo` is the carried amount, `amount_kobo` is what the person set. `budget_progress.amount_kobo` is the sum (the limit the app shows); `base_kobo`, `carry_kobo`, `next_amount_kobo`, `rollover` are extra columns.
+- `next_amount_kobo`: set when the person edits with "Next period"; the daily renewal job uses it as the new base. Tested locally against Postgres 16 with a 3-month gap.
