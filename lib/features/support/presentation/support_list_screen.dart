@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/routes.dart';
+import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/utils/dates.dart';
 import '../../../core/widgets/app_card.dart';
@@ -10,6 +11,7 @@ import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../application/support_controller.dart';
 import '../domain/support_models.dart';
+import 'support_hub_widgets.dart';
 
 StatusTone ticketTone(TicketStatus s) => switch (s) {
       TicketStatus.open => StatusTone.warning,
@@ -34,14 +36,8 @@ class SupportListScreen extends ConsumerWidget {
       body: AsyncView<List<SupportTicket>>(
         value: value,
         onRetry: () => ref.invalidate(ticketsProvider),
-        isEmpty: (l) => l.isEmpty,
-        empty: EmptyState(
-          icon: Icons.support_agent_outlined,
-          title: 'No support requests',
-          message: 'Something not right? Tell us and we will get back to you here.',
-          actionLabel: 'Contact support',
-          onAction: () => context.push(AppRoutes.supportNew),
-        ),
+        isEmpty: (l) => false,
+        empty: const SizedBox.shrink(),
         data: (list) => RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(ticketsProvider);
@@ -53,6 +49,18 @@ class SupportListScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(AppSpacing.pageMargin, AppSpacing.lg, AppSpacing.pageMargin, 96),
             children: [
+              const ContactCards(),
+              const SizedBox(height: AppSpacing.sectionGap),
+              Text('Common questions', style: theme.textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.sm),
+              const FaqList(),
+              const SizedBox(height: AppSpacing.sectionGap),
+              Text('Your requests', style: theme.textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.sm),
+              if (list.isEmpty)
+                Text('No requests yet. Tap New request if something is not right.',
+                    style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft))
+              else
               AppCard(
                 padding: EdgeInsets.zero,
                 child: Column(

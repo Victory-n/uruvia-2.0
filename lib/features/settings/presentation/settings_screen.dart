@@ -7,6 +7,7 @@ import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/config/app_links.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/services/app_info.dart';
 import '../../../core/services/local_store.dart';
 import '../../../core/utils/open_link.dart';
 import '../../../core/widgets/app_button.dart';
@@ -112,6 +113,16 @@ class SettingsScreen extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.settingsPin),
                   ),
+                  if (ref.read(authActionsProvider).hasPassword) ...[
+                    const Divider(),
+                    ListTile(
+                      minTileHeight: 64,
+                      leading: const Icon(Icons.lock_outline_rounded),
+                      title: const Text('Change password'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => context.push(AppRoutes.settingsPassword),
+                    ),
+                  ],
                   const Divider(),
                   const _BiometricsTile(),
                 ],
@@ -138,6 +149,21 @@ class SettingsScreen extends ConsumerWidget {
                     title: const Text('Terms and conditions'),
                     trailing: const Icon(Icons.open_in_new_rounded),
                     onTap: () => openLink(context, AppLinks.terms),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    minTileHeight: 64,
+                    leading: const Icon(Icons.help_outline_rounded),
+                    title: const Text('Help and support'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.go(AppRoutes.support),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    minTileHeight: 64,
+                    leading: const Icon(Icons.info_outline_rounded),
+                    title: const Text('App version'),
+                    subtitle: Text(ref.watch(appVersionProvider).valueOrNull ?? ''),
                   ),
                 ],
               ),

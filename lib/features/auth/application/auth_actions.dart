@@ -7,6 +7,9 @@ import '../data/auth_repository.dart';
 import 'app_lock.dart';
 
 /// The things screens can ask for. Each method throws on failure; screens show `friendlyError`.
+/// Set before the app signs the user out itself, so the app can tell that apart from an expired session.
+bool userInitiatedSignOut = false;
+
 class AuthActions {
   AuthActions(this._ref);
   final Ref _ref;
@@ -51,7 +54,13 @@ class AuthActions {
     _ref.read(appLockProvider.notifier).unlock();
   }
 
+  bool get hasPassword => _auth.hasPassword;
+
+  Future<void> changePassword({required String current, required String fresh}) =>
+      _auth.changePassword(current: current, fresh: fresh);
+
   Future<void> signOut() async {
+    userInitiatedSignOut = true;
     await _ref.read(lockPinStoreProvider).clear();
     _ref.invalidate(hasLockPinProvider);
     await _auth.signOut();
@@ -59,6 +68,7 @@ class AuthActions {
 
   /// Deletes the account on the server, then clears everything on this phone.
   Future<void> deleteAccount() async {
+    userInitiatedSignOut = true;
     await _accounts.deleteMyAccount();
     await _ref.read(lockPinStoreProvider).clear();
     _ref.invalidate(hasLockPinProvider);

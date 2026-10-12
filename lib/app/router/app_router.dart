@@ -39,6 +39,7 @@ import '../../features/sales/presentation/sale_detail_screen.dart';
 import '../../features/sales/presentation/sale_list_screen.dart';
 import '../../features/settings/presentation/business_details_screen.dart';
 import '../../features/settings/presentation/change_pin_screen.dart';
+import '../../features/settings/presentation/change_password_screen.dart';
 import '../../features/settings/presentation/delete_account_screen.dart';
 import '../../features/settings/presentation/notification_prefs_screen.dart';
 import '../../features/subscription/presentation/plan_screen.dart';
@@ -200,6 +201,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: AppRoutes.settingsNotifications, builder: (_, __) => const NotificationPrefsScreen()),
       GoRoute(path: AppRoutes.settingsPin, builder: (_, __) => const ChangePinScreen()),
+      GoRoute(path: AppRoutes.settingsPassword, builder: (_, __) => const ChangePasswordScreen()),
       GoRoute(path: AppRoutes.settingsDelete, builder: (_, __) => const DeleteAccountScreen()),
       GoRoute(path: AppRoutes.settingsBusiness, builder: (_, __) => const BusinessDetailsScreen()),
       GoRoute(path: AppRoutes.savingsNew, builder: (_, __) => const SavingsTypeScreen()),

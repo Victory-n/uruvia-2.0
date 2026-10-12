@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../domain/validators.dart';
 import '../../../core/services/local_store.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/pin_keypad.dart';
@@ -56,6 +57,14 @@ class _CreatePinScreenState extends ConsumerState<CreatePinScreen> {
 
   void _complete() {
     if (_step == _PinStep.create) {
+      final weak = Validators.weakPin(_entry);
+      if (weak != null) {
+        setState(() {
+          _entry = '';
+          _error = weak;
+        });
+        return;
+      }
       setState(() {
         _first = _entry;
         _entry = '';

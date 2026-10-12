@@ -9,6 +9,7 @@ import '../../../core/errors/friendly_error.dart';
 import '../../../core/widgets/pin_keypad.dart';
 import '../../../core/widgets/sub_page.dart';
 import '../../auth/application/app_lock.dart';
+import '../../auth/domain/validators.dart';
 import '../application/settings_controller.dart';
 
 enum _Step { current, fresh, confirm }
@@ -79,6 +80,14 @@ class _BodyState extends ConsumerState<_Body> {
           if (_wrong >= kMaxPinTries && mounted) context.pop();
         }
       case _Step.fresh:
+        final weak = Validators.weakPin(_entry);
+        if (weak != null) {
+          setState(() {
+            _entry = '';
+            _error = weak;
+          });
+          return;
+        }
         setState(() {
           _fresh = _entry;
           _entry = '';

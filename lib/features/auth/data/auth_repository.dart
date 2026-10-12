@@ -37,6 +37,12 @@ abstract class AuthRepository {
   Future<bool> signInWithGoogle();
   Future<bool> signInWithApple();
 
+  /// True when the user signed up with an email and password (not Google or Apple only).
+  bool get hasPassword;
+
+  /// Checks [current] first, then sets [fresh].
+  Future<void> changePassword({required String current, required String fresh});
+
   Future<void> signOut();
 
   /// Ends the session on this phone only (the server session no longer exists after deletion).
@@ -141,6 +147,18 @@ class SupabaseAuthRepository implements AuthRepository {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._';
     final r = Random.secure();
     return List.generate(length, (_) => chars[r.nextInt(chars.length)]).join();
+  }
+
+  @override
+  bool get hasPassword => _auth.currentUser?.identities?.any((i) => i.provider == 'email') ?? false;
+
+  @override
+  Future<void> changePassword({required String current, required String fresh}) async {
+    final email = _auth.currentUser?.email;
+    if (email == null) throw AuthException('Not signed in');
+    // Proves the person at the keyboard knows the current password.
+    await _auth.signInWithPassword(email: email, password: current);
+    await _auth.updateUser(UserAttributes(password: fresh));
   }
 
   @override

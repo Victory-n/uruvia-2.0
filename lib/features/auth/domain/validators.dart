@@ -27,6 +27,22 @@ class Validators {
     return null;
   }
 
+  /// Rejects PINs that are easy to guess: 0000, 1234, 4321, 1212. Null when the PIN is fine.
+  static String? weakPin(String pin) {
+    const msg = 'That PIN is too easy to guess. Choose another.';
+    if (pin.length < 2) return null;
+    final d = pin.codeUnits;
+    if (d.every((c) => c == d.first)) return msg;
+    var up = true, down = true;
+    for (var i = 1; i < d.length; i++) {
+      if (d[i] != d[i - 1] + 1) up = false;
+      if (d[i] != d[i - 1] - 1) down = false;
+    }
+    if (up || down) return msg;
+    if (pin.length == 4 && pin.substring(0, 2) == pin.substring(2)) return msg;
+    return null;
+  }
+
   static String? password(String value) => value.isEmpty ? 'Enter your password.' : null;
 
   static String? code(String value) {

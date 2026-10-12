@@ -131,3 +131,11 @@ Wallet, savings, voice and Pro screens switch from DUMMY to LIVE only after the 
 - TODO when KYC lands: files in the `kyc` bucket must be removed too. Supabase blocks deleting storage rows from SQL, so do it from an Edge Function (service role) before calling the rpc.
 - TODO when Providus wallet lands: refuse deletion while the wallet balance is not zero.
 - TODO when staff invites exist: owner must be able to remove members before deleting.
+
+## Settings, safety and Help (12 Oct 2026)
+- Weak PIN rule (`Validators.weakPin`) on create and change PIN.
+- Settings > Change password (email sign-ups only; current password is checked first).
+- Settings > About: privacy, terms, Help and support, app version (`package_info_plus`).
+- Support hub: dummy WhatsApp/call/email in `lib/core/config/app_contacts.dart` (REPLACE before launch), FAQ text in `support_hub_widgets.dart`.
+- App start gate: `public.app_config` (migration 0017, `apply_0017_only.sql`). Set `maintenance` or raise `min_version_android/ios` in the Supabase table editor; fails open when offline.
+- Text scale clamped to 130%. A session that ends without the user logging out shows "Your session ended" (`userInitiatedSignOut` flag in auth_actions).
