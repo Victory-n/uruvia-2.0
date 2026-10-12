@@ -82,6 +82,16 @@ class _Body extends ConsumerStatefulWidget {
 class _BodyState extends ConsumerState<_Body> {
   String _query = '';
   String? _categoryId;
+  DateTimeRange? _range;
+
+  Future<void> _pickRange() async {
+    final month = ref.read(selectedMonthProvider);
+    final monthEnd = DateTime(month.year, month.month + 1, 0);
+    final now = DateTime.now();
+    final last = monthEnd.isAfter(now) ? DateTime(now.year, now.month, now.day) : monthEnd;
+    final picked = await showDateRangePicker(context: context, firstDate: month, lastDate: last, initialDateRange: _range);
+    if (picked != null && mounted) setState(() => _range = picked);
+  }
 
   Map<String, String> get icons => widget.icons;
 
@@ -89,7 +99,7 @@ class _BodyState extends ConsumerState<_Body> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final all = widget.expenses;
-    final expenses = filterExpenses(all, query: _query, categoryId: _categoryId);
+    final expenses = filterExpenses(all, query: _query, categoryId: _categoryId, from: _range?.start, to: _range?.end);
     // Only offer categories that appear this month.
     final used = <String, String>{
       for (final e in all)
@@ -153,6 +163,18 @@ class _BodyState extends ConsumerState<_Body> {
               hintText: 'Search notes or categories',
               prefixIcon: Icon(Icons.search_rounded),
             ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _range == null
+                ? ActionChip(avatar: const Icon(Icons.date_range_rounded, size: 18), label: const Text('Pick dates'), onPressed: _pickRange)
+                : InputChip(
+                    avatar: const Icon(Icons.date_range_rounded, size: 18),
+                    label: Text('${formatShortDate(_range!.start)} to ${formatShortDate(_range!.end)}'),
+                    onPressed: _pickRange,
+                    onDeleted: () => setState(() => _range = null),
+                  ),
           ),
           if (used.length > 1) ...[
             const SizedBox(height: AppSpacing.sm),

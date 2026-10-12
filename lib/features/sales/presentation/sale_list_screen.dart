@@ -13,6 +13,7 @@ import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../application/sales_controller.dart';
 import '../domain/sale_models.dart';
+import 'sales_bars.dart';
 
 class SaleListScreen extends ConsumerStatefulWidget {
   const SaleListScreen({super.key});
@@ -61,7 +62,11 @@ class _SaleListScreenState extends ConsumerState<SaleListScreen> {
             padding: const EdgeInsets.fromLTRB(AppSpacing.pageMargin, AppSpacing.lg, AppSpacing.pageMargin, AppSpacing.xxxl),
             children: [
               _Summary(summary: summary),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Last 7 days', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: AppSpacing.sm),
+              SalesBars(sales: all),
+              const SizedBox(height: AppSpacing.lg),
               SizedBox(
                 height: 40,
                 child: ListView(

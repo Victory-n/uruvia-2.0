@@ -12,6 +12,10 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../core/widgets/sub_page.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../../core/errors/friendly_error.dart';
+import '../../invoices/application/invoices_controller.dart' show businessInfoProvider;
 import '../../invoices/domain/invoice_models.dart' show PaymentMethod;
 import '../application/sales_controller.dart';
 import '../domain/sale_models.dart';
@@ -26,6 +30,26 @@ class SaleDetailScreen extends ConsumerWidget {
     return SubPage(
       title: value.valueOrNull?.number ?? 'Sale',
       fallbackRoute: AppRoutes.sales,
+      actions: [
+        if (value.valueOrNull != null && !value.valueOrNull!.isReversed)
+          IconButton(
+            tooltip: 'Share receipt',
+            icon: const Icon(Icons.share_outlined),
+            onPressed: () async {
+              try {
+                final sale = value.valueOrNull!;
+                final business = await ref.read(businessInfoProvider.future);
+                final items = await ref.read(saleItemsProvider(sale.id).future);
+                await SharePlus.instance.share(ShareParams(
+                  text: saleReceiptText(businessName: business?.name ?? 'Uruvia', sale: sale, items: items),
+                  subject: 'Receipt ${sale.number}',
+                ));
+              } catch (e) {
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
+              }
+            },
+          ),
+      ],
       body: AsyncView<Sale?>(
         value: value,
         onRetry: () => ref.invalidate(saleProvider(saleId)),

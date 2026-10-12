@@ -76,11 +76,15 @@ List<CategoryTotal> totalsByCategory(List<Expense> expenses, List<ExpenseCategor
 
 /// Narrows a month of expenses by words (note or category) and by one category.
 /// An empty [query] and a null [categoryId] return everything.
-List<Expense> filterExpenses(List<Expense> all, {String query = '', String? categoryId}) {
+List<Expense> filterExpenses(List<Expense> all, {String query = '', String? categoryId, DateTime? from, DateTime? to}) {
   final q = query.trim().toLowerCase();
+  final start = from == null ? null : DateTime(from.year, from.month, from.day);
+  final endExclusive = to == null ? null : DateTime(to.year, to.month, to.day + 1);
   return [
     for (final e in all)
       if ((categoryId == null || e.categoryId == categoryId) &&
+          (start == null || !e.spentAt.isBefore(start)) &&
+          (endExclusive == null || e.spentAt.isBefore(endExclusive)) &&
           (q.isEmpty || (e.note ?? '').toLowerCase().contains(q) || (e.categoryName ?? '').toLowerCase().contains(q)))
         e,
   ];

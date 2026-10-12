@@ -1,3 +1,6 @@
+import '../../../core/utils/dates.dart';
+import '../../../core/utils/money.dart';
+
 class Sale {
   const Sale({
     required this.id,
@@ -116,4 +119,40 @@ List<Sale> filterSales(List<Sale> all, String query) {
           (s.note ?? '').toLowerCase().contains(q))
         s,
   ];
+}
+
+/// Sales per calendar day for the last [days] days ending today, oldest first. Reversed sales are left out.
+/// Days with no sales are included with zero, so the chart has no gaps.
+List<({DateTime day, int totalKobo})> dailySalesTotals(List<Sale> sales, {int days = 7, DateTime? now}) {
+  final n = now ?? DateTime.now();
+  final today = DateTime(n.year, n.month, n.day);
+  final first = today.subtract(Duration(days: days - 1));
+  final totals = <DateTime, int>{};
+  for (final s in sales) {
+    if (s.isReversed) continue;
+    final d = DateTime(s.soldAt.year, s.soldAt.month, s.soldAt.day);
+    if (d.isBefore(first) || d.isAfter(today)) continue;
+    totals[d] = (totals[d] ?? 0) + s.totalKobo;
+  }
+  return [
+    for (var i = 0; i < days; i++)
+      (day: DateTime(first.year, first.month, first.day + i), totalKobo: totals[DateTime(first.year, first.month, first.day + i)] ?? 0),
+  ];
+}
+
+/// A plain-text receipt to send to a customer on WhatsApp or by message.
+String saleReceiptText({required String businessName, required Sale sale, required List<SaleItem> items}) {
+  final b = StringBuffer()
+    ..writeln('Receipt ${sale.number}')
+    ..writeln(businessName)
+    ..writeln(formatShortDate(sale.soldAt))
+    ..writeln();
+  for (final i in items) {
+    b.writeln('${i.description}  ${i.qty} x ${formatNaira(i.unitPriceKobo, showKobo: false)} = ${formatNaira(i.totalKobo, showKobo: false)}');
+  }
+  b
+    ..writeln()
+    ..writeln('Total: ${formatNaira(sale.totalKobo, showKobo: sale.totalKobo % 100 != 0)}');
+  b.write('Thank you for your purchase.');
+  return b.toString();
 }

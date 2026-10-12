@@ -42,6 +42,10 @@ void main() {
       expect(filterExpenses(list, query: 'RICE').map((e) => e.id), ['1']);
       expect(filterExpenses(list, query: 'food').map((e) => e.id), ['1', '3']);
     });
+    test('keeps only the chosen days, both ends included', () {
+      expect(filterExpenses(list, from: DateTime(2026, 10, 2), to: DateTime(2026, 10, 3)).map((e) => e.id), ['2', '3']);
+      expect(filterExpenses(list, from: DateTime(2026, 10, 3)).map((e) => e.id), ['3']);
+    });
     test('combines a category with words', () {
       expect(filterExpenses(list, query: 'bus', categoryId: 'f'), isEmpty);
       expect(filterExpenses(list, categoryId: 't').map((e) => e.id), ['2']);
