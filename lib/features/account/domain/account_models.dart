@@ -14,8 +14,10 @@ class Bootstrap {
     required this.accounts,
     required this.activeAccountId,
     required this.hasTransactionPin,
+    this.avatarPath,
   });
 
+  final String? avatarPath;
   final String? fullName;
   final List<AccountSummary> accounts;
   final String? activeAccountId;

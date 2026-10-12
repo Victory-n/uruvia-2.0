@@ -94,6 +94,7 @@ class ExpensesActions {
     required DateTime spentAt,
     String? categoryId,
     String? note,
+    String? receiptPath,
   }) async {
     if (id == null) {
       final account = _ref.read(activeAccountSummaryProvider);
@@ -106,6 +107,7 @@ class ExpensesActions {
             spentAt: spentAt,
             categoryId: categoryId,
             note: (note == null || note.trim().isEmpty) ? null : note.trim(),
+            receiptPath: receiptPath,
           ));
       if (!_ref.read(isOnlineProvider)) {
         await keepOnPhone();
@@ -120,6 +122,7 @@ class ExpensesActions {
           spentAt: spentAt,
           categoryId: categoryId,
           note: note,
+          receiptPath: receiptPath,
         );
       } catch (e) {
         if (!isNetworkError(e)) rethrow;
@@ -128,7 +131,7 @@ class ExpensesActions {
         return true;
       }
     } else {
-      await _repo.update(id, amountKobo: amountKobo, spentAt: spentAt, categoryId: categoryId, note: note);
+      await _repo.update(id, amountKobo: amountKobo, spentAt: spentAt, categoryId: categoryId, note: note, receiptPath: receiptPath);
       _ref.invalidate(expenseProvider(id));
     }
     _refresh();
@@ -171,6 +174,7 @@ final outboxSyncProvider = Provider<void>((ref) {
                 spentAt: p.spentAt,
                 categoryId: p.categoryId,
                 note: p.note,
+                receiptPath: p.receiptPath,
               );
           await outbox.remove(p.id);
           sent++;

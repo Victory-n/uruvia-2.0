@@ -39,7 +39,7 @@ class SupabaseSettingsRepository implements SettingsRepository {
   Future<BusinessDetails> businessDetails(String accountId) async {
     final r = await supabase
         .from('business_profiles')
-        .select('business_name, category, address, invoice_prefix, vat_rate_bps, payment_details')
+        .select('business_name, category, address, invoice_prefix, vat_rate_bps, payment_details, logo_path')
         .eq('account_id', accountId)
         .single();
     final pay = (r['payment_details'] as Map?) ?? const {};
@@ -52,6 +52,7 @@ class SupabaseSettingsRepository implements SettingsRepository {
       bankName: pay['bank_name'] as String?,
       accountNumber: pay['account_number'] as String?,
       accountName: pay['account_name'] as String?,
+      logoPath: r['logo_path'] as String?,
     );
   }
 
@@ -64,6 +65,7 @@ class SupabaseSettingsRepository implements SettingsRepository {
       'invoice_prefix': d.invoicePrefix.trim(),
       'vat_rate_bps': d.vatRateBps,
       'payment_details': d.paymentDetails,
+      'logo_path': d.logoPath,
     }).eq('account_id', accountId);
     // The account carries the same name, shown in the switcher.
     await supabase.from('accounts').update({'name': d.name.trim()}).eq('id', accountId);

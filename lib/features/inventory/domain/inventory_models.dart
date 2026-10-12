@@ -19,6 +19,7 @@ class Product {
     this.categoryId,
     this.categoryName,
     this.archived = false,
+    this.imagePath,
   });
 
   final String id;
@@ -34,6 +35,9 @@ class Product {
   final String? categoryId;
   final String? categoryName;
   final bool archived;
+
+  /// Path in the private account-files bucket, or null.
+  final String? imagePath;
 
   int get qtyAvailable => qtyOnHand - qtyReserved;
   bool get isOut => qtyAvailable <= 0;

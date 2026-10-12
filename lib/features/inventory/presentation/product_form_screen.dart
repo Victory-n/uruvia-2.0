@@ -8,6 +8,8 @@ import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/photos/photo_field.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/amount_field.dart';
 import '../../../core/widgets/app_button.dart';
@@ -15,6 +17,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/sub_page.dart';
+import '../../account/application/active_account.dart';
 import '../application/inventory_controller.dart';
 import '../domain/inventory_models.dart';
 
@@ -62,6 +65,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
   late String _unit = widget.existing?.unit ?? 'pieces';
   late String? _categoryId = widget.existing?.categoryId;
   late bool _alert = widget.existing?.lowStockAlert ?? true;
+  late String? _imagePath = widget.existing?.imagePath;
   int? _costKobo;
   int? _priceKobo;
   String? _nameError;
@@ -135,6 +139,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
           lowStockAlert: _alert,
           lowStockThreshold: threshold!,
           categoryId: _categoryId,
+          imagePath: _imagePath,
         );
       } else {
         await actions.createProduct(
@@ -147,6 +152,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
           lowStockAlert: _alert,
           lowStockThreshold: threshold!,
           categoryId: _categoryId,
+          imagePath: _imagePath,
         );
       }
       if (mounted) context.canPop() ? context.pop() : context.go(AppRoutes.inventory);
@@ -201,6 +207,16 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
             padding: const EdgeInsets.only(bottom: AppSpacing.lg),
             child: Text(_error!, style: theme.textTheme.bodyMedium?.copyWith(color: StatusColors.errorText)),
           ),
+        PhotoField(
+          label: 'Product photo (optional)',
+          bucket: accountFilesBucket,
+          folder: '${ref.watch(activeAccountSummaryProvider)?.id}/products',
+          path: _imagePath,
+          placeholder: Icons.inventory_2_outlined,
+          reason: 'Add a photo so you can spot this product quickly. It is stored privately for your team.',
+          onChanged: (p) => setState(() => _imagePath = p),
+        ),
+        const SizedBox(height: AppSpacing.lg),
         AppTextField(
           label: 'Product name',
           controller: _name,

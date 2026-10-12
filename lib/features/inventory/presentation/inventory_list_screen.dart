@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
+import '../../../core/photos/photo_field.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/app_card.dart';
@@ -217,6 +219,7 @@ class _ProductRow extends StatelessWidget {
     final p = product;
     return ListTile(
       minTileHeight: 72,
+      leading: StoredImage(bucket: accountFilesBucket, path: p.imagePath, size: 44, placeholder: Icons.inventory_2_outlined),
       title: Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
       subtitle: Text(
         [

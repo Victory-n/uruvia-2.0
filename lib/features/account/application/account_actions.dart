@@ -23,6 +23,12 @@ class AccountActions {
     await _ref.read(bootstrapProvider.future);
   }
 
+  Future<void> updateAvatar(String? path) async {
+    await _repo.updateAvatar(path);
+    _ref.invalidate(bootstrapProvider);
+    await _ref.read(bootstrapProvider.future);
+  }
+
   Future<void> updateName(String name) async {
     await _repo.updateFullName(name);
     _ref.invalidate(bootstrapProvider);

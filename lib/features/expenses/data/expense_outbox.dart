@@ -15,7 +15,10 @@ class PendingExpense {
     required this.spentAt,
     this.categoryId,
     this.note,
+    this.receiptPath,
   });
+
+  final String? receiptPath;
 
   /// Made on the phone, so sending it twice can never create two expenses.
   final String id;
@@ -32,6 +35,7 @@ class PendingExpense {
         'spent_at': spentAt.toUtc().toIso8601String(),
         'category_id': categoryId,
         'note': note,
+        'receipt_path': receiptPath,
       };
 
   factory PendingExpense.fromJson(Map<String, dynamic> j) => PendingExpense(
@@ -41,6 +45,7 @@ class PendingExpense {
         spentAt: DateTime.parse(j['spent_at'] as String).toLocal(),
         categoryId: j['category_id'] as String?,
         note: j['note'] as String?,
+        receiptPath: j['receipt_path'] as String?,
       );
 }
 

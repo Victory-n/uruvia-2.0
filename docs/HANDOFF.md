@@ -139,3 +139,10 @@ Wallet, savings, voice and Pro screens switch from DUMMY to LIVE only after the 
 - Support hub: dummy WhatsApp/call/email in `lib/core/config/app_contacts.dart` (REPLACE before launch), FAQ text in `support_hub_widgets.dart`.
 - App start gate: `public.app_config` (migration 0017, `apply_0017_only.sql`). Set `maintenance` or raise `min_version_android/ios` in the Supabase table editor; fails open when offline.
 - Text scale clamped to 130%. A session that ends without the user logging out shows "Your session ended" (`userInitiatedSignOut` flag in auth_actions).
+
+## Photos and storage (migration 0018)
+- Buckets `account-files` (5 MB, private) and `avatars` (2 MB, private). Paths: `<account_id>/products|logo|receipts|proofs/<file>`, `<user_id>/<file>`.
+- `lib/core/photos/photo_service.dart` (pick, shrink to 1280px, upload, signed URL 6h, download) and `photo_field.dart` (`PhotoField`, `StoredImage`). Widgets never call Supabase storage directly.
+- Used by: product form/list/detail, business logo (settings + invoice PDF header), profile picture (settings), expense receipt, payment proof (`p_proof_path`).
+- Uploads happen as soon as a photo is chosen, so cancelling a form can leave an orphan file. Clean-up job and removal on account deletion need an Edge Function (storage tables cannot be changed by SQL).
+- Photos need a connection; the offline expense outbox only carries the path of a photo already uploaded.

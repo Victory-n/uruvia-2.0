@@ -17,6 +17,7 @@ abstract class ExpensesRepository {
     required DateTime spentAt,
     String? categoryId,
     String? note,
+    String? receiptPath,
   });
   Future<void> update(
     String id, {
@@ -24,6 +25,7 @@ abstract class ExpensesRepository {
     required DateTime spentAt,
     String? categoryId,
     String? note,
+    String? receiptPath,
   });
   Future<void> delete(String id);
 }
@@ -62,6 +64,7 @@ class SupabaseExpensesRepository implements ExpensesRepository {
         categoryId: r['category_id'] as String?,
         categoryName: names[r['category_id']],
         note: r['note'] as String?,
+        receiptPath: r['receipt_path'] as String?,
       );
 
   Future<Map<String, String>> _names(String accountId) async {
@@ -73,7 +76,7 @@ class SupabaseExpensesRepository implements ExpensesRepository {
   Future<List<Expense>> between(String accountId, DateTime from, DateTime to) async {
     final rows = await supabase
         .from('expenses')
-        .select('id, amount_kobo, spent_at, note, category_id')
+        .select('id, amount_kobo, spent_at, note, category_id, receipt_path')
         .eq('account_id', accountId)
         .gte('spent_at', from.toUtc().toIso8601String())
         .lt('spent_at', to.toUtc().toIso8601String())
@@ -88,7 +91,7 @@ class SupabaseExpensesRepository implements ExpensesRepository {
   Future<Expense?> get(String id) async {
     final row = await supabase
         .from('expenses')
-        .select('id, account_id, amount_kobo, spent_at, note, category_id')
+        .select('id, account_id, amount_kobo, spent_at, note, category_id, receipt_path')
         .eq('id', id)
         .maybeSingle();
     if (row == null) return null;
@@ -103,6 +106,7 @@ class SupabaseExpensesRepository implements ExpensesRepository {
     required DateTime spentAt,
     String? categoryId,
     String? note,
+    String? receiptPath,
   }) async {
     // With a phone-made id, sending the same expense twice is ignored.
     await supabase.from('expenses').upsert({
@@ -112,6 +116,7 @@ class SupabaseExpensesRepository implements ExpensesRepository {
       'spent_at': spentAt.toUtc().toIso8601String(),
       'category_id': categoryId,
       'note': (note == null || note.trim().isEmpty) ? null : note.trim(),
+      'receipt_path': receiptPath,
       'source': 'manual',
     }, onConflict: 'id', ignoreDuplicates: true);
   }
@@ -123,12 +128,14 @@ class SupabaseExpensesRepository implements ExpensesRepository {
     required DateTime spentAt,
     String? categoryId,
     String? note,
+    String? receiptPath,
   }) async {
     await supabase.from('expenses').update({
       'amount_kobo': amountKobo,
       'spent_at': spentAt.toUtc().toIso8601String(),
       'category_id': categoryId,
       'note': (note == null || note.trim().isEmpty) ? null : note.trim(),
+      'receipt_path': receiptPath,
     }).eq('id', id);
   }
 

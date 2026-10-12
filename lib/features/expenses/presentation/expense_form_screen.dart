@@ -6,6 +6,8 @@ import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/photos/photo_field.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../core/utils/dates.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/amount_field.dart';
@@ -14,6 +16,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/sub_page.dart';
+import '../../account/application/active_account.dart';
 import '../application/expenses_controller.dart';
 import '../domain/expense_models.dart';
 import '../domain/voice_parser.dart';
@@ -74,6 +77,7 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
   late final _note = TextEditingController(text: widget.existing?.note ?? widget.prefill?.note ?? '');
   late DateTime _date = widget.existing?.spentAt ?? widget.prefill?.spentAt ?? DateTime.now();
   late String? _categoryId = widget.existing?.categoryId;
+  late String? _receiptPath = widget.existing?.receiptPath;
   int? _kobo;
   String? _amountError;
   String? _error;
@@ -152,6 +156,7 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
             spentAt: _date,
             categoryId: _categoryId,
             note: _note.text,
+            receiptPath: _receiptPath,
           );
       if (!mounted) return;
       if (queued) {
@@ -262,6 +267,16 @@ class _ExpenseFormState extends ConsumerState<_ExpenseForm> {
           maxLength: 200,
           enabled: !_saving,
           textCapitalization: TextCapitalization.sentences,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        PhotoField(
+          label: 'Receipt photo (optional)',
+          bucket: accountFilesBucket,
+          folder: '${ref.watch(activeAccountSummaryProvider)?.id}/receipts',
+          path: _receiptPath,
+          placeholder: Icons.receipt_long_outlined,
+          reason: 'Keep a photo of the receipt with this expense. It is stored privately for your team.',
+          onChanged: (p) => setState(() => _receiptPath = p),
         ),
         const SizedBox(height: AppSpacing.xxl),
         AppButton(label: 'Save', onPressed: _save, loading: _saving),

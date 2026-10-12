@@ -9,7 +9,7 @@ Left out on purpose: wallet, KYC, group savings, bills, real voice, loans, Busin
 3. **Force-update and maintenance screens**, and **session-expired** handling (screen 14): not built.
 4. **Text size**: the spec scales text up to 130%; no limit is set, so very large system fonts may break layouts.
 5. **Reports** (55) show sample figures. Real reports needed: profit and loss, sales, expenses, inventory valuation, receivables by age, customer statement, with PDF/CSV export.
-6. **Photos and files**: product image, business logo, avatar, expense receipt, payment proof. No storage buckets exist except `kyc`. Needs camera/photo permission prompts with an explanation first.
+6. **Photos and files** (DONE, migration 0018): product image, business logo, avatar, expense receipt, payment proof. No storage buckets exist except `kyc`. Needs camera/photo permission prompts with an explanation first.
 7. **Trusted devices** with remote sign-out (settings): the `devices` table exists but the app never registers a device and there is no screen.
 8. **Settings > Help**: app version, FAQs, and the Support hub contact cards (WhatsApp, call, email). Needs Uruvia's real contact details.
 

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uruvia/features/customers/domain/customer_models.dart';
 import 'package:uruvia/features/invoices/application/invoice_pdf.dart';
@@ -127,6 +129,17 @@ void main() {
         invoice: inv(),
         items: const [InvoiceItem(description: 'Rice 50kg', qty: 2, unitPriceKobo: 5000)],
         customer: const Customer(id: 'c1', name: 'Ada Stores'),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('an unreadable logo is skipped instead of failing the invoice', () async {
+      const business = BusinessInfo(name: 'Ada Stores', vatRateBps: 750);
+      final bytes = await buildInvoicePdf(
+        business: business,
+        invoice: inv(),
+        items: const [InvoiceItem(description: 'Rice 50kg', qty: 2, unitPriceKobo: 5000)],
+        logoBytes: Uint8List.fromList([1, 2, 3, 4]),
       );
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');
     });

@@ -7,3 +7,6 @@ final profileNameProvider = Provider<String>((ref) {
   final name = ref.watch(bootstrapProvider).valueOrNull?.fullName?.trim();
   return (name == null || name.isEmpty) ? 'Your name' : name;
 });
+
+/// Stored path of the profile picture in the avatars bucket, if one was added.
+final profileAvatarProvider = Provider<String?>((ref) => ref.watch(bootstrapProvider).valueOrNull?.avatarPath);

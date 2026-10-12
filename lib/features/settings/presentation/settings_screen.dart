@@ -7,6 +7,8 @@ import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/config/app_links.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/photos/photo_field.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../core/services/app_info.dart';
 import '../../../core/services/local_store.dart';
 import '../../../core/utils/open_link.dart';
@@ -42,6 +44,24 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             Text('Profile', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.sm),
+            PhotoField(
+              label: 'Profile picture',
+              bucket: avatarsBucket,
+              folder: ref.watch(sessionProvider).valueOrNull?.user.id ?? 'me',
+              path: ref.watch(profileAvatarProvider),
+              circle: true,
+              placeholder: Icons.person_outline_rounded,
+              reason: 'Your picture is stored privately and only you can see it.',
+              onChanged: (p) async {
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await ref.read(accountActionsProvider).updateAvatar(p);
+                } catch (e) {
+                  messenger.showSnackBar(SnackBar(content: Text(friendlyError(e))));
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
             AppCard(
               padding: EdgeInsets.zero,
               child: Column(

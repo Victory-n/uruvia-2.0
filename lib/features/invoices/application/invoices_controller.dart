@@ -122,8 +122,9 @@ class InvoiceActions {
     required PaymentMethod method,
     required DateTime paidOn,
     String? reference,
+    String? proofPath,
   }) async {
-    await _repo.recordPayment(id, amountKobo: amountKobo, method: method, paidOn: paidOn, reference: reference);
+    await _repo.recordPayment(id, amountKobo: amountKobo, method: method, paidOn: paidOn, reference: reference, proofPath: proofPath);
     // A payment that clears the balance creates the sale and moves stock out.
     _refresh(id, stock: true, sales: true);
     _ref.invalidate(customersProvider);

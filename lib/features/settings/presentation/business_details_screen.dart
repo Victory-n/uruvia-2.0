@@ -7,10 +7,13 @@ import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/photos/photo_field.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/sub_page.dart';
+import '../../account/application/active_account.dart';
 import '../../auth/domain/validators.dart';
 import '../application/settings_controller.dart';
 import '../domain/settings_models.dart';
@@ -53,6 +56,7 @@ class _FormState extends ConsumerState<_Form> {
   late final _bank = TextEditingController(text: widget.initial.bankName ?? '');
   late final _number = TextEditingController(text: widget.initial.accountNumber ?? '');
   late final _holder = TextEditingController(text: widget.initial.accountName ?? '');
+  late String? _logoPath = widget.initial.logoPath;
   final _errors = <String, String?>{};
   String? _formError;
   bool _saving = false;
@@ -92,6 +96,7 @@ class _FormState extends ConsumerState<_Form> {
               bankName: _bank.text,
               accountNumber: _number.text,
               accountName: _holder.text,
+              logoPath: _logoPath,
             ),
           );
       if (!mounted) return;
@@ -114,6 +119,16 @@ class _FormState extends ConsumerState<_Form> {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pageMargin),
       children: [
+        PhotoField(
+          label: 'Business logo (optional)',
+          bucket: accountFilesBucket,
+          folder: '${ref.watch(activeAccountSummaryProvider)?.id}/logo',
+          path: _logoPath,
+          placeholder: Icons.storefront_outlined,
+          reason: 'Your logo appears at the top of your invoices. It is stored privately for your team.',
+          onChanged: (p) => setState(() => _logoPath = p),
+        ),
+        gap,
         AppTextField(
           label: 'Business name',
           controller: _name,

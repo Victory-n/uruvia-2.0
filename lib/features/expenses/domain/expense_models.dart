@@ -16,8 +16,10 @@ class Expense {
     this.categoryName,
     this.note,
     this.pending = false,
+    this.receiptPath,
   });
 
+  final String? receiptPath;
   final String id;
   final int amountKobo;
   final DateTime spentAt;

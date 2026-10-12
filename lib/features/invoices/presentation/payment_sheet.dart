@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/photos/photo_field.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../core/utils/dates.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/amount_field.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../account/application/active_account.dart';
 import '../application/invoices_controller.dart';
 import '../domain/invoice_models.dart';
 
@@ -38,6 +41,7 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
   PaymentMethod _method = PaymentMethod.transfer;
   DateTime _paidOn = dateOnly(DateTime.now());
   late int? _kobo = widget.invoice.balanceKobo;
+  String? _proofPath;
   String? _error;
   bool _saving = false;
 
@@ -87,6 +91,7 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
             method: _method,
             paidOn: _paidOn,
             reference: _reference.text,
+            proofPath: _proofPath,
           );
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
@@ -154,6 +159,16 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
           enabled: !_saving,
           hint: 'Transfer reference or receipt number',
           maxLength: 80,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        PhotoField(
+          label: 'Proof of payment (optional)',
+          bucket: accountFilesBucket,
+          folder: '${ref.watch(activeAccountSummaryProvider)?.id}/proofs',
+          path: _proofPath,
+          placeholder: Icons.receipt_long_outlined,
+          reason: 'Keep a screenshot or photo of the transfer alert with this payment. It is stored privately for your team.',
+          onChanged: (p) => setState(() => _proofPath = p),
         ),
         if (_clearsBalance) ...[
           const SizedBox(height: AppSpacing.lg),

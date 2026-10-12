@@ -17,6 +17,7 @@ Future<Uint8List> buildInvoicePdf({
   required Invoice invoice,
   required List<InvoiceItem> items,
   Customer? customer,
+  Uint8List? logoBytes,
 }) {
   final doc = pw.Document(title: invoice.number, author: business.name);
 
@@ -45,6 +46,16 @@ Future<Uint8List> buildInvoicePdf({
 
   final status = invoice.effectiveStatus();
 
+  // A logo the PDF library cannot read (for example a WebP) is skipped rather than failing the invoice.
+  pw.MemoryImage? logo;
+  if (logoBytes != null) {
+    try {
+      logo = pw.MemoryImage(logoBytes);
+    } catch (_) {
+      logo = null;
+    }
+  }
+
   doc.addPage(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -58,6 +69,7 @@ Future<Uint8List> buildInvoicePdf({
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
+                  if (logo != null) pw.Padding(padding: const pw.EdgeInsets.only(bottom: 6), child: pw.Image(logo, height: 48)),
                   pw.Text(business.name, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                   if ((business.address ?? '').isNotEmpty) pw.Text(business.address!, style: soft),
                 ],

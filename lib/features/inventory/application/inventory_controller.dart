@@ -65,6 +65,7 @@ class InventoryActions {
     required bool lowStockAlert,
     required int lowStockThreshold,
     String? categoryId,
+    String? imagePath,
   }) async {
     await _repo.createProduct(
       accountId: _accountId,
@@ -77,6 +78,7 @@ class InventoryActions {
       lowStockAlert: lowStockAlert,
       lowStockThreshold: lowStockThreshold,
       categoryId: categoryId,
+      imagePath: imagePath,
     );
     _ref.invalidate(productsProvider);
     _ref.invalidate(homeDataProvider);
@@ -92,6 +94,7 @@ class InventoryActions {
     required bool lowStockAlert,
     required int lowStockThreshold,
     String? categoryId,
+    String? imagePath,
   }) async {
     await _repo.updateProduct(
       id,
@@ -103,6 +106,7 @@ class InventoryActions {
       lowStockAlert: lowStockAlert,
       lowStockThreshold: lowStockThreshold,
       categoryId: categoryId,
+      imagePath: imagePath,
     );
     _refreshProduct(id);
   }

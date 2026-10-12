@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/photos/photo_field.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
@@ -61,6 +63,10 @@ class _Detail extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pageMargin),
       children: [
+        if (p.imagePath != null) ...[
+          Center(child: StoredImage(bucket: accountFilesBucket, path: p.imagePath, size: 160, placeholder: Icons.inventory_2_outlined)),
+          const SizedBox(height: AppSpacing.md),
+        ],
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

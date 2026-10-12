@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/errors/friendly_error.dart';
+import '../../../core/photos/photo_service.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../customers/application/customers_controller.dart';
@@ -52,7 +54,16 @@ class _ShareOptionsState extends ConsumerState<_ShareOptions> {
       final business = await _business();
       final items = await ref.read(invoiceItemsProvider(invoice.id).future);
       final customer = await ref.read(customerProvider(invoice.customerId).future);
-      final bytes = await buildInvoicePdf(business: business, invoice: invoice, items: items, customer: customer);
+      Uint8List? logo;
+      final logoPath = business.logoPath;
+      if (logoPath != null && logoPath.isNotEmpty) {
+        try {
+          logo = await ref.read(photoServiceProvider).download(StoredFile(accountFilesBucket, logoPath));
+        } catch (_) {
+          logo = null; // The invoice is still worth sending without the logo.
+        }
+      }
+      final bytes = await buildInvoicePdf(business: business, invoice: invoice, items: items, customer: customer, logoBytes: logo);
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${invoice.number}.pdf');
       await file.writeAsBytes(bytes, flush: true);

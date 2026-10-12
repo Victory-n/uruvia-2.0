@@ -22,6 +22,7 @@ abstract class InventoryRepository {
     required bool lowStockAlert,
     required int lowStockThreshold,
     String? categoryId,
+    String? imagePath,
   });
   Future<void> updateProduct(
     String id, {
@@ -33,6 +34,7 @@ abstract class InventoryRepository {
     required bool lowStockAlert,
     required int lowStockThreshold,
     String? categoryId,
+    String? imagePath,
   });
   Future<void> setArchived(String id, bool archived);
 
@@ -85,7 +87,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
   }
 
   static const _cols =
-      'id, account_id, category_id, name, sku, unit, cost_kobo, price_kobo, qty_on_hand, qty_reserved, low_stock_alert, low_stock_threshold, archived_at';
+      'id, account_id, category_id, name, sku, unit, cost_kobo, price_kobo, qty_on_hand, qty_reserved, low_stock_alert, low_stock_threshold, archived_at, image_path';
 
   Product _product(Map r, Map<String, String> cats) => Product(
         id: r['id'] as String,
@@ -101,6 +103,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
         categoryId: r['category_id'] as String?,
         categoryName: cats[r['category_id']],
         archived: r['archived_at'] != null,
+        imagePath: r['image_path'] as String?,
       );
 
   Future<Map<String, String>> _catNames(String accountId) async {
@@ -141,6 +144,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
     required bool lowStockAlert,
     required int lowStockThreshold,
     String? categoryId,
+    String? imagePath,
   }) async {
     await supabase.from('products').insert({
       'account_id': accountId,
@@ -153,6 +157,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
       'qty_on_hand': openingQty,
       'low_stock_alert': lowStockAlert,
       'low_stock_threshold': lowStockThreshold,
+      'image_path': imagePath,
     });
   }
 
@@ -167,6 +172,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
     required bool lowStockAlert,
     required int lowStockThreshold,
     String? categoryId,
+    String? imagePath,
   }) async {
     await supabase.from('products').update({
       'category_id': categoryId,
@@ -177,6 +183,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
       'price_kobo': priceKobo,
       'low_stock_alert': lowStockAlert,
       'low_stock_threshold': lowStockThreshold,
+      'image_path': imagePath,
     }).eq('id', id);
   }
 

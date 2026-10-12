@@ -203,7 +203,9 @@ class BusinessInfo {
     this.bankName,
     this.accountNumber,
     this.accountName,
+    this.logoPath,
   });
+  final String? logoPath;
   final String name;
   final int vatRateBps;
   final String? address;

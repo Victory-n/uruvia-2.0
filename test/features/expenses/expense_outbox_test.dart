@@ -24,6 +24,15 @@ void main() {
     expect(outbox.all().single.id, 'b');
   });
 
+  test('a receipt photo path survives being kept on the phone', () async {
+    SharedPreferences.setMockInitialValues({});
+    final outbox = ExpenseOutbox(await SharedPreferences.getInstance());
+    await outbox.add(PendingExpense(
+      id: 'r', accountId: 'acc1', amountKobo: 5000, spentAt: DateTime.utc(2026, 10, 11), receiptPath: 'acc1/receipts/x.jpg',
+    ));
+    expect(outbox.forAccount('acc1').single.receiptPath, 'acc1/receipts/x.jpg');
+  });
+
   test('a damaged outbox reads as empty', () async {
     SharedPreferences.setMockInitialValues({'outbox.expenses.v1': 'not json'});
     expect(ExpenseOutbox(await SharedPreferences.getInstance()).all(), isEmpty);

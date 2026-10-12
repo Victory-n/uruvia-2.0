@@ -34,6 +34,7 @@ abstract class InvoicesRepository {
     required PaymentMethod method,
     required DateTime paidOn,
     String? reference,
+    String? proofPath,
   });
 }
 
@@ -115,7 +116,7 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
   Future<BusinessInfo> business(String accountId) async {
     final r = await supabase
         .from('business_profiles')
-        .select('business_name, address, vat_rate_bps, payment_details')
+        .select('business_name, address, vat_rate_bps, payment_details, logo_path')
         .eq('account_id', accountId)
         .maybeSingle();
     if (r == null) {
@@ -136,6 +137,7 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
       bankName: pay['bank_name'] as String?,
       accountNumber: pay['account_number'] as String?,
       accountName: pay['account_name'] as String?,
+      logoPath: r['logo_path'] as String?,
     );
   }
 
@@ -191,6 +193,7 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
     required PaymentMethod method,
     required DateTime paidOn,
     String? reference,
+    String? proofPath,
   }) async {
     await supabase.rpc('record_invoice_payment', params: {
       'p_invoice_id': invoiceId,
@@ -198,6 +201,7 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
       'p_method': method.db,
       'p_paid_on': isoDate(paidOn),
       'p_reference': _clean(reference),
+      'p_proof_path': proofPath,
     });
   }
 }

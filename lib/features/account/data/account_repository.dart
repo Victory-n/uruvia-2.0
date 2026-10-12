@@ -12,6 +12,7 @@ abstract class AccountRepository {
   Future<bool> verifyTransactionPin(String pin);
   Future<void> setActiveAccount(String accountId);
   Future<void> updateFullName(String name);
+  Future<void> updateAvatar(String? path);
 
   /// Deletes the signed-in user, their accounts and all their data. Server side.
   Future<void> deleteMyAccount();
@@ -25,7 +26,7 @@ class SupabaseAccountRepository implements AccountRepository {
     final uid = supabase.auth.currentUser!.id;
     final profile = await supabase
         .from('profiles')
-        .select('full_name, last_active_account_id')
+        .select('full_name, last_active_account_id, avatar_path')
         .eq('id', uid)
         .maybeSingle();
     final rows = await supabase.from('accounts').select('id, type, name').order('created_at');
@@ -33,6 +34,7 @@ class SupabaseAccountRepository implements AccountRepository {
 
     return Bootstrap(
       fullName: profile?['full_name'] as String?,
+      avatarPath: profile?['avatar_path'] as String?,
       activeAccountId: profile?['last_active_account_id'] as String?,
       hasTransactionPin: hasPin,
       accounts: [
@@ -88,6 +90,12 @@ class SupabaseAccountRepository implements AccountRepository {
   Future<void> updateFullName(String name) async {
     final uid = supabase.auth.currentUser!.id;
     await supabase.from('profiles').update({'full_name': name.trim()}).eq('id', uid);
+  }
+
+  @override
+  Future<void> updateAvatar(String? path) async {
+    final uid = supabase.auth.currentUser!.id;
+    await supabase.from('profiles').update({'avatar_path': path}).eq('id', uid);
   }
 }
 

@@ -10,7 +10,7 @@ Google Play: prominent in-app disclosure right before a sensitive permission; re
 | INTERNET, ACCESS_NETWORK_STATE | kept | normal, no prompt |
 | USE_BIOMETRIC / NSFaceIDUsageDescription | kept | ask when user turns on biometric unlock in Settings |
 | RECORD_AUDIO, speech recognition, microphone | REMOVED for now | add with the real voice feature; ask when user taps the mic |
-| Camera, photo library | REMOVED for now | add with KYC / attachments; ask when user taps "Take photo" |
+| Camera, photo library | IN USE (image_picker) | asked only when the user taps Take a photo / Choose from gallery, after a one-line reason; used for product, logo, profile, receipt, proof photos. Declare photos/files in Play Data safety |
 | POST_NOTIFICATIONS (Android 13+), iOS notifications | not added | add with real push; ask after the user's first useful moment, never on first launch |
 | Contacts, SMS, location, storage | never | not needed; banned for loan apps on Play |
 
