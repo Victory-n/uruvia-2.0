@@ -104,3 +104,16 @@ SalesSummary summarizeSales(List<Sale> list) {
   }
   return SalesSummary(count: count, totalKobo: total, profitKobo: profit);
 }
+
+/// Sales whose number, customer or note contains [query] (any case). Empty query keeps everything.
+List<Sale> filterSales(List<Sale> all, String query) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return all;
+  return [
+    for (final s in all)
+      if (s.number.toLowerCase().contains(q) ||
+          (s.customerName ?? 'walk-in customer').toLowerCase().contains(q) ||
+          (s.note ?? '').toLowerCase().contains(q))
+        s,
+  ];
+}

@@ -23,6 +23,7 @@ class SaleListScreen extends ConsumerStatefulWidget {
 
 class _SaleListScreenState extends ConsumerState<SaleListScreen> {
   SalePeriod _period = SalePeriod.month;
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +47,7 @@ class _SaleListScreenState extends ConsumerState<SaleListScreen> {
         onAction: () => context.push(AppRoutes.salesNew),
       ),
       data: (all) {
-        final shown = [for (final s in all) if (_period.contains(s.soldAt)) s];
+        final shown = filterSales([for (final s in all) if (_period.contains(s.soldAt)) s], _query);
         final summary = summarizeSales(shown);
         return RefreshIndicator(
           onRefresh: () async {
@@ -73,6 +74,12 @@ class _SaleListScreenState extends ConsumerState<SaleListScreen> {
                       ),
                   ],
                 ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                onChanged: (v) => setState(() => _query = v),
+                textInputAction: TextInputAction.search,
+                decoration: const InputDecoration(hintText: 'Search customer, number or note', prefixIcon: Icon(Icons.search_rounded)),
               ),
               const SizedBox(height: AppSpacing.lg),
               if (shown.isEmpty)

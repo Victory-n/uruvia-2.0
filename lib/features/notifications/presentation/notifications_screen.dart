@@ -8,16 +8,37 @@ import '../../../core/widgets/state_views.dart';
 import '../application/notifications_controller.dart';
 import '../domain/app_notification.dart';
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  NotificationGroup _group = NotificationGroup.all;
+
+  @override
+  Widget build(BuildContext context) {
     final value = ref.watch(notificationsProvider);
     final hasUnread = value.valueOrNull?.any((n) => !n.isRead) ?? false;
 
     return Column(
       children: [
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageMargin, vertical: AppSpacing.xs),
+            children: [
+              for (final g in NotificationGroup.values)
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: ChoiceChip(label: Text(g.label), selected: _group == g, onSelected: (_) => setState(() => _group = g)),
+                ),
+            ],
+          ),
+        ),
         if (hasUnread)
           Align(
             alignment: Alignment.centerRight,
@@ -33,7 +54,7 @@ class NotificationsScreen extends ConsumerWidget {
           child: AsyncView<List<AppNotification>>(
             value: value,
             onRetry: () => ref.invalidate(notificationsProvider),
-            isEmpty: (items) => items.isEmpty,
+            isEmpty: (items) => notificationsIn(items, _group).isEmpty,
             empty: const EmptyState(
               icon: Icons.notifications_none_rounded,
               title: 'You are all caught up',
@@ -49,9 +70,9 @@ class NotificationsScreen extends ConsumerWidget {
               child: ListView.separated(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                itemCount: items.length,
+                itemCount: notificationsIn(items, _group).length,
                 separatorBuilder: (_, __) => const Divider(indent: 72),
-                itemBuilder: (_, i) => _NotificationTile(item: items[i]),
+                itemBuilder: (_, i) => _NotificationTile(item: notificationsIn(items, _group)[i]),
               ),
             ),
           ),
@@ -77,7 +98,7 @@ class _NotificationTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final palette = theme.extension<AppPalette>()!;
-    return Semantics(
+    final tile = Semantics(
       label: '${item.isRead ? '' : 'Unread. '}${item.title}',
       child: ListTile(
         minTileHeight: 72,
@@ -101,6 +122,28 @@ class _NotificationTile extends ConsumerWidget {
         trailing: item.isRead ? null : Icon(Icons.circle, size: 10, color: palette.action),
         onTap: item.isRead ? null : () => ref.read(notificationsActionsProvider).markRead(item.id),
       ),
+    );
+    if (item.isRead) return tile;
+    // Swipe either way to mark as read. The row stays in the list, so nothing is lost.
+    return Dismissible(
+      key: ValueKey('n-${item.id}'),
+      background: Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: AppSpacing.lg),
+        color: palette.tint,
+        child: const Icon(Icons.done_all_rounded),
+      ),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        color: palette.tint,
+        child: const Icon(Icons.done_all_rounded),
+      ),
+      confirmDismiss: (_) async {
+        await ref.read(notificationsActionsProvider).markRead(item.id);
+        return false;
+      },
+      child: tile,
     );
   }
 }
