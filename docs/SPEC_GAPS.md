@@ -22,7 +22,7 @@ Left out on purpose: wallet, KYC, group savings, bills, real voice, loans, Busin
 - **Customers** (48): DONE: Call, WhatsApp, billed/paid/outstanding, purchase history. Still open: import from contacts (adds a contacts permission, decide first).
 - **Sales** (49, 50): DONE: 7-day bar chart, search, share receipt as text. Still open: stock effect (before and after), PDF receipt.
 - **Inventory** (34, 35, 36): DONE: barcode scan (stored as the SKU), list/grid toggle, unit chips, save and add another. Still open: full history timeline.
-- **Home** (7, 8): check against the spec: budget ring, savings snapshot, upgrade card, stat tiles, quick-create sheet, new-business checklist.
+- **Home** (7, 8): DONE: new-business checklist, upgrade card (hidden for Pro). Already there: wallet card, quick actions, budget summary (as a bar), business stat tiles, recent lists. Still open: budget as a ring, savings snapshot (needs real savings), quick-create sheet. The original screen 7 and 8 wording was not available to compare, so check on a device.
 - **Savings extras**: Compare sheet, maturity reminder and the Move to wallet / Lock again screen (savings is still sample data).
 
 ## C. Where the spec and our decisions differ

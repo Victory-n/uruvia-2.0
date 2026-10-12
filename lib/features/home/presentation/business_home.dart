@@ -9,6 +9,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../domain/home_models.dart';
+import '../../subscription/presentation/upgrade_prompt.dart';
+import 'getting_started_card.dart';
 import 'home_widgets.dart';
 import 'wallet_card.dart';
 
@@ -22,6 +24,7 @@ class BusinessHome extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        GettingStartedCard(data: data),
         const WalletCard(),
         const SizedBox(height: AppSpacing.sectionGap),
         const QuickActions(actions: [
@@ -91,6 +94,8 @@ class BusinessHome extends StatelessWidget {
               ],
             ),
           ),
+        const SizedBox(height: AppSpacing.sectionGap),
+        const UpgradePrompt(message: 'See what Uruvia Pro adds to your business.'),
       ],
     );
   }

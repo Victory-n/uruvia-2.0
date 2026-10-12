@@ -9,6 +9,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/utils/money.dart';
 import '../domain/home_models.dart';
+import '../../subscription/presentation/upgrade_prompt.dart';
 import 'home_widgets.dart';
 import 'wallet_card.dart';
 
@@ -57,6 +58,8 @@ class IndividualHome extends StatelessWidget {
               ],
             ),
           ),
+        const SizedBox(height: AppSpacing.sectionGap),
+        const UpgradePrompt(message: 'See what Uruvia Pro adds to your money tools.'),
       ],
     );
   }
