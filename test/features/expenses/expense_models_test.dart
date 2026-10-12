@@ -30,4 +30,21 @@ void main() {
     expect(formatDayHeader(DateTime(2026, 10, 9), now: now), 'Yesterday');
     expect(formatDayHeader(DateTime(2026, 10, 5), now: now), 'Mon 5 Oct');
   });
+
+  group('filterExpenses', () {
+    final list = [
+      Expense(id: '1', amountKobo: 100, spentAt: DateTime(2026, 10, 1), categoryId: 'f', categoryName: 'Food', note: 'Jollof rice'),
+      Expense(id: '2', amountKobo: 200, spentAt: DateTime(2026, 10, 2), categoryId: 't', categoryName: 'Transport', note: 'Bus'),
+      Expense(id: '3', amountKobo: 300, spentAt: DateTime(2026, 10, 3), categoryId: 'f', categoryName: 'Food'),
+    ];
+    test('returns everything with no filter', () => expect(filterExpenses(list).length, 3));
+    test('matches notes and category names, ignoring case', () {
+      expect(filterExpenses(list, query: 'RICE').map((e) => e.id), ['1']);
+      expect(filterExpenses(list, query: 'food').map((e) => e.id), ['1', '3']);
+    });
+    test('combines a category with words', () {
+      expect(filterExpenses(list, query: 'bus', categoryId: 'f'), isEmpty);
+      expect(filterExpenses(list, categoryId: 't').map((e) => e.id), ['2']);
+    });
+  });
 }

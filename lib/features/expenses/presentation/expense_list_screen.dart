@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/tokens.dart';
+import '../../../core/errors/friendly_error.dart';
 import '../../../core/utils/dates.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/app_button.dart';
@@ -69,14 +70,31 @@ class ExpenseListScreen extends ConsumerWidget {
   }
 }
 
-class _Body extends ConsumerWidget {
+class _Body extends ConsumerStatefulWidget {
   const _Body({required this.expenses, required this.icons});
   final List<Expense> expenses;
   final Map<String, String> icons;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends ConsumerState<_Body> {
+  String _query = '';
+  String? _categoryId;
+
+  Map<String, String> get icons => widget.icons;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final all = widget.expenses;
+    final expenses = filterExpenses(all, query: _query, categoryId: _categoryId);
+    // Only offer categories that appear this month.
+    final used = <String, String>{
+      for (final e in all)
+        if (e.categoryId != null) e.categoryId!: e.categoryName ?? 'Category',
+    };
     final total = expenses.fold<int>(0, (s, e) => s + e.amountKobo);
 
     // Group by day (list is already newest first).
@@ -128,6 +146,43 @@ class _Body extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
+          TextField(
+            onChanged: (v) => setState(() => _query = v),
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: 'Search notes or categories',
+              prefixIcon: Icon(Icons.search_rounded),
+            ),
+          ),
+          if (used.length > 1) ...[
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    child: ChoiceChip(label: const Text('All'), selected: _categoryId == null, onSelected: (_) => setState(() => _categoryId = null)),
+                  ),
+                  for (final entry in used.entries)
+                    Padding(
+                      padding: const EdgeInsets.only(right: AppSpacing.sm),
+                      child: ChoiceChip(
+                        label: Text(entry.value),
+                        selected: _categoryId == entry.key,
+                        onSelected: (s) => setState(() => _categoryId = s ? entry.key : null),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          if (expenses.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+              child: Center(child: Text('No expenses match.', style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.inkSoft))),
+            ),
           for (final item in items)
             if (item is DateTime)
               Padding(
@@ -142,13 +197,63 @@ class _Body extends ConsumerWidget {
   }
 }
 
-class _ExpenseTile extends StatelessWidget {
+class _ExpenseTile extends ConsumerWidget {
   const _ExpenseTile({required this.expense, required this.icon});
   final Expense expense;
   final String icon;
 
+  Future<bool> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete this expense?'),
+        content: Text(expense.title),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (ok != true) return false;
+    try {
+      await ref.read(expensesActionsProvider).delete(expense.id);
+      return true;
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
+      return false;
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tile = _tile(context);
+    if (expense.pending) return tile;
+    return Dismissible(
+      key: ValueKey(expense.id),
+      background: Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: AppSpacing.lg),
+        color: Theme.of(context).extension<AppPalette>()!.tint,
+        child: const Icon(Icons.edit_outlined),
+      ),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        color: StatusColors.errorText.withValues(alpha: 0.12),
+        child: const Icon(Icons.delete_outline_rounded, color: StatusColors.errorText),
+      ),
+      confirmDismiss: (dir) async {
+        if (dir == DismissDirection.startToEnd) {
+          context.push(AppRoutes.expenseEdit(expense.id));
+          return false;
+        }
+        return _confirmDelete(context, ref);
+      },
+      child: tile,
+    );
+  }
+
+  Widget _tile(BuildContext context) {
     final theme = Theme.of(context);
     final palette = theme.extension<AppPalette>()!;
     return ListTile(

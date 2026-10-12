@@ -16,10 +16,10 @@ Left out on purpose: wallet, KYC, group savings, bills, real voice, loans, Busin
 ## B. Should fix
 - **Smart alerts feed** (52) with inline actions (send reminder, extend/release reservation, restock), alert-type choices, quiet hours and daily summary time. The `alerts` folder is empty.
 - **Notifications** (9): All / Money / Business / System tabs, swipe to read or delete.
-- **Expenses** (30, 31, 33): search and filters (date, category, source), swipe to edit/delete, receipt photo; insights lack week/year choice, budget versus actual bars, tips, PDF/CSV export.
+- **Expenses** (30, 31, 33): DONE: search, category filter, swipe edit/delete, receipt photo. Still open: date and source filters; insights lack week/year choice, budget versus actual bars, tips, PDF/CSV export.
 - **Budgets** (20 to 23): template chips, rollover switch (column exists, no UI), weekly trend bars, "apply now or from next period" on edit, alert settings with weekly summary, emergency-fund pocket offer.
-- **Invoices** (43, 44): send reminder, duplicate, 25% and 50% quick chips, proof photo, timeline of events.
-- **Customers** (48): Call and WhatsApp buttons, import from contacts, billed/paid/outstanding totals and purchase history.
+- **Invoices** (43, 44): DONE: send reminder, duplicate, 25%/50% chips, proof photo. Still open: timeline of events.
+- **Customers** (48): DONE: Call, WhatsApp, billed/paid/outstanding, purchase history. Still open: import from contacts (adds a contacts permission, decide first).
 - **Sales** (49, 50): bar chart, search and filter, stock effect (before and after), share receipt and PDF.
 - **Inventory** (34, 35, 36): barcode scan, list/grid toggle, unit choice, "save and add another", full history timeline.
 - **Home** (7, 8): check against the spec: budget ring, savings snapshot, upgrade card, stat tiles, quick-create sheet, new-business checklist.

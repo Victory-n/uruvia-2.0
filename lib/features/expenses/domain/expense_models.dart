@@ -73,3 +73,15 @@ List<CategoryTotal> totalsByCategory(List<Expense> expenses, List<ExpenseCategor
   ]..sort((a, b) => b.totalKobo.compareTo(a.totalKobo));
   return list;
 }
+
+/// Narrows a month of expenses by words (note or category) and by one category.
+/// An empty [query] and a null [categoryId] return everything.
+List<Expense> filterExpenses(List<Expense> all, {String query = '', String? categoryId}) {
+  final q = query.trim().toLowerCase();
+  return [
+    for (final e in all)
+      if ((categoryId == null || e.categoryId == categoryId) &&
+          (q.isEmpty || (e.note ?? '').toLowerCase().contains(q) || (e.categoryName ?? '').toLowerCase().contains(q)))
+        e,
+  ];
+}
