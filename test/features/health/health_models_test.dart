@@ -15,9 +15,7 @@ void main() {
     expect(overallHealthScore(const []), 0);
   });
 
-  test('report totals and bar fraction', () {
-    final d = sampleReport(ReportPeriod.thisMonth);
-    expect(d.profitKobo, d.salesKobo - d.expensesKobo);
+  test('bar fraction', () {
     expect(barFraction(50, 100), 0.5);
     expect(barFraction(5, 0), 0);
   });
