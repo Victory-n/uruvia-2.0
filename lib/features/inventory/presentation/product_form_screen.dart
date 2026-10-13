@@ -34,7 +34,7 @@ class ProductFormScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final id = productId;
     if (id == null) {
-      return const SubPage(title: 'Add product', fallbackRoute: AppRoutes.inventory, body: _ProductForm(initialSku: initialSku));
+      return SubPage(title: 'Add product', fallbackRoute: AppRoutes.inventory, body: _ProductForm(initialSku: initialSku));
     }
     return SubPage(
       title: 'Edit product',

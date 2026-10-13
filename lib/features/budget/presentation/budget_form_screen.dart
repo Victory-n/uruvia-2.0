@@ -106,7 +106,7 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
           alert100: _alert100,
           paused: _paused,
           rollover: _rollover,
-          fromNextPeriod: _fromNext && _amountChanged(kobo!),
+          fromNextPeriod: _fromNext && _amountChanged(kobo),
         );
       } else {
         await actions.create(
