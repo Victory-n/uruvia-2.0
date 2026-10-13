@@ -179,4 +179,14 @@ void main() {
       expect(text, contains('is due on'));
     });
   });
+
+  test('timeline lists events oldest first, with payments between sent and paid', () {
+    final invoice = Invoice(
+      id: 'i1', number: 'INV-1', status: InvoiceStatus.paid, customerId: 'c', issueDate: DateTime(2026, 10, 1), dueDate: DateTime(2026, 10, 15),
+      discountKobo: 0, vatEnabled: false, chargesKobo: 0, vatRateBps: 0, subtotalKobo: 100, vatKobo: 0, totalKobo: 100, amountPaidKobo: 100,
+      createdAt: DateTime(2026, 10, 1, 9), issuedAt: DateTime(2026, 10, 1, 10), paidAt: DateTime(2026, 10, 5, 12),
+    );
+    final events = invoiceTimeline(invoice, [InvoicePayment(id: 'p', amountKobo: 100, method: PaymentMethod.transfer, paidOn: DateTime(2026, 10, 5, 11))]);
+    expect(events.map((e) => e.title), ['Created', 'Sent to customer', 'Payment received', 'Paid in full']);
+  });
 }

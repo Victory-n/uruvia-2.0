@@ -10,6 +10,9 @@ abstract class SalesRepository {
   Future<Sale?> saleForInvoice(String invoiceId);
   Future<List<SaleItem>> items(String saleId);
 
+  /// Stock before and after, for each product the sale moved.
+  Future<List<SaleStockEffect>> stockEffects(String saleId);
+
   /// Records a counter sale in one step and returns its id.
   Future<String> recordQuickSale({
     required String accountId,
@@ -97,6 +100,37 @@ class SupabaseSalesRepository implements SalesRepository {
           unitCostKobo: (r['unit_cost_kobo'] as num).toInt(),
         ),
     ];
+  }
+
+  @override
+  Future<List<SaleStockEffect>> stockEffects(String saleId) async {
+    final moves = await supabase
+        .from('stock_movements')
+        .select('product_id, delta_on_hand, created_at')
+        .eq('sale_id', saleId)
+        .neq('delta_on_hand', 0) as List;
+    if (moves.isEmpty) return const [];
+    final ids = {for (final m in moves) m['product_id'] as String}.toList();
+    final products = await supabase.from('products').select('id, name, qty_on_hand').inFilter('id', ids) as List;
+    final byId = {for (final p in products) p['id'] as String: p as Map};
+    final out = <SaleStockEffect>[];
+    for (final m in moves) {
+      final pid = m['product_id'] as String;
+      final p = byId[pid];
+      if (p == null) continue;
+      final later = await supabase
+          .from('stock_movements')
+          .select('delta_on_hand')
+          .eq('product_id', pid)
+          .gt('created_at', m['created_at'] as String) as List;
+      out.add(SaleStockEffect.fromHistory(
+        productName: p['name'] as String,
+        change: (m['delta_on_hand'] as num).toInt(),
+        onHandNow: (p['qty_on_hand'] as num).toInt(),
+        laterChanges: [for (final l in later) (l['delta_on_hand'] as num).toInt()],
+      ));
+    }
+    return out;
   }
 }
 

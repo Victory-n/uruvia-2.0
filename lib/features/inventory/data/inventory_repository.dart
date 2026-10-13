@@ -201,7 +201,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
         .select('id, kind, delta_on_hand, delta_reserved, note, created_at')
         .eq('product_id', productId)
         .order('created_at', ascending: false)
-        .limit(50) as List;
+        .limit(200) as List;
     return [
       for (final r in rows)
         StockMovement(

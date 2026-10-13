@@ -156,3 +156,25 @@ String saleReceiptText({required String businessName, required Sale sale, requir
   b.write('Thank you for your purchase.');
   return b.toString();
 }
+
+/// What one sale did to one product's stock.
+class SaleStockEffect {
+  const SaleStockEffect({required this.productName, required this.change, required this.before, required this.after});
+  final String productName;
+
+  /// Change to the stock on hand: negative when goods left the shelf.
+  final int change;
+  final int before;
+  final int after;
+
+  /// Works out before and after from the stock now, taking away every change made since the sale.
+  factory SaleStockEffect.fromHistory({
+    required String productName,
+    required int change,
+    required int onHandNow,
+    required Iterable<int> laterChanges,
+  }) {
+    final after = onHandNow - laterChanges.fold<int>(0, (s, d) => s + d);
+    return SaleStockEffect(productName: productName, change: change, before: after - change, after: after);
+  }
+}

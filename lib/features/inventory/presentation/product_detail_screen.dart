@@ -154,9 +154,9 @@ class _Detail extends ConsumerWidget {
             padding: EdgeInsets.zero,
             child: Column(
               children: [
-                for (var i = 0; i < list.length; i++) ...[
+                for (final (i, row) in withRunningBalance(list, p.qtyOnHand).indexed) ...[
                   if (i > 0) const Divider(),
-                  _MovementTile(movement: list[i]),
+                  _MovementTile(movement: row.movement, onHandAfter: row.onHandAfter),
                 ],
               ],
             ),
@@ -268,8 +268,9 @@ class _ReservationTile extends ConsumerWidget {
 }
 
 class _MovementTile extends StatelessWidget {
-  const _MovementTile({required this.movement});
+  const _MovementTile({required this.movement, required this.onHandAfter});
   final StockMovement movement;
+  final int onHandAfter;
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +283,7 @@ class _MovementTile extends StatelessWidget {
       minTileHeight: 56,
       title: Text(m.kind.label),
       subtitle: Text(
-        [formatRelative(m.createdAt), if (m.note != null && m.note != m.kind.label) m.note!].join(' · '),
+        [formatRelative(m.createdAt), 'In stock after: $onHandAfter', if (m.note != null && m.note != m.kind.label) m.note!].join(' · '),
         style: theme.textTheme.bodySmall,
       ),
       trailing: Column(

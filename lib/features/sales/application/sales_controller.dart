@@ -24,6 +24,10 @@ final saleItemsProvider = FutureProvider.autoDispose.family<List<SaleItem>, Stri
   (ref, id) => ref.watch(salesRepositoryProvider).items(id),
 );
 
+final saleStockEffectsProvider = FutureProvider.autoDispose.family<List<SaleStockEffect>, String>(
+  (ref, id) => ref.watch(salesRepositoryProvider).stockEffects(id),
+);
+
 final customerSalesProvider = FutureProvider.autoDispose.family<List<Sale>, String>((ref, customerId) async {
   final account = ref.watch(activeAccountSummaryProvider);
   if (account == null) return const [];

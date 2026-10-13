@@ -161,3 +161,14 @@ Product? findProductByCode(Iterable<Product> products, String code) {
   }
   return null;
 }
+
+/// Pairs each movement (newest first) with the stock on hand right after it happened, worked back from the stock now.
+List<({StockMovement movement, int onHandAfter})> withRunningBalance(List<StockMovement> newestFirst, int onHandNow) {
+  var after = onHandNow;
+  final out = <({StockMovement movement, int onHandAfter})>[];
+  for (final m in newestFirst) {
+    out.add((movement: m, onHandAfter: after));
+    after -= m.deltaOnHand;
+  }
+  return out;
+}

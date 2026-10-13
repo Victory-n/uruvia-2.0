@@ -57,4 +57,11 @@ void main() {
     expect(findProductByCode([p()], '999'), isNull);
     expect(findProductByCode([p()], '  '), isNull);
   });
+
+  test('running balance works back from the stock now', () {
+    StockMovement mv(String id, int d) =>
+        StockMovement(id: id, kind: MovementKind.sale, deltaOnHand: d, deltaReserved: 0, createdAt: DateTime(2026, 10, 1));
+    final rows = withRunningBalance([mv('c', -2), mv('b', 5), mv('a', 10)], 13);
+    expect(rows.map((r) => r.onHandAfter), [13, 15, 10]);
+  });
 }

@@ -119,7 +119,18 @@ class Invoice {
     this.customerName,
     this.notes,
     this.terms,
+    this.createdAt,
+    this.issuedAt,
+    this.paidAt,
+    this.cancelledAt,
+    this.revisedAt,
   });
+
+  final DateTime? createdAt;
+  final DateTime? issuedAt;
+  final DateTime? paidAt;
+  final DateTime? cancelledAt;
+  final DateTime? revisedAt;
 
   final String id;
   final String number;
@@ -176,6 +187,11 @@ class Invoice {
         vatKobo: (r['vat_kobo'] as num).toInt(),
         totalKobo: (r['total_kobo'] as num).toInt(),
         amountPaidKobo: (r['amount_paid_kobo'] as num).toInt(),
+        createdAt: _ts(r['created_at']),
+        issuedAt: _ts(r['issued_at']),
+        paidAt: _ts(r['paid_at']),
+        cancelledAt: _ts(r['cancelled_at']),
+        revisedAt: _ts(r['revised_at']),
       );
 }
 
@@ -247,4 +263,34 @@ InvoiceSummary summarizeInvoices(List<Invoice> list, {DateTime? today}) {
     }
   }
   return InvoiceSummary(outstandingKobo: outstanding, overdueCount: overdue, draftCount: drafts);
+}
+
+DateTime? _ts(Object? v) => v == null ? null : DateTime.parse(v as String).toLocal();
+
+/// One line in an invoice's history.
+class InvoiceEvent {
+  const InvoiceEvent({required this.when, required this.title, this.detail});
+  final DateTime when;
+  final String title;
+  final String? detail;
+}
+
+/// What happened to an invoice, oldest first: created, sent, each payment, paid in full, reopened, cancelled.
+/// Reminders are not recorded yet, so they do not appear.
+List<InvoiceEvent> invoiceTimeline(Invoice invoice, List<InvoicePayment> payments) {
+  final events = <InvoiceEvent>[
+    if (invoice.createdAt != null) InvoiceEvent(when: invoice.createdAt!, title: 'Created'),
+    if (invoice.issuedAt != null) InvoiceEvent(when: invoice.issuedAt!, title: 'Sent to customer'),
+    for (final p in payments)
+      InvoiceEvent(
+        when: p.paidOn,
+        title: 'Payment received',
+        detail: '${p.method.label}${p.reference == null ? '' : ' · ${p.reference}'}',
+      ),
+    if (invoice.revisedAt != null) InvoiceEvent(when: invoice.revisedAt!, title: 'Reopened for changes'),
+    if (invoice.paidAt != null) InvoiceEvent(when: invoice.paidAt!, title: 'Paid in full'),
+    if (invoice.cancelledAt != null) InvoiceEvent(when: invoice.cancelledAt!, title: 'Cancelled'),
+  ];
+  events.sort((a, b) => a.when.compareTo(b.when));
+  return events;
 }

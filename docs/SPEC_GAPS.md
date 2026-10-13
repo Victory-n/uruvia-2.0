@@ -18,10 +18,10 @@ Left out on purpose: wallet, KYC, group savings, bills, real voice, loans, Busin
 - **Notifications** (9): All / Money / Business / System tabs, swipe to read or delete.
 - **Expenses** (30, 31, 33): DONE: search, category filter, swipe edit/delete, receipt photo. Date range filter added too (source filter not needed: no source column in the UI); insights lack week/year choice, budget versus actual bars, tips, PDF/CSV export.
 - **Budgets** (20 to 23): DONE (migration 0019): quick-start template chips, rollover switch (unspent money is added to the next period), weekly bars, apply now or from next period. Still open: weekly summary alert, emergency-fund pocket offer (needs real savings).
-- **Invoices** (43, 44): DONE: send reminder, duplicate, 25%/50% chips, proof photo. Still open: timeline of events.
+- **Invoices** (43, 44): DONE: send reminder, duplicate, 25%/50% chips, proof photo. Timeline added (reminders are not recorded, so they do not show).
 - **Customers** (48): DONE: Call, WhatsApp, billed/paid/outstanding, purchase history. Still open: import from contacts (adds a contacts permission, decide first).
-- **Sales** (49, 50): DONE: 7-day bar chart, search, share receipt as text. Still open: stock effect (before and after), PDF receipt.
-- **Inventory** (34, 35, 36): DONE: barcode scan (stored as the SKU), list/grid toggle, unit chips, save and add another. Still open: full history timeline.
+- **Sales** (49, 50): DONE: 7-day bar chart, search, share receipt as text. Stock effect and PDF receipt added too.
+- **Inventory** (34, 35, 36): DONE: barcode scan (stored as the SKU), list/grid toggle, unit chips, save and add another. Stock history now shows stock after each change.
 - **Home** (7, 8): DONE: new-business checklist, upgrade card (hidden for Pro). Already there: wallet card, quick actions, budget summary (as a bar), business stat tiles, recent lists. Still open: budget as a ring, savings snapshot (needs real savings), quick-create sheet. The original screen 7 and 8 wording was not available to compare, so check on a device.
 - **Savings extras**: Compare sheet, maturity reminder and the Move to wallet / Lock again screen (savings is still sample data).
 

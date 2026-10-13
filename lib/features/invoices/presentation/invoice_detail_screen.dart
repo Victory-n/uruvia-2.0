@@ -326,6 +326,25 @@ class _DetailState extends ConsumerState<_Detail> {
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.sectionGap),
+        Text('History', style: theme.textTheme.titleLarge),
+        const SizedBox(height: AppSpacing.sm),
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (final (n, e) in invoiceTimeline(i, payments.valueOrNull ?? const <InvoicePayment>[]).indexed) ...[
+                if (n > 0) const Divider(),
+                ListTile(
+                  minTileHeight: 56,
+                  leading: Icon(Icons.circle, size: 10, color: theme.extension<AppPalette>()!.action),
+                  title: Text(e.title),
+                  subtitle: Text([formatShortDate(e.when), if (e.detail != null) e.detail!].join(' · ')),
+                ),
+              ],
+            ],
+          ),
+        ),
         if ((i.notes ?? '').isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sectionGap),
           Text('Notes', style: theme.textTheme.titleLarge),

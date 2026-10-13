@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uruvia/features/sales/application/receipt_pdf.dart';
 import 'package:uruvia/features/sales/domain/sale_models.dart';
 
 Sale s(String id, String number, {String? customer, String? note}) => Sale(
@@ -40,5 +41,21 @@ void main() {
     expect(text, contains('Receipt SAL-1'));
     expect(text, contains('Rice  2 x'));
     expect(text, contains('Total:'));
+  });
+
+  test('stock effect works back from the stock now', () {
+    // 10 on hand now. After the sale (-2) there was a restock of +5 and a sale of -1: stock after our sale = 10 - (5 - 1) = 6.
+    final e = SaleStockEffect.fromHistory(productName: 'Rice', change: -2, onHandNow: 10, laterChanges: [5, -1]);
+    expect(e.after, 6);
+    expect(e.before, 8);
+  });
+
+  test('receipt PDF builds', () async {
+    final bytes = await buildReceiptPdf(
+      businessName: 'Ada Stores',
+      sale: Sale(id: 'a', number: 'SAL-1', totalKobo: 1000000, costKobo: 0, soldAt: DateTime(2026, 10, 12)),
+      items: const [SaleItem(description: 'Rice', qty: 2, unitPriceKobo: 500000, unitCostKobo: 0)],
+    );
+    expect(String.fromCharCodes(bytes.take(4)), '%PDF');
   });
 }

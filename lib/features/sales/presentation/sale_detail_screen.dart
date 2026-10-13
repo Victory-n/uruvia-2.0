@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,6 +20,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/errors/friendly_error.dart';
 import '../../invoices/application/invoices_controller.dart' show businessInfoProvider;
 import '../../invoices/domain/invoice_models.dart' show PaymentMethod;
+import '../application/receipt_pdf.dart';
 import '../application/sales_controller.dart';
 import '../domain/sale_models.dart';
 
@@ -32,22 +36,38 @@ class SaleDetailScreen extends ConsumerWidget {
       fallbackRoute: AppRoutes.sales,
       actions: [
         if (value.valueOrNull != null && !value.valueOrNull!.isReversed)
-          IconButton(
+          PopupMenuButton<String>(
             tooltip: 'Share receipt',
             icon: const Icon(Icons.share_outlined),
-            onPressed: () async {
+            onSelected: (v) async {
               try {
                 final sale = value.valueOrNull!;
                 final business = await ref.read(businessInfoProvider.future);
+                final name = business?.name ?? 'Uruvia';
                 final items = await ref.read(saleItemsProvider(sale.id).future);
-                await SharePlus.instance.share(ShareParams(
-                  text: saleReceiptText(businessName: business?.name ?? 'Uruvia', sale: sale, items: items),
-                  subject: 'Receipt ${sale.number}',
-                ));
+                if (v == 'pdf') {
+                  final bytes = await buildReceiptPdf(businessName: name, sale: sale, items: items);
+                  final dir = await getTemporaryDirectory();
+                  final file = File('${dir.path}/${sale.number}.pdf');
+                  await file.writeAsBytes(bytes, flush: true);
+                  await SharePlus.instance.share(ShareParams(
+                    files: [XFile(file.path, mimeType: 'application/pdf')],
+                    subject: 'Receipt ${sale.number}',
+                  ));
+                } else {
+                  await SharePlus.instance.share(ShareParams(
+                    text: saleReceiptText(businessName: name, sale: sale, items: items),
+                    subject: 'Receipt ${sale.number}',
+                  ));
+                }
               } catch (e) {
                 if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e))));
               }
             },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'pdf', child: Text('Share as PDF')),
+              PopupMenuItem(value: 'text', child: Text('Share as message')),
+            ],
           ),
       ],
       body: AsyncView<Sale?>(
@@ -149,6 +169,37 @@ class _Detail extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+        ref.watch(saleStockEffectsProvider(s.id)).maybeWhen(
+          data: (effects) => effects.isEmpty
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.sectionGap),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Stock effect', style: theme.textTheme.titleLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            for (var n = 0; n < effects.length; n++) ...[
+                              if (n > 0) const Divider(),
+                              ListTile(
+                                minTileHeight: 56,
+                                title: Text(effects[n].productName),
+                                subtitle: Text('${effects[n].before} in stock before, ${effects[n].after} after'),
+                                trailing: Text('${effects[n].change > 0 ? '+' : ''}${effects[n].change}', style: theme.textTheme.titleMedium),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+          orElse: () => const SizedBox.shrink(),
         ),
       ],
     );
